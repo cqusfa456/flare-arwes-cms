@@ -20,6 +20,10 @@
  */
 
 import type { SettingsService } from './settings'
+import { createApiToken, revokeApiToken } from './api-tokens'
+import { getSiteProvider, providerLabel } from './site-providers'
+import type { SiteProviderCapabilities } from './site-providers'
+import { importablePresets, presetToSiteInput } from './site-presets'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,9 +36,10 @@ import type { SettingsService } from './settings'
  *    builds via a Pages Deploy Hook, build settings via the Pages project's
  *    `build_config`.
  *  * `cloudflare-worker` — a Worker with static assets; domains via the Workers
- *    domains API (requires a zone), builds via a Workers Builds Deploy Hook,
- *    build settings on a Workers Builds trigger. One Worker can serve many
- *    custom domains, which is why this is the preferred provider for a
+ *    domains API (requires a zone), builds through the Workers Builds API (a
+ *    Deploy Hook still works as a fallback), build settings and build-time
+ *    environment variables on a Workers Builds trigger. One Worker can serve
+ *    many custom domains, which is why this is the preferred provider for a
  *    multi-site deployment.
  *  * `external`          — anything else; the CMS only records it.
  */
@@ -90,6 +95,12 @@ export interface Site {
   nodeVersion: string | null
   buildConfigSyncedAt: number | null
   contentPrefix: string | null
+  /** Extra/overriding build-time env vars pushed to the trigger (migration 040). */
+  buildEnv: Record<string, SiteBuildEnvVar>
+  /** Read-only API token the CMS minted for this site's builds (never serialized). */
+  contentToken: string | null
+  /** `api_tokens` row backing `contentToken`, so it can be rotated or revoked. */
+  contentTokenId: string | null
   isActive: boolean
   lastBuildAt: number | null
   lastBuildStatus: string | null
@@ -118,6 +129,7 @@ export interface SiteInput {
   rootDir?: string | null
   nodeVersion?: string | null
   contentPrefix?: string | null
+  buildEnv?: Record<string, SiteBuildEnvVar> | null
   isActive?: boolean
 }
 
@@ -131,6 +143,8 @@ export interface BuildTriggerResult {
   ok: boolean
   siteId: string
   triggeredAt: number
+  /** How the build was started: the Builds API or a Deploy Hook. */
+  via?: 'api' | 'hook'
   /** Deploy hook response body, when Pages returns one. */
   buildId?: string
   buildUrl?: string
@@ -146,6 +160,30 @@ export interface SiteDeploymentInfo {
   stage: string | null
   status: string | null
   createdAt: string | null
+}
+
+/** One build-time environment variable pushed to a Workers Builds trigger. */
+export interface SiteBuildEnvVar {
+  value: string
+  /** Secrets are masked in Cloudflare's build logs. */
+  secret?: boolean
+}
+
+/** Outcome of pushing a site's build settings, including its environment. */
+export interface SyncBuildConfigResult {
+  site: Site
+  /** True when the trigger's environment variables were updated. */
+  envPushed: boolean
+  /** Environment variable keys that were pushed. */
+  envKeys: string[]
+  /** Operator-facing notes (what was skipped and why). */
+  notes: string[]
+}
+
+/** Outcome of importing the Arwes site presets. */
+export interface SitePresetImportResult {
+  created: Array<{ slug: string; name: string; provider: SiteProvider }>
+  skipped: Array<{ slug: string; reason: string }>
 }
 
 /** Raised for operator-fixable problems so routes can answer 400 instead of 500. */
@@ -180,6 +218,29 @@ interface CloudflareEnvelope<T> {
   messages?: unknown
 }
 
+/**
+ * Build env is stored as JSON. A malformed value must not break the whole site
+ * row — the admin page still has to render so the operator can fix it.
+ */
+const parseBuildEnv = (raw: unknown): Record<string, SiteBuildEnvVar> => {
+  if (typeof raw !== 'string' || raw.trim() === '') return {}
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const out: Record<string, SiteBuildEnvVar> = {}
+    for (const [key, value] of Object.entries(parsed ?? {})) {
+      if (value && typeof value === 'object' && 'value' in value) {
+        const entry = value as { value?: unknown; secret?: unknown }
+        out[key] = { value: String(entry.value ?? ''), secret: entry.secret === true }
+      } else if (typeof value === 'string') {
+        out[key] = { value, secret: false }
+      }
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
 const rowToSite = (row: Record<string, unknown>): Site => ({
   id: String(row.id),
   slug: String(row.slug),
@@ -200,6 +261,9 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   nodeVersion: (row.node_version as string | null) ?? null,
   buildConfigSyncedAt: (row.build_config_synced_at as number | null) ?? null,
   contentPrefix: (row.content_prefix as string | null) ?? null,
+  buildEnv: parseBuildEnv(row.build_env),
+  contentToken: (row.content_token as string | null) ?? null,
+  contentTokenId: (row.content_token_id as string | null) ?? null,
   isActive: Number(row.is_active ?? 1) === 1,
   lastBuildAt: (row.last_build_at as number | null) ?? null,
   lastBuildStatus: (row.last_build_status as string | null) ?? null,
@@ -263,6 +327,30 @@ const mapCloudflareDomainStatus = (payload: Record<string, unknown>): SiteDomain
 // ---------------------------------------------------------------------------
 // SitesService
 // ---------------------------------------------------------------------------
+
+/**
+ * The build-time environment for a site.
+ *
+ * Pure, and exported so the admin UI can render exactly what a sync would push
+ * without constructing a service. The three `PUBLIC_FLARE_*` values are what the
+ * Astro loader in `@flare-cms/astro` reads (`apps/docs/src/content.config.ts`);
+ * they are the difference between a build that talks to the production CMS for
+ * the right site and one that silently falls back to `http://localhost:8787`.
+ * Operator-defined variables on the site win, so any of them can be overridden.
+ */
+export const buildSiteEnvironment = (
+  site: Site,
+  options: { apiBaseUrl?: string | null; contentToken?: string | null } = {}
+): Record<string, SiteBuildEnvVar> => {
+  const computed: Record<string, SiteBuildEnvVar> = {}
+  if (options.apiBaseUrl) {
+    computed.PUBLIC_FLARE_API_URL = { value: options.apiBaseUrl, secret: false }
+  }
+  computed.PUBLIC_FLARE_SITE = { value: site.slug, secret: false }
+  const token = options.contentToken ?? site.contentToken
+  if (token) computed.PUBLIC_FLARE_API_TOKEN = { value: token, secret: true }
+  return { ...computed, ...site.buildEnv }
+}
 
 export class SitesService {
   constructor(
@@ -558,8 +646,9 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, is_active, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           content_prefix, build_env, content_token, content_token_id,
+           is_active, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`
       )
       .bind(
         id,
@@ -580,6 +669,9 @@ export class SitesService {
         input.rootDir ?? null,
         input.nodeVersion ?? null,
         input.contentPrefix ?? null,
+        input.buildEnv && Object.keys(input.buildEnv).length > 0
+          ? JSON.stringify(input.buildEnv)
+          : null,
         input.isActive === false ? 0 : 1,
         now,
         now
@@ -623,6 +715,7 @@ export class SitesService {
       rootDir: 'root_dir',
       nodeVersion: 'node_version',
       contentPrefix: 'content_prefix',
+      buildEnv: 'build_env',
       isActive: 'is_active'
     }
 
@@ -635,6 +728,12 @@ export class SitesService {
       assignments.push(`${column} = ?`)
       if (key === 'slug') values.push(normalizeSiteSlug(String(value)))
       else if (key === 'isActive') values.push(value ? 1 : 0)
+      else if (key === 'buildEnv')
+        values.push(
+          value && typeof value === 'object' && Object.keys(value as object).length > 0
+            ? JSON.stringify(value)
+            : null
+        )
       else values.push(value)
     }
 
@@ -672,6 +771,14 @@ export class SitesService {
       }
     }
 
+    // A build token that outlives its site would keep working (degraded to the
+    // shared scope), so revoke it together with the site.
+    if (site.contentTokenId) {
+      await revokeApiToken(this.db, site.contentTokenId).catch((error) =>
+        console.warn('[sites] could not revoke the site build token:', error)
+      )
+    }
+
     // Deleting the site cascades to site_domains (ON DELETE CASCADE), but D1
     // does not enforce foreign keys by default — clean up explicitly.
     await this.db.prepare('DELETE FROM site_domains WHERE site_id = ?').bind(site.id).run()
@@ -681,17 +788,38 @@ export class SitesService {
   // -- builds ---------------------------------------------------------------
 
   /**
-   * Rebuild a site by POSTing its Cloudflare Pages Deploy Hook.
+   * Start a build.
    *
-   * Deploy hooks need no authentication (the URL is the capability), and Pages
-   * returns 200 with `{ id, url }` describing the queued deployment.
+   * Worker sites go through the Builds API (see {@link triggerBuildViaApi}) and
+   * fall back to a Deploy Hook; Pages sites always use their Deploy Hook, which
+   * needs no authentication because the URL is the capability.
    */
-  async triggerBuild(id: string): Promise<BuildTriggerResult> {
+  async triggerBuild(
+    id: string,
+    options: { via?: 'api' | 'hook' } = {}
+  ): Promise<BuildTriggerResult> {
     const site = await this.get(id)
     if (!site) throw new SitesConfigError('Site not found')
 
     if (!site.isActive) {
       throw new SitesConfigError(`Site "${site.slug}" is inactive; enable it before building`)
+    }
+
+    // A Worker with a Git-connected trigger does not need a Deploy Hook: the
+    // Builds API starts the build directly and returns the build uuid.
+    if (
+      site.provider === 'cloudflare-worker' &&
+      this.capabilities(site).triggerBuildViaApi &&
+      options.via !== 'hook'
+    ) {
+      try {
+        return await this.triggerBuildViaApi(site)
+      } catch (error) {
+        // With no hook stored there is nothing to fall back to, so the API
+        // error (missing trigger, token scope) is the useful answer.
+        if (!site.deployHookUrl) throw error
+        console.error('Builds API trigger failed, falling back to the Deploy Hook:', error)
+      }
     }
 
     const hookUrl = site.deployHookUrl
@@ -763,6 +891,7 @@ export class SitesService {
       ok: true,
       siteId: site.id,
       triggeredAt,
+      via: 'hook',
       ...(parsedBuild.buildId === undefined ? {} : { buildId: parsedBuild.buildId }),
       ...(parsedBuild.buildUrl === undefined ? {} : { buildUrl: parsedBuild.buildUrl }),
       ...(parsedBuild.alreadyExists === undefined
@@ -905,11 +1034,20 @@ export class SitesService {
    *    `deploy_command` and `root_directory` (the assets directory itself lives
    *    in the repository's Wrangler configuration, not here).
    */
-  async syncBuildConfig(id: string): Promise<Site> {
+  async syncBuildConfig(
+    id: string,
+    options: {
+      apiBaseUrl?: string | null
+      pushEnv?: boolean
+      rotateToken?: boolean
+      ownerUserId?: string
+    } = {}
+  ): Promise<SyncBuildConfigResult> {
     const site = await this.get(id)
     if (!site) throw new SitesConfigError('Site not found')
     const target = this.requireTarget(site)
     const { accountId } = await this.requireCredentials()
+    const notes: string[] = []
 
     if (site.provider === 'cloudflare-worker') {
       const body: Record<string, string> = {}
@@ -917,17 +1055,18 @@ export class SitesService {
       if (site.deployCommand) body.deploy_command = site.deployCommand
       if (site.rootDir) body.root_directory = site.rootDir
 
-      if (Object.keys(body).length === 0) {
-        throw new SitesConfigError(
-          'Nothing to sync: set at least a build command, deploy command or root directory'
+      if (Object.keys(body).length > 0) {
+        const triggerUuid = await this.resolveProductionTrigger(site)
+        await this.cf(`/accounts/${accountId}/builds/triggers/${triggerUuid}`, {
+          method: 'PATCH',
+          body
+        })
+        notes.push(`Build settings pushed to trigger ${triggerUuid}.`)
+      } else {
+        notes.push(
+          'No build command, deploy command or root directory set — build settings were left unchanged.'
         )
       }
-
-      const triggerUuid = await this.resolveProductionTrigger(site)
-      await this.cf(`/accounts/${accountId}/builds/triggers/${triggerUuid}`, {
-        method: 'PATCH',
-        body
-      })
     } else {
       const buildConfig: Record<string, string> = {}
       if (site.buildCommand) buildConfig.build_command = site.buildCommand
@@ -944,6 +1083,7 @@ export class SitesService {
         method: 'PATCH',
         body: { build_config: buildConfig }
       })
+      notes.push('Build settings pushed to the Pages project.')
     }
 
     await this.db
@@ -951,9 +1091,236 @@ export class SitesService {
       .bind(Date.now(), Date.now(), site.id)
       .run()
 
+    // Build settings and the build environment belong together: a Worker build
+    // that does not know the CMS URL and its site slug quietly builds against
+    // http://localhost:8787, so both go out in the same action.
+    let envKeys: string[] = []
+    let envPushed = false
+
+    if (site.provider === 'cloudflare-worker' && options.pushEnv !== false) {
+      const envResult = await this.pushBuildEnvironment(site.id, {
+        ...(options.apiBaseUrl === undefined ? {} : { apiBaseUrl: options.apiBaseUrl }),
+        ...(options.rotateToken === undefined ? {} : { rotateToken: options.rotateToken }),
+        ...(options.ownerUserId === undefined ? {} : { ownerUserId: options.ownerUserId })
+      })
+      envKeys = envResult.envKeys
+      envPushed = true
+      notes.push(...envResult.notes)
+    } else if (site.provider === 'cloudflare-pages') {
+      notes.push(
+        'Pages build variables live in the Pages project settings; the CMS does not push them.'
+      )
+    }
+
     const updated = await this.get(site.id)
     if (!updated) throw new Error('Site was updated but could not be read back')
-    return updated
+    return { site: updated, envPushed, envKeys, notes }
+  }
+
+  // -- build environment ----------------------------------------------------
+
+  /**
+   * Mint (or rotate) the read-only API token this site's builds use to read its
+   * own content.
+   *
+   * The value is stored on the site row because the token service keeps only a
+   * hash: the same value has to be re-pushable on every build-config sync. It is
+   * scoped to this site (`api_tokens.site_id`), so it cannot read another site's
+   * content even if a build changes `X-Site`.
+   */
+  async ensureContentToken(
+    site: Site,
+    options: { ownerUserId?: string; rotate?: boolean } = {}
+  ): Promise<string> {
+    if (site.contentToken && !options.rotate) return site.contentToken
+
+    if (options.rotate && site.contentTokenId) {
+      await revokeApiToken(this.db, site.contentTokenId).catch((error) =>
+        console.error('Failed to revoke the previous site build token:', error)
+      )
+    }
+
+    const ownerUserId = options.ownerUserId ?? (await this.firstAdminUserId())
+    const created = await createApiToken(this.db, {
+      name: `site:${site.slug}`,
+      userId: ownerUserId,
+      allowedCollections: null,
+      expiresAt: null,
+      siteId: site.id
+    })
+
+    await this.db
+      .prepare(
+        'UPDATE sites SET content_token = ?, content_token_id = ?, updated_at = ? WHERE id = ?'
+      )
+      .bind(created.tokenValue, created.id, Date.now(), site.id)
+      .run()
+
+    return created.tokenValue
+  }
+
+  /** `api_tokens.user_id` is NOT NULL, so a build token needs an owner. */
+  private async firstAdminUserId(): Promise<string> {
+    const preferred = await this.db
+      .prepare(`SELECT id FROM users WHERE role = 'admin' ORDER BY created_at ASC LIMIT 1`)
+      .first()
+    const row =
+      preferred ?? (await this.db.prepare('SELECT id FROM users ORDER BY created_at ASC LIMIT 1').first())
+    if (!row) {
+      throw new SitesConfigError(
+        'No user exists to own the site build token; create an admin user first'
+      )
+    }
+    return String((row as { id: string }).id)
+  }
+
+  /**
+   * The build-time environment for a site.
+   *
+   * The three `PUBLIC_FLARE_*` values are what the Astro loader in
+   * `@flare-cms/astro` reads (`apps/docs/src/content.config.ts`), and they are
+   * the difference between a build that talks to the production CMS for the
+   * right site and one that silently falls back to `http://localhost:8787`.
+   * Operator-defined variables on the site win, so a site can still override
+   * any of them.
+   */
+  buildEnvironment(
+    site: Site,
+    options: { apiBaseUrl?: string | null; contentToken?: string | null } = {}
+  ): Record<string, SiteBuildEnvVar> {
+    return buildSiteEnvironment(site, options)
+  }
+
+  /** What the CMS can do for this site, from the provider catalog. */
+  capabilities(site: Site): SiteProviderCapabilities {
+    return getSiteProvider(site.provider).can
+  }
+
+  /**
+   * Push a site's build environment to its Workers Builds trigger.
+   *
+   * Only the `PUBLIC_FLARE_*` keys (plus operator extras) are sent: the API
+   * patches the keys it is given, so variables the operator added in the
+   * dashboard are left alone.
+   */
+  async pushBuildEnvironment(
+    id: string,
+    options: { apiBaseUrl?: string | null; rotateToken?: boolean; ownerUserId?: string } = {}
+  ): Promise<SyncBuildConfigResult> {
+    const site = await this.get(id)
+    if (!site) throw new SitesConfigError('Site not found')
+
+    if (site.provider !== 'cloudflare-worker') {
+      throw new SitesConfigError(
+        `Build environment variables can only be pushed to a Worker trigger; "${site.slug}" is ${providerLabel(site.provider)}`
+      )
+    }
+
+    const contentToken = await this.ensureContentToken(site, {
+      ...(options.rotateToken === undefined ? {} : { rotate: options.rotateToken }),
+      ...(options.ownerUserId === undefined ? {} : { ownerUserId: options.ownerUserId })
+    })
+
+    const env = this.buildEnvironment(site, {
+      ...(options.apiBaseUrl === undefined ? {} : { apiBaseUrl: options.apiBaseUrl }),
+      contentToken
+    })
+
+    const triggerUuid = await this.resolveProductionTrigger(site)
+    const { accountId } = await this.requireCredentials()
+
+    const body: Record<string, { value: string; is_secret: boolean }> = {}
+    for (const [key, value] of Object.entries(env)) {
+      if (value.value === '') continue
+      body[key] = { value: value.value, is_secret: value.secret === true }
+    }
+
+    if (Object.keys(body).length === 0) {
+      throw new SitesConfigError('Nothing to push: the build environment resolved to no variables')
+    }
+
+    await this.cf(`/accounts/${accountId}/builds/triggers/${triggerUuid}/environment_variables`, {
+      method: 'PATCH',
+      body
+    })
+
+    const updated = await this.get(site.id)
+    if (!updated) throw new Error('Site was updated but could not be read back')
+
+    return {
+      site: updated,
+      envPushed: true,
+      envKeys: Object.keys(body),
+      notes: [`Build environment pushed to trigger ${triggerUuid}.`]
+    }
+  }
+
+  /** Dashboard URL for a Worker build, used when a build is queued. */
+  private buildDashboardUrl(site: Site, buildId: string | undefined): string | null {
+    if (!buildId || !site.cfProjectName) return null
+    return `https://dash.cloudflare.com/?to=/:account/workers/services/view/${encodeURIComponent(site.cfProjectName)}/builds/${encodeURIComponent(buildId)}`
+  }
+
+  /**
+   * Start a Workers Builds build through the Builds API.
+   *
+   * This is why a Worker site does not need a Deploy Hook: the trigger is
+   * addressed directly, the branch to build is explicit, and the API answers
+   * with the build uuid the CMS records.
+   */
+  private async triggerBuildViaApi(site: Site): Promise<BuildTriggerResult> {
+    const triggeredAt = Date.now()
+    const triggerUuid = await this.resolveProductionTrigger(site)
+    const { accountId } = await this.requireCredentials()
+    const branch = site.gitBranch || 'main'
+
+    const result = await this.cf<Record<string, unknown>>(
+      `/accounts/${accountId}/builds/triggers/${triggerUuid}/builds`,
+      { method: 'POST', body: { branch } }
+    )
+
+    const buildId = result?.build_uuid ? String(result.build_uuid) : undefined
+    const alreadyExists = result?.already_exists === true ? true : undefined
+
+    await this.recordBuild(site.id, {
+      status: 'queued',
+      at: triggeredAt,
+      buildId: buildId ?? null,
+      buildUrl: this.buildDashboardUrl(site, buildId)
+    })
+
+    return {
+      ok: true,
+      siteId: site.id,
+      triggeredAt,
+      via: 'api',
+      ...(buildId === undefined ? {} : { buildId }),
+      ...(alreadyExists === undefined ? {} : { alreadyExists })
+    }
+  }
+
+  /**
+   * Create every importable Arwes preset that is not registered yet.
+   *
+   * Existing slugs are reported as skipped instead of overwritten, so this is
+   * safe to run repeatedly and never clobbers operator edits.
+   */
+  async importPresets(): Promise<SitePresetImportResult> {
+    const existing = new Set((await this.list()).map((site) => site.slug))
+    const created: SitePresetImportResult['created'] = []
+    const skipped: SitePresetImportResult['skipped'] = []
+
+    for (const preset of importablePresets()) {
+      const slug = normalizeSiteSlug(preset.slug || preset.name)
+      if (existing.has(slug)) {
+        skipped.push({ slug, reason: 'Already registered' })
+        continue
+      }
+      const site = await this.create(presetToSiteInput(preset, slug))
+      created.push({ slug: site.slug, name: site.name, provider: site.provider })
+    }
+
+    return { created, skipped }
   }
 
   // -- domains --------------------------------------------------------------

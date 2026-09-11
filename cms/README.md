@@ -236,30 +236,44 @@ node scripts/set-cf-token.mjs
 （可在 Admin → Sites 页面底部保存，便于轮换而无需重新部署）。API token 永不返回给客户端；
 Deploy Hook URL 属于能力型 URL，在 JSON 响应中被掩码。
 
-### 每个站点的一次性前置条件
+### 从 CMS 注册与构建一个站点
 
-**Worker 站点（推荐，`apps/docs` 已按此配置）**
+Admin → Sites 按**托管类型分组**展示（Worker / Pages / External），并可一键导入 **Arwes 预设**
+（`apps/docs` 的构建约定已内置，含 `{{slug}}` 占位替换，新增 Astro 应用只需加一条预设）。
 
-1. Worker 必须是 **Git 连接**的（Worker → Settings → Builds），并有一个 Workers Builds **trigger**
-2. trigger 上设置（可由 CMS 的 "Push build config to Cloudflare" 下发前两项）：
+**Worker 站点（推荐：一个 Worker 可绑定多个域名）**
+
+1. 在 Cloudflare 把 Worker **连接 Git 仓库**（Worker → Settings → Builds），使其存在一个 trigger
+2. 在 CMS 注册站点：名称、slug、Worker 名（**不是** tag）、Git 仓库/分支，以及 build / deploy
+   命令与 root directory（预设已填好）：
    - `build_command`：`sh ./apps/docs/scripts/build-worker.sh`
    - `deploy_command`：`cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy`
    - `root_directory`：`/`
-   - 构建期环境变量：`PUBLIC_FLARE_API_URL`、`PUBLIC_FLARE_API_TOKEN`，按站点隔离内容时还要 `PUBLIC_FLARE_SITE`
-3. 创建 **Deploy Hook**（同一 Settings → Builds 页），URL 形如
-   `https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/<id>`，填进站点
-4. 在 Admin → Sites 里 **Bind domain**（Worker 域名必须落在 token 可见的 zone 内）
+3. 点 **Push build config + env**：CMS 下发上述构建设置，并把构建期环境变量写入该 trigger：
+   `PUBLIC_FLARE_API_URL`（CMS 自身地址）、`PUBLIC_FLARE_SITE`（站点 slug）、
+   `PUBLIC_FLARE_API_TOKEN`（CMS 自动签发的**只读、限定该站点**的 token）。
+   站点可在 Site settings 里用同名变量覆盖任意一个
+4. 点 **Build now**：Worker 站点直接走 Workers Builds API
+   （`POST /accounts/{id}/builds/triggers/{uuid}/builds`），**不再需要 Deploy Hook**；
+   "Build via Deploy Hook" 作为兜底入口。Pages 站点仍只能用 Deploy Hook
+5. **Bind domain**：Worker 自定义域名必须落在 token 可见的 zone 内（可在站点上固定 zone id）
 
 **Pages 站点**
 
 1. Pages 项目必须是 **Git 连接**的（Direct Upload 项目无法被 Deploy Hook 重建）
-2. 在该项目上设置构建命令 / 输出目录 / Node 版本（可由 CMS 的
-   "Push build config to Cloudflare" 下发）
-3. 创建 **Deploy Hook**，把 URL 填入站点；再在 Admin → Sites 里 **Bind domain** 绑定域名
+2. 设置构建命令 / 输出目录 / root 目录（可由 CMS 下发）。Pages 的构建变量在项目自己的设置里，
+   CMS 不下发
+3. 创建 **Deploy Hook** 填入站点，再 **Bind domain**
+
+> 以上构建/域名动作需要 `CF_API_TOKEN` / `CF_ACCOUNT_ID`。未配置时注册站点、内容归属与
+> 域名记录仍可用，但构建触发与域名绑定会明确报错而不是静默失败。Builds API 要求
+> **user-scoped** token 并带 `Workers Builds Configuration: Edit`。
 
 ### 代码位置
 
-- `packages/core/src/services/sites.ts` — 注册表 + Cloudflare 客户端 + 构建/域名逻辑
+- `packages/core/src/services/sites.ts` — 注册表 + Cloudflare 客户端 + 构建/域名/构建环境逻辑
+- `packages/core/src/services/site-providers.ts` — 托管类型元数据（标签、字段、能力矩阵）
+- `packages/core/src/services/site-presets.ts` — Arwes 站点预设与 `{{slug}}` 替换
 - `packages/core/src/routes/admin-sites.ts` — 页面 + JSON API（`/admin/sites`）
 - `packages/core/src/templates/pages/admin-sites.template.ts` — 列表 / 新建 / 详情页
 
@@ -271,6 +285,7 @@ Deploy Hook URL 属于能力型 URL，在 JSON 响应中被掩码。
 | 请求方 | 可见内容 |
 | ------ | -------- |
 | `X-Site: <slug\|id>` 或 `?site=<slug\|id>`（活跃站点） | 该站点内容 + 共享内容 |
+| 使用**绑定站点的 API token**（`api_tokens.site_id`） | 固定为该站点内容 + 共享内容，**忽略** `X-Site`（构建 token 读不到别的站点） |
 | 未标示站点，但部署里已注册了站点 | **仅共享内容** |
 | 未标示站点，且没有任何站点 | 全部内容（单租户，向后兼容） |
 | 标示了不存在/已停用的站点 | **404**（明确报错，而不是静默空列表） |
@@ -300,9 +315,10 @@ flareLoader({
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `PUBLIC_FLARE_API_URL` | CMS API 地址 | `http://localhost:8787` |
-| `PUBLIC_FLARE_API_TOKEN` | 只读 API token（可选） | 无 |
-| `PUBLIC_FLARE_SITE` | （可选）站点 slug，按站点隔离内容时必填 | 无 |
+| `PUBLIC_FLARE_API_URL` | CMS API 地址（Worker 站点由 CMS 下发到 trigger，可被站点覆盖） | `http://localhost:8787` |
+| `PUBLIC_FLARE_API_TOKEN` | 只读 API token（Worker 站点由 CMS 自动签发并下发） | 无 |
+| `PUBLIC_FLARE_SITE` | 站点 slug，按站点隔离内容时必填（Worker 站点由 CMS 下发） | 无 |
+| `FLARE_API_URL` | （可选，Worker 变量）站点未固定 `PUBLIC_FLARE_API_URL` 时，CMS 用它作为下发的地址 | 请求来源 origin |
 | `CF_API_TOKEN` / `CF_ACCOUNT_ID` | （Worker secret，可选）站点域名管理所需的 Cloudflare API 凭据 | 无 |
 
 ## 注意事项

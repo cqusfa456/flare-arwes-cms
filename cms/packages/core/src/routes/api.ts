@@ -655,7 +655,8 @@ apiRoutes.get('/content', async (c) => {
     // never be served another site's cached response.
     const siteScope = await resolveContentSiteScope(db, {
       header: c.req.header('X-Site'),
-      query: queryParams.site
+      query: queryParams.site,
+      tokenSiteId: c.get('apiToken')?.site_id ?? null
     })
     if (siteScope.unknown) {
       return c.json({
@@ -812,7 +813,8 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
     // Per-site content isolation (server-controlled; also keys the cache below)
     const siteScope = await resolveContentSiteScope(db, {
       header: c.req.header('X-Site'),
-      query: queryParams.site
+      query: queryParams.site,
+      tokenSiteId: c.get('apiToken')?.site_id ?? null
     })
     if (siteScope.unknown) {
       return c.json({

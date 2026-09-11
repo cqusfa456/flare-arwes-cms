@@ -14,8 +14,10 @@ import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { requireAuth, requireRole } from '../middleware'
 import { SettingsService } from '../services/settings'
-import { SitesService, SitesConfigError } from '../services/sites'
+import { SitesService, SitesConfigError, buildSiteEnvironment } from '../services/sites'
 import type { Site, SiteInput } from '../services/sites'
+import { SITE_PROVIDERS, getSiteProvider } from '../services/site-providers'
+import { ARWES_SITE_PRESETS } from '../services/site-presets'
 import { logAudit, getClientIP } from '../services/audit-log'
 import {
   renderSitesListPage,
@@ -39,10 +41,22 @@ const sitesService = (c: SitesContext): SitesService =>
     new SettingsService(c.env.DB)
   )
 
-/** Strip capability URLs before a site crosses the wire as JSON. */
-const toPublicSite = (site: Site): Omit<Site, 'deployHookUrl'> & { hasDeployHook: boolean } => {
-  const { deployHookUrl, ...rest } = site
-  return { ...rest, hasDeployHook: !!deployHookUrl }
+/**
+ * Strip capabilities and secrets before a site crosses the wire as JSON: the
+ * Deploy Hook URL and the build content token are both bearer credentials.
+ */
+const toPublicSite = (
+  site: Site
+): Omit<Site, 'deployHookUrl' | 'contentToken' | 'contentTokenId'> & {
+  hasDeployHook: boolean
+  hasContentToken: boolean
+} => {
+  const { deployHookUrl, contentToken, contentTokenId, ...rest } = site
+  return {
+    ...rest,
+    hasDeployHook: !!deployHookUrl,
+    hasContentToken: !!(contentToken && contentTokenId)
+  }
 }
 
 const pageUser = (user: Variables['user']): { name: string; email: string; role: string } | undefined =>
@@ -70,6 +84,62 @@ const readJson = async (c: SitesContext): Promise<Record<string, unknown>> => {
 
 const str = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
+
+/** Read an optional string binding without widening the Bindings type. */
+const envString = (c: SitesContext, key: string): string => {
+  const value = (c.env as unknown as Record<string, unknown>)[key]
+  return typeof value === 'string' ? value : ''
+}
+
+/**
+ * Base URL the CMS advertises to builds (`PUBLIC_FLARE_API_URL`).
+ *
+ * A site may pin it in its own build env; otherwise a deployed `FLARE_API_URL`
+ * is used, and as a last resort the origin the admin happens to be using (which
+ * is correct for a single-domain deployment).
+ */
+const apiBaseUrlFor = (c: SitesContext, site?: Site): string | null => {
+  const pinned = site?.buildEnv?.PUBLIC_FLARE_API_URL?.value
+  if (pinned) return pinned
+  const fromEnv = envString(c, 'FLARE_API_URL')
+  if (fromEnv) return fromEnv.replace(/\/+$/, '')
+  try {
+    return new URL(c.req.url).origin
+  } catch {
+    return null
+  }
+}
+
+/** Keys the CMS owns on the trigger; everything else is operator-defined. */
+const MANAGED_BUILD_ENV_KEYS = [
+  'PUBLIC_FLARE_API_URL',
+  'PUBLIC_FLARE_SITE',
+  'PUBLIC_FLARE_API_TOKEN'
+]
+
+/** Show a token's prefix, never its secret. */
+const maskSecret = (value: string): string =>
+  value.length > 12 ? `${value.slice(0, 11)}…` : '••••••'
+
+/**
+ * The build environment a sync would push, safe to render in the admin page:
+ * secrets are reduced to a prefix.
+ */
+const buildEnvView = (
+  site: Site,
+  apiBaseUrl: string | null
+): Array<{ key: string; value: string; secret: boolean; managed: boolean }> => {
+  const env = buildSiteEnvironment(site, { apiBaseUrl, contentToken: site.contentToken })
+
+  return Object.entries(env)
+    .map(([key, entry]) => ({
+      key,
+      value: entry.secret ? maskSecret(entry.value) : entry.value,
+      secret: entry.secret === true,
+      managed: MANAGED_BUILD_ENV_KEYS.includes(key)
+    }))
+    .sort((a, b) => a.key.localeCompare(b.key))
+}
 
 // ---------------------------------------------------------------------------
 // JSON API (registered first so /api/* never falls through to /:slug)
@@ -140,14 +210,17 @@ adminSitesRoutes.delete('/api/sites/:id', async (c) => {
 
 adminSitesRoutes.post('/api/sites/:id/build', async (c) => {
   const id = c.req.param('id')
+  const body = await readJson(c)
+  const via = body.via === 'hook' || body.via === 'api' ? body.via : undefined
   try {
-    const result = await sitesService(c).triggerBuild(id)
+    const result = await sitesService(c).triggerBuild(id, via ? { via } : {})
     if (!result.ok) {
       return c.json({ success: false, error: result.error ?? 'Build trigger failed' }, 502)
     }
     return c.json({
       success: true,
       triggeredAt: result.triggeredAt,
+      ...(result.via === undefined ? {} : { via: result.via }),
       ...(result.buildId === undefined ? {} : { buildId: result.buildId }),
       ...(result.buildUrl === undefined ? {} : { buildUrl: result.buildUrl })
     })
@@ -206,11 +279,91 @@ adminSitesRoutes.post('/api/sites/:id/domains/primary', async (c) => {
 })
 
 adminSitesRoutes.post('/api/sites/:id/sync-build-config', async (c) => {
+  const body = await readJson(c)
+  const id = c.req.param('id')
+  const user = c.get('user')
   try {
-    const site = await sitesService(c).syncBuildConfig(c.req.param('id'))
-    return c.json({ success: true, site: toPublicSite(site) })
+    const service = sitesService(c)
+    const site = await service.get(id)
+    const result = await service.syncBuildConfig(id, {
+      apiBaseUrl: apiBaseUrlFor(c, site ?? undefined),
+      rotateToken: body.rotateToken === true,
+      ...(user ? { ownerUserId: user.userId } : {})
+    })
+    return c.json({
+      success: true,
+      site: toPublicSite(result.site),
+      envPushed: result.envPushed,
+      envKeys: result.envKeys,
+      notes: result.notes
+    })
   } catch (error) {
     return errorResponse(c, error, 'Failed to push build config to Cloudflare')
+  }
+})
+
+/**
+ * Push only the build environment (the PUBLIC_FLARE_* values plus the site's own
+ * variables). Split from the build-settings sync so an operator can re-issue the
+ * content token without touching the trigger's commands.
+ */
+adminSitesRoutes.post('/api/sites/:id/build-env', async (c) => {
+  const body = await readJson(c)
+  const id = c.req.param('id')
+  const user = c.get('user')
+  try {
+    const service = sitesService(c)
+    const site = await service.get(id)
+    const result = await service.pushBuildEnvironment(id, {
+      apiBaseUrl: apiBaseUrlFor(c, site ?? undefined),
+      rotateToken: body.rotateToken === true,
+      ...(user ? { ownerUserId: user.userId } : {})
+    })
+    return c.json({
+      success: true,
+      site: toPublicSite(result.site),
+      envKeys: result.envKeys,
+      notes: result.notes
+    })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to push the build environment')
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Presets — the monorepo's build contract, offered as one-click registrations
+// ---------------------------------------------------------------------------
+
+adminSitesRoutes.get('/api/presets', (c) =>
+  c.json({
+    success: true,
+    presets: ARWES_SITE_PRESETS.map((preset) => ({
+      id: preset.id,
+      name: preset.name,
+      slug: preset.slug,
+      provider: preset.provider,
+      providerLabel: getSiteProvider(preset.provider).label,
+      cfProjectName: preset.cfProjectName,
+      description: preset.description,
+      gitRepo: preset.gitRepo,
+      gitBranch: preset.gitBranch,
+      buildCommand: preset.buildCommand,
+      deployCommand: preset.deployCommand,
+      rootDir: preset.rootDir,
+      outputDir: preset.outputDir,
+      app: preset.app,
+      template: preset.template === true,
+      notes: preset.notes
+    }))
+  })
+)
+
+adminSitesRoutes.post('/api/presets/import', async (c) => {
+  try {
+    const result = await sitesService(c).importPresets()
+    return c.json({ success: true, ...result })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to import site presets')
   }
 })
 
@@ -223,6 +376,8 @@ adminSitesRoutes.get('/new', async (c) => {
   return c.html(
     renderSiteNewPage({
       credentials: await service.getCredentialStatus(),
+      providers: SITE_PROVIDERS,
+      presets: ARWES_SITE_PRESETS,
       ...(pageUser(c.get('user')) ? { user: pageUser(c.get('user'))! } : {}),
       version: c.get('appVersion')
     })
@@ -233,8 +388,16 @@ adminSitesRoutes.get('/', async (c) => {
   const service = sitesService(c)
   const sites = await service.list()
 
+  const requestedType = str(c.req.query('type'))
+  const typeFilter =
+    requestedType && SITE_PROVIDERS.some((provider) => provider.id === requestedType)
+      ? (requestedType as Site['provider'])
+      : null
+
+  const visible = typeFilter ? sites.filter((site) => site.provider === typeFilter) : sites
+
   const enriched = await Promise.all(
-    sites.map(async (site) => {
+    visible.map(async (site) => {
       const [domains, counts] = await Promise.all([
         service.listDomains(site.id),
         service.contentCounts(site.id)
@@ -247,6 +410,10 @@ adminSitesRoutes.get('/', async (c) => {
   return c.html(
     renderSitesListPage({
       sites: enriched,
+      providers: SITE_PROVIDERS,
+      typeFilter,
+      totalCount: sites.length,
+      presets: ARWES_SITE_PRESETS,
       credentials: await service.getCredentialStatus(),
       ...(user ? { user } : {}),
       version: c.get('appVersion')
@@ -284,6 +451,9 @@ adminSitesRoutes.get('/:slug', async (c) => {
       contentOwned: counts.owned,
       contentShared: counts.shared,
       credentials: await service.getCredentialStatus(),
+      capabilities: service.capabilities(site),
+      buildEnv: buildEnvView(site, apiBaseUrlFor(c, site)),
+      isPreset: ARWES_SITE_PRESETS.some((preset) => preset.slug === site.slug),
       ...(user ? { user } : {}),
       version: c.get('appVersion')
     })

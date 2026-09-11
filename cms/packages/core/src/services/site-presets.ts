@@ -1,0 +1,126 @@
+/**
+ * Arwes site presets.
+ *
+ * Registering a site by hand means knowing the monorepo's build contract: which
+ * workspace builds first, where the static output lands, and which binary
+ * deploys it. These presets encode that contract once, so "add a site" is a
+ * click plus a slug instead of a documentation exercise.
+ *
+ * `{{slug}}` in a command is substituted with the (normalised) site slug when the
+ * site is created, which is what lets a preset describe an Astro app generically:
+ * a site with the slug `play` becomes `sh ./apps/play/scripts/build-worker.sh`.
+ */
+
+import type { SiteInput, SiteProvider } from './sites'
+
+export interface SitePreset {
+  id: string
+  name: string
+  /** Suggested slug; empty for templates the operator must name. */
+  slug: string
+  provider: SiteProvider
+  /** Worker name or Pages project name. */
+  cfProjectName: string
+  description: string
+  gitRepo: string
+  gitBranch: string
+  buildCommand: string
+  deployCommand: string
+  rootDir: string
+  outputDir: string
+  /** App directory inside the repository, for documentation and hints. */
+  app: string
+  /**
+   * True for a generic starting point: offered in the "new site" form but never
+   * created by "import presets", because it does not describe a real target.
+   */
+  template?: boolean
+  /** Extra build-time environment variables (non-secret). */
+  buildEnv?: Record<string, string>
+  /** What the operator still has to do in Cloudflare. */
+  notes: string[]
+}
+
+export const ARWES_SITE_PRESETS: SitePreset[] = [
+  {
+    id: 'arwes-docs',
+    name: 'Arwes Docs',
+    slug: 'arwes-docs',
+    provider: 'cloudflare-worker',
+    cfProjectName: 'arwes-docs-worker',
+    description:
+      'Arwes documentation site. Astro builds into apps/docs/build and the Worker serves it from static assets, so one build can answer on several custom domains.',
+    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitBranch: 'main',
+    buildCommand: 'sh ./apps/docs/scripts/build-worker.sh',
+    deployCommand:
+      'cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy',
+    rootDir: '/',
+    outputDir: 'apps/docs/build',
+    app: 'apps/docs',
+    notes: [
+      'Connect the Worker "arwes-docs-worker" to the Git repository in Cloudflare (Worker → Settings → Builds) so a trigger exists.',
+      'Create a Deploy Hook as a fallback, or let the CMS trigger builds through the Builds API.',
+      'Bind a custom domain (for example docs.<your-domain>) from this page; *.workers.dev works too but is blocked on some networks.'
+    ]
+  },
+  {
+    id: 'arwes-astro-worker',
+    name: 'Arwes Astro site (Worker + assets)',
+    slug: '',
+    provider: 'cloudflare-worker',
+    cfProjectName: 'arwes-{{slug}}-worker',
+    description:
+      'Template for another Astro app in this monorepo: builds the app and serves its static output from a Worker, with per-site content pulled from the CMS at build time.',
+    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitBranch: 'main',
+    buildCommand: 'sh ./apps/{{slug}}/scripts/build-worker.sh',
+    deployCommand:
+      'cd apps/{{slug}} && ../../cms/packages/cms/node_modules/.bin/wrangler deploy',
+    rootDir: '/',
+    outputDir: 'apps/{{slug}}/build',
+    app: 'apps/{{slug}}',
+    template: true,
+    notes: [
+      'The app needs its own wrangler configuration with an assets binding, plus scripts/build-worker.sh (copy apps/docs/scripts/build-worker.sh).',
+      'Name the site after the app directory: slug "play" resolves {{slug}} to apps/play and arwes-play-worker.'
+    ]
+  }
+]
+
+const BY_ID = new Map(ARWES_SITE_PRESETS.map((preset) => [preset.id, preset]))
+
+export const getSitePreset = (id: string): SitePreset | undefined => BY_ID.get(id)
+
+/** Presets that describe a real deployment (i.e. what "import presets" creates). */
+export const importablePresets = (): SitePreset[] =>
+  ARWES_SITE_PRESETS.filter((preset) => !preset.template)
+
+/**
+ * Substitute `{{slug}}` and `{{app}}` placeholders.
+ *
+ * The slug is normalised by the caller (SitesService.create does it again), so a
+ * value like `My App` becomes `my-app` and yields `apps/my-app/build`.
+ */
+export const substitutePreset = (value: string, slug: string): string =>
+  value.replace(/\{\{\s*slug\s*\}\}/g, slug).replace(/\{\{\s*app\s*\}\}/g, slug)
+
+/** Build a `SiteInput` from a preset, substituting placeholders with `slug`. */
+export const presetToSiteInput = (preset: SitePreset, slug: string): SiteInput => ({
+  slug: slug || preset.slug,
+  name: preset.name,
+  description: preset.description,
+  provider: preset.provider,
+  cfProjectName: substitutePreset(preset.cfProjectName, slug),
+  gitRepo: preset.gitRepo,
+  gitBranch: preset.gitBranch,
+  buildCommand: substitutePreset(preset.buildCommand, slug),
+  deployCommand: substitutePreset(preset.deployCommand, slug),
+  rootDir: preset.rootDir,
+  outputDir: substitutePreset(preset.outputDir, slug),
+  buildEnv: preset.buildEnv
+    ? Object.fromEntries(
+        Object.entries(preset.buildEnv).map(([key, value]) => [key, { value, secret: false }])
+      )
+    : null
+})

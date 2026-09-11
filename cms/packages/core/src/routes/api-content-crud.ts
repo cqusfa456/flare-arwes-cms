@@ -68,7 +68,8 @@ apiContentCrudRoutes.get('/:id', async (c) => {
     // shared content, so guessing an id cannot cross tenants.
     const scope = await resolveContentSiteScope(db, {
       header: c.req.header('X-Site'),
-      query: c.req.query('site')
+      query: c.req.query('site'),
+      tokenSiteId: c.get('apiToken')?.site_id ?? null
     })
     if (scope.unknown) {
       return c.json({ error: `Unknown site "${scope.requested}"` }, 404)

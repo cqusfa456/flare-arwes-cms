@@ -20,6 +20,8 @@ export interface ApiTokenRecord {
   expires_at: number | null
   last_used_at: number | null
   created_at: number
+  /** When set the token may only read that site's content (migration 040). */
+  site_id: string | null
 }
 
 export interface ApiTokenSafe {
@@ -33,6 +35,7 @@ export interface ApiTokenSafe {
   expires_at: number | null
   last_used_at: number | null
   created_at: number
+  site_id: string | null
 }
 
 export interface CreateApiTokenParams {
@@ -40,6 +43,8 @@ export interface CreateApiTokenParams {
   userId: string
   allowedCollections: string[] | null
   expiresAt: number | null
+  /** Bind the token to one site; reads are then locked to that site. */
+  siteId?: string | null
 }
 
 export interface CreateApiTokenResult {
@@ -112,8 +117,8 @@ export async function createApiToken(
     INSERT INTO api_tokens (
       id, name, token, token_hash, token_prefix,
       user_id, permissions, allowed_collections,
-      is_read_only, expires_at, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+      is_read_only, site_id, expires_at, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
   `).bind(
     tokenId,
     params.name,
@@ -123,6 +128,7 @@ export async function createApiToken(
     params.userId,
     'read', // read-only permission string
     allowedCollectionsStr,
+    params.siteId ?? null,
     params.expiresAt,
     now
   ).run()
@@ -157,7 +163,7 @@ export async function validateApiToken(
 
   const record = await db.prepare(`
     SELECT id, name, token_prefix, token_hash, user_id, permissions,
-           allowed_collections, is_read_only, expires_at, last_used_at, created_at
+           allowed_collections, is_read_only, site_id, expires_at, last_used_at, created_at
     FROM api_tokens
     WHERE token_hash = ?
   `).bind(tokenHash).first<ApiTokenRecord>()
@@ -190,6 +196,7 @@ export async function validateApiToken(
     expires_at: record.expires_at,
     last_used_at: record.last_used_at,
     created_at: record.created_at,
+    site_id: record.site_id ?? null,
   }
 
   return { valid: true, tokenRecord: safeRecord }
@@ -217,7 +224,7 @@ export async function listApiTokens(
   if (userId) {
     stmt = db.prepare(`
       SELECT id, name, token_prefix, user_id, permissions,
-             allowed_collections, is_read_only, expires_at, last_used_at, created_at
+             allowed_collections, is_read_only, site_id, expires_at, last_used_at, created_at
       FROM api_tokens
       WHERE user_id = ?
       ORDER BY created_at DESC
@@ -225,7 +232,7 @@ export async function listApiTokens(
   } else {
     stmt = db.prepare(`
       SELECT id, name, token_prefix, user_id, permissions,
-             allowed_collections, is_read_only, expires_at, last_used_at, created_at
+             allowed_collections, is_read_only, site_id, expires_at, last_used_at, created_at
       FROM api_tokens
       ORDER BY created_at DESC
     `)
@@ -246,5 +253,6 @@ export async function listApiTokens(
     expires_at: record.expires_at,
     last_used_at: record.last_used_at,
     created_at: record.created_at,
+    site_id: record.site_id ?? null,
   }))
 }

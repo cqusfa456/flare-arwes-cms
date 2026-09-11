@@ -13,12 +13,16 @@
  *
  * A site identifies itself with `X-Site: <slug|id>` or `?site=<slug|id>`.
  * Content ownership is `content.site_id` (migration 038).
+ *
+ * A request authenticated with a **site-pinned API token** (migration 040) gets
+ * that site regardless of what it sends: a build token issued for one site must
+ * not be able to read another site's content by changing the header.
  */
 
 import type { QueryFilter } from '../utils/query-filter'
 
 /** How the request identified its site. */
-export type SiteScopeSource = 'header' | 'query' | 'none'
+export type SiteScopeSource = 'header' | 'query' | 'token' | 'none'
 
 /** What the resolved scope allows. */
 export type SiteScopeMode =
@@ -49,6 +53,8 @@ export interface ResolveSiteScopeInput {
   header?: string | null
   /** Value of the `site` query parameter. */
   query?: string | null
+  /** Site id a site-pinned API token is bound to; outranks header and query. */
+  tokenSiteId?: string | null
 }
 
 const clean = (value: string | null | undefined): string | null => {
@@ -79,6 +85,44 @@ export async function resolveContentSiteScope(
   const query = clean(input.query)
   const requested = header ?? query
   const source: SiteScopeSource = header ? 'header' : query ? 'query' : 'none'
+
+  // A site-pinned token outranks the caller: it is how a CI build proves which
+  // site it is, without trusting anything the build (or a leaked token used from
+  // elsewhere) puts in a header.
+  const tokenSiteId = clean(input.tokenSiteId)
+  if (tokenSiteId) {
+    const pinned = await db
+      .prepare('SELECT id, slug FROM sites WHERE id = ? LIMIT 1')
+      .bind(tokenSiteId)
+      .first()
+
+    if (pinned) {
+      const row = pinned as { id: string; slug: string }
+      const ignored = requested !== null && requested !== row.slug && requested !== row.id
+      return {
+        siteId: row.id,
+        siteSlug: row.slug,
+        requested,
+        source: 'token',
+        mode: 'site+shared',
+        unknown: false,
+        reason: ignored
+          ? `Pinned to site "${row.slug}" by the API token; the requested site "${requested}" was ignored`
+          : `Pinned to site "${row.slug}" by the API token`
+      }
+    }
+
+    return {
+      siteId: null,
+      siteSlug: null,
+      requested,
+      source: 'token',
+      mode: 'shared-only',
+      unknown: false,
+      reason:
+        'The API token is pinned to a site that no longer exists; only shared content is visible'
+    }
+  }
 
   if (requested) {
     // Match on slug (the human-facing identifier) or id, active sites only.

@@ -2,23 +2,40 @@
  * Admin → Sites pages.
  *
  * The CMS is the control plane for every website: these pages own each site's
- * build (Cloudflare Pages Deploy Hook), its custom domain bindings (Cloudflare
- * API) and its content scope. All mutating actions go through the JSON API in
- * `routes/admin-sites.ts`; pages are rendered server-side and reloaded after a
- * mutation so the UI always reflects persisted state.
+ * build (Cloudflare Pages Deploy Hook or Workers Builds API), its custom domain
+ * bindings (Cloudflare API) and its content scope. All mutating actions go
+ * through the JSON API in `routes/admin-sites.ts`; pages are rendered
+ * server-side and reloaded after a mutation so the UI always reflects persisted
+ * state.
+ *
+ * Nothing here is provider-specific by hand: labels, badges, which form fields
+ * apply and which actions are offered all come from `services/site-providers`,
+ * so the UI can never offer an action a provider cannot perform.
  */
 
 import { renderAdminLayoutCatalyst } from '../layouts/admin-layout-catalyst.template'
 import { escapeHtml } from '../../utils/sanitize'
+import { getSiteProvider, SITE_PROVIDERS } from '../../services/site-providers'
+import type { SiteProviderInfo, SiteProviderCapabilities } from '../../services/site-providers'
+import { ARWES_SITE_PRESETS } from '../../services/site-presets'
+import type { SitePreset } from '../../services/site-presets'
 import type {
   Site,
   SiteDomain,
   SiteDeploymentInfo,
-  CloudflareCredentialStatus
+  CloudflareCredentialStatus,
+  SiteProvider
 } from '../../services/sites'
 
 export interface SitesListPageData {
   sites: Array<Site & { domains: SiteDomain[]; contentOwned: number; contentShared: number }>
+  /** Ordered provider catalog: grouping order, labels, badges and counts. */
+  providers: SiteProviderInfo[]
+  /** When set, `sites` only contains that provider's sites. */
+  typeFilter: SiteProvider | null
+  /** Total registered sites, ignoring the filter (used by the "All" chip). */
+  totalCount: number
+  presets: SitePreset[]
   credentials: CloudflareCredentialStatus
   user?: { name: string; email: string; role: string }
   version?: string
@@ -32,6 +49,10 @@ export interface SiteDetailPageData {
   contentOwned: number
   contentShared: number
   credentials: CloudflareCredentialStatus
+  capabilities: SiteProviderCapabilities
+  /** Masked build-time environment the CMS would push to a Worker trigger. */
+  buildEnv: Array<{ key: string; value: string; secret: boolean; managed: boolean }>
+  isPreset: boolean
   user?: { name: string; email: string; role: string }
   version?: string
 }
@@ -44,6 +65,19 @@ const PRIMARY_BTN =
   'inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm'
 const SECONDARY_BTN =
   'inline-flex items-center justify-center rounded-lg border border-zinc-950/10 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm font-medium text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors'
+
+/**
+ * Safe to embed inside an inline `<script>`: JSON is valid JavaScript, and
+ * escaping `<` keeps a `</script>` in the data from closing the block early.
+ */
+const jsonForScript = (value: unknown): string =>
+  JSON.stringify(value).replace(/</g, '\\u003c')
+
+/** Small provider pill, driven entirely by the provider catalog. */
+const providerBadge = (provider: SiteProvider | string): string => {
+  const info = getSiteProvider(provider)
+  return `<span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${info.badgeClass}">${escapeHtml(info.shortLabel)}</span>`
+}
 
 const buildBadge = (site: Site): string => {
   const status = (site.lastBuildStatus || '').toLowerCase()
@@ -85,6 +119,15 @@ const primaryDomainOf = (domains: SiteDomain[]): SiteDomain | null => {
   return domains.find((domain) => domain.status === 'active') ?? null
 }
 
+/** `<option>` list for a provider select, in catalog order. */
+const providerOptions = (providers: SiteProviderInfo[], selected: SiteProvider | null): string =>
+  providers
+    .map(
+      (provider) =>
+        `<option value="${escapeHtml(provider.id)}" ${selected === provider.id ? 'selected' : ''}>${escapeHtml(provider.label)}</option>`
+    )
+    .join('')
+
 const credentialsBanner = (credentials: CloudflareCredentialStatus): string => {
   if (credentials.configured) {
     return `<div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 p-4 ${CARD}">
@@ -105,7 +148,7 @@ const credentialsBanner = (credentials: CloudflareCredentialStatus): string => {
     <p class="mt-3 text-xs text-amber-700 dark:text-amber-400">
       Token permissions — Pages sites: <code>Pages:Edit</code>, <code>Zone:Read</code>.
       Worker sites additionally need <code>Workers Scripts:Read</code> (to resolve the Worker tag) and
-      <code>Workers Builds Configuration:Edit</code> (to read builds and trigger them).
+      <code>Workers Builds Configuration:Edit</code> (to read builds, trigger them and push the build environment).
       The Builds API only accepts a <strong>user-scoped</strong> token — account-scoped tokens are rejected with an "Invalid token" error.
     </p>
     <button onclick="saveCredentials()" class="mt-3 ${SECONDARY_BTN}">Save credentials</button>
@@ -133,31 +176,92 @@ const credentialsScript = `
   }
 `
 
+/**
+ * Show only the fields the selected provider declares, and disable the inputs
+ * of hidden wrappers so a value typed for one provider cannot leak into the
+ * payload after switching to another. Embedded on every page that renders a
+ * provider select (each page gets its own copy, they never share a scope).
+ */
+const providerFieldsScript = `
+  function syncProviderFields() {
+    var select = document.getElementById('site-provider') || document.getElementById('s-provider');
+    var providerId = select ? select.value : '';
+    var context = PROVIDER_INFO[providerId] || PROVIDER_INFO['external'] || { fields: [], setup: '', summary: '' };
+    var allowed = context.fields || [];
+    var wrappers = document.querySelectorAll('[data-provider-field]');
+    for (var i = 0; i < wrappers.length; i++) {
+      var wrapper = wrappers[i];
+      var key = wrapper.getAttribute('data-provider-field');
+      var visible = allowed.indexOf(key) !== -1;
+      wrapper.style.display = visible ? '' : 'none';
+      var inputs = wrapper.querySelectorAll('input, select, textarea');
+      for (var j = 0; j < inputs.length; j++) { inputs[j].disabled = !visible; }
+    }
+    var setup = document.getElementById('provider-setup');
+    if (setup) { setup.textContent = context.setup || ''; }
+    var summary = document.getElementById('provider-summary');
+    if (summary) { summary.textContent = context.summary || ''; }
+  }
+`
+
 // ---------------------------------------------------------------------------
 // List page
 // ---------------------------------------------------------------------------
 
 export function renderSitesListPage(data: SitesListPageData): string {
-  const rows = data.sites.length === 0
-    ? `<div class="p-10 text-center">
-         <p class="text-sm text-zinc-500 dark:text-zinc-400">No sites registered yet.</p>
-         <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Register a site to own its build, domains and content from here.</p>
-       </div>`
-    : `<div class="divide-y divide-zinc-950/5 dark:divide-white/5">
-        ${data.sites.map((site) => {
+  const providers = data.providers
+  const typeFilter = data.typeFilter
+
+  const labelOf = (id: string): string => {
+    const info = providers.find((provider) => provider.id === id)
+    return info ? info.label : getSiteProvider(id).label
+  }
+
+  // Counts come from the filtered list; the "All" chip always uses the
+  // unfiltered total so it stays meaningful while a type filter is applied.
+  const countOf = (providerId: string): number =>
+    data.sites.filter((site) => site.provider === providerId).length
+
+  const chipBase =
+    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-colors'
+  const chipActive = 'bg-zinc-950 text-white ring-zinc-950 dark:bg-white dark:text-zinc-950 dark:ring-white'
+  const chipIdle =
+    'bg-white dark:bg-white/5 text-zinc-700 dark:text-zinc-200 ring-zinc-950/10 dark:ring-white/15 hover:bg-zinc-50 dark:hover:bg-white/10'
+
+  const filterChips = `
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="/admin/sites" class="${chipBase} ${typeFilter === null ? chipActive : chipIdle}">All (${data.totalCount})</a>
+      ${providers
+        .map(
+          (provider) =>
+            `<a href="/admin/sites?type=${encodeURIComponent(provider.id)}" class="${chipBase} ${typeFilter === provider.id ? chipActive : chipIdle}">${escapeHtml(provider.shortLabel)} (${countOf(provider.id)})</a>`
+        )
+        .join('')}
+    </div>`
+
+  const activeProviders = typeFilter
+    ? providers.filter((provider) => provider.id === typeFilter)
+    : providers
+
+  const sections = activeProviders
+    .map((provider) => {
+      const sites = data.sites.filter((site) => site.provider === provider.id)
+      if (sites.length === 0) return ''
+      const body = sites
+        .map((site) => {
           const primary = primaryDomainOf(site.domains)
           const activeDomains = site.domains.filter((domain) => domain.status === 'active').length
           return `
-          <div class="p-5 flex flex-wrap items-start justify-between gap-4">
+          <div class="p-5 flex flex-wrap items-start justify-between gap-4" data-provider="${escapeHtml(site.provider)}">
             <div class="min-w-0">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="text-sm font-semibold text-zinc-950 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">${escapeHtml(site.name)}</a>
+                ${providerBadge(site.provider)}
                 ${site.isActive ? '' : '<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Inactive</span>'}
                 ${buildBadge(site)}
               </div>
               <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 <code>${escapeHtml(site.slug)}</code>
-                ${site.cfProjectName ? ` · Pages project <code>${escapeHtml(site.cfProjectName)}</code>` : ' · no Pages project'}
               </p>
               <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 ${primary ? `Primary domain <code>${escapeHtml(primary.hostname)}</code>` : 'No active domain'}
@@ -170,8 +274,34 @@ export function renderSitesListPage(data: SitesListPageData): string {
               <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="${PRIMARY_BTN}">Manage</a>
             </div>
           </div>`
-        }).join('')}
+        })
+        .join('')
+
+      return `
+      <div>
+        <div class="px-5 pt-5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${escapeHtml(provider.label)}</h2>
+              ${providerBadge(provider.id)}
+              <span class="text-xs text-zinc-500 dark:text-zinc-400">${sites.length} site${sites.length === 1 ? '' : 's'}</span>
+            </div>
+            ${typeFilter === provider.id ? `<a href="/admin/sites" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400">Clear filter</a>` : ''}
+          </div>
+          <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(provider.summary)}</p>
+        </div>
+        <div class="mt-4 divide-y divide-zinc-950/5 dark:divide-white/5 border-t border-zinc-950/5 dark:border-white/5">${body}</div>
       </div>`
+    })
+    .filter((section) => section !== '')
+    .join('')
+
+  const rows = data.sites.length === 0
+    ? `<div class="p-10 text-center">
+         <p class="text-sm text-zinc-500 dark:text-zinc-400">No sites registered yet.</p>
+         <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Register a site to own its build, domains and content from here — or import the Arwes presets to create the documentation site in one click.</p>
+       </div>`
+    : `<div class="divide-y divide-zinc-950/5 dark:divide-white/5">${sections}</div>`
 
   const content = `
     <div class="space-y-6">
@@ -180,16 +310,26 @@ export function renderSitesListPage(data: SitesListPageData): string {
           <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Sites</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">One control plane for every website: builds, domain bindings and content.</p>
         </div>
-        <a href="/admin/sites/new" class="${PRIMARY_BTN}">Register site</a>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="importPresets(this)" class="${SECONDARY_BTN}">Import Arwes presets</button>
+          <a href="/admin/sites/new" class="${PRIMARY_BTN}">Register site</a>
+        </div>
       </div>
 
       ${credentialsBanner(data.credentials)}
+
+      ${filterChips}
 
       <div class="${CARD}">${rows}</div>
       <div id="build-result" class="text-sm"></div>
     </div>
 
     <script>
+      // Keyed by provider id so a row's label can be resolved from the list.
+      var PROVIDER_INFO = ${jsonForScript(
+        Object.fromEntries(providers.map((provider) => [provider.id, { id: provider.id, label: provider.label }]))
+      )};
+
       async function triggerBuild(siteId, button) {
         var result = document.getElementById('build-result');
         var original = button ? button.textContent : '';
@@ -200,7 +340,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
           if (result) {
             result.className = data.success ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-sm text-red-600 dark:text-red-400';
             result.textContent = data.success
-              ? 'Build queued on Cloudflare Pages' + (data.buildUrl ? ' — ' + data.buildUrl : '') + '. Refresh in a minute to see the deployment.'
+              ? 'Build queued on ' + providerLabel(siteId) + (data.buildUrl ? ' — ' + data.buildUrl : '') + '. Refresh in a minute to see the deployment.'
               : (data.error || 'Failed to trigger build');
           }
         } catch (error) {
@@ -209,6 +349,46 @@ export function renderSitesListPage(data: SitesListPageData): string {
           if (button) { button.textContent = original; button.disabled = false; }
         }
       }
+
+      // The list is grouped by provider, so the row itself carries the label the
+      // success message needs (the button's argument is the site id, not a type).
+      function providerLabel(siteId) {
+        var button = document.querySelector('[onclick*="' + siteId + '"]');
+        var row = button ? button.closest('[data-provider]') : null;
+        var id = row ? row.getAttribute('data-provider') : '';
+        var info = PROVIDER_INFO[id];
+        return info ? info.label : 'the hosting provider';
+      }
+
+      async function importPresets(button) {
+        var result = document.getElementById('build-result');
+        var original = button ? button.textContent : '';
+        if (button) { button.textContent = 'Importing...'; button.disabled = true; }
+        try {
+          var response = await fetch('/admin/sites/api/presets/import', { method: 'POST' });
+          var data = await response.json();
+          if (result) {
+            if (data.success) {
+              var created = (data.created || []).map(function (entry) { return entry.slug; });
+              var skipped = (data.skipped || []).map(function (entry) { return entry.slug + ' (' + entry.reason + ')'; });
+              var lines = [];
+              lines.push(created.length ? 'Created: ' + created.join(', ') : 'Created: none');
+              if (skipped.length) { lines.push('Skipped: ' + skipped.join(', ')); }
+              result.className = 'text-sm text-emerald-600 dark:text-emerald-400';
+              result.textContent = lines.join(' · ');
+              setTimeout(function () { location.reload(); }, 1200);
+              return;
+            }
+            result.className = 'text-sm text-red-600 dark:text-red-400';
+            result.textContent = data.error || 'Failed to import presets';
+          }
+        } catch (error) {
+          if (result) { result.className = 'text-sm text-red-600 dark:text-red-400'; result.textContent = 'Failed to import presets'; }
+        } finally {
+          if (button) { button.textContent = original; button.disabled = false; }
+        }
+      }
+
       ${credentialsScript}
     </script>
   `
@@ -229,19 +409,80 @@ export function renderSitesListPage(data: SitesListPageData): string {
 
 export function renderSiteNewPage(data: {
   credentials: CloudflareCredentialStatus
+  providers: SiteProviderInfo[]
+  presets: SitePreset[]
   user?: { name: string; email: string; role: string }
   version?: string
 }): string {
+  const presetsJson = jsonForScript(
+    data.presets.map((preset) => ({
+      id: preset.id,
+      name: preset.name,
+      slug: preset.slug,
+      provider: preset.provider,
+      cfProjectName: preset.cfProjectName,
+      description: preset.description,
+      gitRepo: preset.gitRepo,
+      gitBranch: preset.gitBranch,
+      buildCommand: preset.buildCommand,
+      deployCommand: preset.deployCommand,
+      rootDir: preset.rootDir,
+      outputDir: preset.outputDir,
+      notes: preset.notes
+    }))
+  )
+  const providersJson = jsonForScript(
+    Object.fromEntries(
+      data.providers.map((provider) => [
+        provider.id,
+        {
+          id: provider.id,
+          label: provider.label,
+          summary: provider.summary,
+          fields: provider.fields,
+          setup: provider.setup,
+          can: provider.can
+        }
+      ])
+    )
+  )
+
+  const presetOptions = data.presets
+    .map(
+      (preset) =>
+        `<option value="${escapeHtml(preset.id)}">${escapeHtml(preset.name)}${preset.template ? ' (template)' : ''}</option>`
+    )
+    .join('')
+
+  const defaultProvider = data.providers[0]?.id ?? 'cloudflare-pages'
+
   const content = `
     <div class="space-y-6 max-w-3xl">
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Register a site</h1>
         <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
-          A site owns a Cloudflare Pages project (builds + domains) and, optionally, a slice of content.
+          A site owns a Cloudflare build target (builds + domains) and, optionally, a slice of content.
+          Which fields apply depends on the hosting provider you pick.
         </p>
       </div>
 
       ${credentialsBanner(data.credentials)}
+
+      <div class="${CARD} p-6 space-y-5">
+        <div>
+          <label class="${LABEL}">Start from</label>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="site-preset" class="${INPUT} flex-1 min-w-56">
+              <option value="">— Blank site —</option>
+              ${presetOptions}
+            </select>
+            <button onclick="applyPreset()" class="${SECONDARY_BTN}">Apply</button>
+          </div>
+          <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            A preset fills in the monorepo's build contract — <code>{{slug}}</code> in a command is replaced with the site slug you enter below.
+          </p>
+        </div>
+      </div>
 
       <div class="${CARD} p-6 space-y-5">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -258,20 +499,16 @@ export function renderSiteNewPage(data: {
           <div class="sm:col-span-2">
             <label class="${LABEL}">Hosting provider</label>
             <select id="site-provider" class="${INPUT}">
-              <option value="cloudflare-worker">Cloudflare Worker + static assets (recommended for multiple sites)</option>
-              <option value="cloudflare-pages">Cloudflare Pages project</option>
-              <option value="external">External — record only</option>
+              ${providerOptions(data.providers, defaultProvider)}
             </select>
-            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              A Worker can serve <strong>many custom domains</strong>, so one Worker for several sites is cheaper to run than one Pages project per site.
-              Domains and build settings are managed through the matching Cloudflare API.
-            </p>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
           </div>
-          <div>
+          <div data-provider-field="project">
             <label class="${LABEL}">Worker name / Pages project</label>
             <input id="site-project" class="${INPUT}" placeholder="arwes-docs" />
           </div>
-          <div>
+          <div data-provider-field="deployHook">
             <label class="${LABEL}">Deploy Hook URL</label>
             <input id="site-hook" class="${INPUT}" placeholder="https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/…" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
@@ -279,32 +516,40 @@ export function renderSiteNewPage(data: {
               Pages: Settings → Builds (<code>/pages/webhooks/deploy_hooks/…</code>). The CMS rejects a mismatched hook.
             </p>
           </div>
-          <div>
+          <div data-provider-field="gitRepo">
             <label class="${LABEL}">Git repository</label>
             <input id="site-repo" class="${INPUT}" placeholder="owner/repo" />
           </div>
-          <div>
+          <div data-provider-field="gitBranch">
             <label class="${LABEL}">Git branch</label>
             <input id="site-branch" class="${INPUT}" value="main" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
+          <div data-provider-field="buildCommand">
             <label class="${LABEL}">Build command</label>
             <input id="site-build-command" class="${INPUT}" placeholder="npm run build" />
           </div>
-          <div>
-            <label class="${LABEL}">Deploy command <span class="font-normal text-zinc-500 dark:text-zinc-400">(Worker)</span></label>
+          <div data-provider-field="deployCommand">
+            <label class="${LABEL}">Deploy command</label>
             <input id="site-deploy-command" class="${INPUT}" placeholder="npx wrangler deploy" />
           </div>
-          <div>
-            <label class="${LABEL}">Output directory <span class="font-normal text-zinc-500 dark:text-zinc-400">(Pages)</span></label>
+          <div data-provider-field="outputDir">
+            <label class="${LABEL}">Output directory</label>
             <input id="site-output-dir" class="${INPUT}" placeholder="apps/docs/build" />
           </div>
-          <div>
+          <div data-provider-field="rootDir">
             <label class="${LABEL}">Root directory</label>
             <input id="site-root-dir" class="${INPUT}" placeholder="/" />
+          </div>
+          <div data-provider-field="zoneId">
+            <label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+            <input id="site-zone" class="${INPUT}" placeholder="auto-detected from the hostname" />
+          </div>
+          <div data-provider-field="contentPrefix">
+            <label class="${LABEL}">Content prefix</label>
+            <input id="site-prefix" class="${INPUT}" placeholder="docs" />
           </div>
         </div>
 
@@ -324,12 +569,71 @@ export function renderSiteNewPage(data: {
     </div>
 
     <script>
+      var PRESETS = ${presetsJson};
+      var PROVIDER_INFO = ${providersJson};
+
       function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+      function fill(id, value) {
+        var el = document.getElementById(id);
+        if (el && value) { el.value = value; }
+      }
+
+      function fillIfEmpty(id, value) {
+        var el = document.getElementById(id);
+        if (el && value && !el.value) { el.value = value; }
+      }
+
+      // Preset commands describe an Astro app generically; {{slug}} becomes the
+      // slug the operator typed. With no slug yet the placeholder is left in
+      // place, so it stays visible as a reminder instead of becoming a path
+      // like ./apps//scripts/build-worker.sh.
+      function withSlug(value, slug) {
+        if (!slug) { return String(value == null ? '' : value); }
+        return String(value).replace(/\{\{\s*slug\s*\}\}/g, slug);
+      }
+
+      function reportResult(id, ok, message) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.className = ok ? 'text-sm text-emerald-600 dark:text-emerald-400' : 'text-sm text-red-600 dark:text-red-400';
+        el.textContent = message;
+      }
+
+      function applyPreset() {
+        var select = document.getElementById('site-preset');
+        var presetId = select ? select.value : '';
+        if (!presetId) { return; }
+        var preset = null;
+        for (var i = 0; i < PRESETS.length; i++) { if (PRESETS[i].id === presetId) { preset = PRESETS[i]; break; } }
+        if (!preset) { return; }
+
+        var slug = val('site-slug') || preset.slug || '';
+        fillIfEmpty('site-name', preset.name);
+        fillIfEmpty('site-slug', preset.slug);
+        fill('site-provider', preset.provider);
+        fill('site-project', withSlug(preset.cfProjectName, slug));
+        fill('site-repo', preset.gitRepo);
+        fill('site-branch', preset.gitBranch);
+        fill('site-build-command', withSlug(preset.buildCommand, slug));
+        fill('site-deploy-command', withSlug(preset.deployCommand, slug));
+        fill('site-root-dir', preset.rootDir);
+        fill('site-output-dir', withSlug(preset.outputDir, slug));
+        fill('site-description', preset.description);
+        syncProviderFields();
+        reportResult('create-result', true, (preset.notes || []).join(' '));
+      }
+
+      ${providerFieldsScript}
 
       async function createSite() {
         var result = document.getElementById('create-result');
         result.className = 'text-sm text-zinc-500 dark:text-zinc-400';
         result.textContent = 'Saving...';
+        // The backend normalises the slug, so substitute with what we sent: a
+        // preset command like ./apps/{{slug}}/build-worker.sh has to point at
+        // the directory the operator named.
+        var slug = val('site-slug') || val('site-name');
         try {
           var response = await fetch('/admin/sites/api/sites', {
             method: 'POST',
@@ -339,14 +643,16 @@ export function renderSiteNewPage(data: {
               slug: val('site-slug'),
               description: val('site-description'),
               provider: val('site-provider'),
-              cfProjectName: val('site-project'),
+              cfProjectName: withSlug(val('site-project'), slug),
               deployHookUrl: val('site-hook'),
               gitRepo: val('site-repo'),
               gitBranch: val('site-branch'),
-              buildCommand: val('site-build-command'),
-              deployCommand: val('site-deploy-command'),
-              outputDir: val('site-output-dir'),
-              rootDir: val('site-root-dir')
+              buildCommand: withSlug(val('site-build-command'), slug),
+              deployCommand: withSlug(val('site-deploy-command'), slug),
+              outputDir: withSlug(val('site-output-dir'), slug),
+              rootDir: val('site-root-dir'),
+              cfZoneId: val('site-zone'),
+              contentPrefix: val('site-prefix')
             })
           });
           var data = await response.json();
@@ -358,6 +664,13 @@ export function renderSiteNewPage(data: {
           result.textContent = 'Failed to register site';
         }
       }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        syncProviderFields();
+        var providerSelect = document.getElementById('site-provider');
+        if (providerSelect) { providerSelect.addEventListener('change', syncProviderFields); }
+      });
+
       ${credentialsScript}
     </script>
   `
@@ -377,7 +690,8 @@ export function renderSiteNewPage(data: {
 // ---------------------------------------------------------------------------
 
 export function renderSiteDetailPage(data: SiteDetailPageData): string {
-  const { site, domains } = data
+  const { site, domains, capabilities } = data
+  const providerInfo = getSiteProvider(site.provider)
 
   const domainRows = domains.length === 0
     ? `<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No domains bound yet.</td></tr>`
@@ -411,20 +725,69 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           </div>`).join('')}
       </div>`
 
+  const buildRows = data.buildEnv.length === 0
+    ? `<tr><td colspan="2" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No build variables resolved for this site.</td></tr>`
+    : data.buildEnv.map((entry) => `
+        <tr class="border-t border-zinc-950/5 dark:border-white/5">
+          <td class="px-4 py-2 align-top"><code class="text-xs text-zinc-900 dark:text-zinc-100">${escapeHtml(entry.key)}</code></td>
+          <td class="px-4 py-2 align-top">
+            <code class="text-xs text-zinc-600 dark:text-zinc-300 break-all">${escapeHtml(entry.value)}</code>
+            ${entry.secret ? '<span class="ml-2 inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">secret</span>' : ''}
+            ${entry.managed ? '<span class="ml-2 inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:text-indigo-300">managed by CMS</span>' : ''}
+          </td>
+        </tr>`).join('')
+
+  const buildEnvCard = capabilities.pushBuildEnv
+    ? `
+      <!-- Build environment -->
+      <div class="${CARD} p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Build environment</h2>
+          <button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}">Push build environment</button>
+        </div>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
+              <tr><th class="px-4 py-2 font-medium">Key</th><th class="px-4 py-2 font-medium">Value</th></tr>
+            </thead>
+            <tbody>${buildRows}</tbody>
+          </table>
+        </div>
+        <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+          These variables are pushed to the Workers Builds trigger, which is how a build knows which CMS and which site it is building for.
+          Values are masked where they are secret. A site can override any of them by adding the same key under "Site settings".
+        </p>
+        <label class="mt-3 inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <input type="checkbox" id="s-rotate-token" class="rounded border-zinc-300 dark:border-white/20" />
+          Rotate the content token on the next push
+        </label>
+      </div>`
+    : `
+      <!-- Build environment -->
+      <div class="${CARD} p-6">
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Build environment</h2>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          Build variables for this provider are configured in Cloudflare (${escapeHtml(providerInfo.label)}), not by the CMS.
+        </p>
+      </div>`
+
   const content = `
     <div class="space-y-6 max-w-4xl">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <a href="/admin/sites" class="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Sites</a>
             <span class="text-zinc-300 dark:text-zinc-600">/</span>
             <h1 class="text-xl font-semibold text-zinc-950 dark:text-white">${escapeHtml(site.name)}</h1>
+            ${providerBadge(site.provider)}
+            ${data.isPreset ? '<span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">Arwes preset</span>' : ''}
             ${buildBadge(site)}
           </div>
           <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><code>${escapeHtml(site.slug)}</code></p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="triggerBuild(this)" class="${SECONDARY_BTN}" ${site.deployHookUrl ? '' : 'disabled title="No Deploy Hook URL configured"'}>Build now</button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="triggerBuild(this, '${capabilities.triggerBuildViaApi ? 'api' : 'hook'}')" class="${SECONDARY_BTN}" ${capabilities.triggerBuild ? '' : 'disabled title="This provider cannot be built from the CMS"'}>Build now</button>
+          ${capabilities.triggerBuildViaHook && site.deployHookUrl ? `<button onclick="triggerBuild(this, 'hook')" class="${SECONDARY_BTN}">Build via Deploy Hook</button>` : ''}
         </div>
       </div>
 
@@ -432,21 +795,30 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
 
       ${credentialsBanner(data.credentials)}
 
+      <div class="${CARD} p-6">
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Hosting setup</h2>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.summary)}</p>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.setup)}</p>
+      </div>
+
       <!-- Build -->
       <div class="${CARD} p-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Builds</h2>
-          <button onclick="refreshDeployments(this)" class="${SECONDARY_BTN}">Refresh deployments</button>
+          ${capabilities.listDeployments ? `<button onclick="refreshDeployments(this)" class="${SECONDARY_BTN}">Refresh deployments</button>` : ''}
         </div>
         <dl class="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2 text-xs">
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Last triggered</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Status</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
         </dl>
         ${site.lastBuildError ? `<p class="mt-3 rounded-lg bg-red-50 dark:bg-red-500/10 p-3 text-xs text-red-700 dark:text-red-400">${escapeHtml(site.lastBuildError)}</p>` : ''}
-        <p class="mt-4 text-xs text-zinc-500 dark:text-zinc-400">Cloudflare Pages performs the build; the CMS only triggers it through the Deploy Hook.</p>
-        <div id="deployments" class="mt-4">${deploymentRows}</div>
+        <p class="mt-4 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.label)} performs the build; the CMS only triggers it${capabilities.triggerBuildViaApi ? ' through the Builds API or' : ' through'}${capabilities.triggerBuildViaHook ? ' the Deploy Hook' : ''}.</p>
+        ${capabilities.listDeployments ? `<div id="deployments" class="mt-4">${deploymentRows}</div>` : ''}
       </div>
 
+      ${buildEnvCard}
+
+      ${capabilities.manageDomains ? `
       <!-- Domains -->
       <div class="${CARD} p-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -468,8 +840,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           </div>
           <button onclick="addDomain(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Bind domain</button>
         </div>
-        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">The domain is attached to the Pages project through the Cloudflare API; DNS still has to point at the project for it to become active.</p>
-      </div>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">The domain is attached to ${escapeHtml(providerInfo.label)} through the Cloudflare API; DNS still has to point at the site for it to become active.</p>
+      </div>` : ''}
 
       <!-- Settings -->
       <div class="${CARD} p-6 space-y-5">
@@ -480,24 +852,24 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <div class="sm:col-span-2">
             <label class="${LABEL}">Hosting provider</label>
             <select id="s-provider" class="${INPUT}">
-              <option value="cloudflare-worker" ${site.provider === 'cloudflare-worker' ? 'selected' : ''}>Cloudflare Worker + static assets</option>
-              <option value="cloudflare-pages" ${site.provider === 'cloudflare-pages' ? 'selected' : ''}>Cloudflare Pages project</option>
-              <option value="external" ${site.provider === 'external' ? 'selected' : ''}>External — record only</option>
+              ${providerOptions(SITE_PROVIDERS, site.provider)}
             </select>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Changing this switches which Cloudflare API is used for domains and build settings; existing bindings are not migrated automatically.
+              Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.
             </p>
           </div>
-          <div><label class="${LABEL}">Worker name / Pages project</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
-          <div><label class="${LABEL}">Git branch</label><input id="s-branch" class="${INPUT}" value="${escapeHtml(site.gitBranch || '')}" /></div>
-          <div class="sm:col-span-2"><label class="${LABEL}">Deploy Hook URL</label><input id="s-hook" class="${INPUT}" value="${escapeHtml(site.deployHookUrl || '')}" /></div>
-          <div class="sm:col-span-2"><label class="${LABEL}">Git repository</label><input id="s-repo" class="${INPUT}" value="${escapeHtml(site.gitRepo || '')}" /></div>
-          <div><label class="${LABEL}">Build command</label><input id="s-build" class="${INPUT}" value="${escapeHtml(site.buildCommand || '')}" /></div>
-          <div><label class="${LABEL}">Deploy command <span class="font-normal text-zinc-500 dark:text-zinc-400">(Worker)</span></label><input id="s-deploy" class="${INPUT}" value="${escapeHtml(site.deployCommand || '')}" placeholder="npx wrangler deploy" /></div>
-          <div><label class="${LABEL}">Output directory <span class="font-normal text-zinc-500 dark:text-zinc-400">(Pages)</span></label><input id="s-output" class="${INPUT}" value="${escapeHtml(site.outputDir || '')}" /></div>
-          <div><label class="${LABEL}">Root directory</label><input id="s-root" class="${INPUT}" value="${escapeHtml(site.rootDir || '')}" /></div>
-          <div><label class="${LABEL}">Content prefix</label><input id="s-prefix" class="${INPUT}" value="${escapeHtml(site.contentPrefix || '')}" placeholder="docs" /></div>
-          <div><label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label><input id="s-zone" class="${INPUT}" value="${escapeHtml(site.cfZoneId || '')}" placeholder="auto-detected from the hostname" /></div>
+          <div data-provider-field="project"><label class="${LABEL}">Worker name / Pages project</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
+          <div data-provider-field="gitBranch"><label class="${LABEL}">Git branch</label><input id="s-branch" class="${INPUT}" value="${escapeHtml(site.gitBranch || '')}" /></div>
+          <div data-provider-field="deployHook" class="sm:col-span-2"><label class="${LABEL}">Deploy Hook URL</label><input id="s-hook" class="${INPUT}" value="${escapeHtml(site.deployHookUrl || '')}" /></div>
+          <div data-provider-field="gitRepo" class="sm:col-span-2"><label class="${LABEL}">Git repository</label><input id="s-repo" class="${INPUT}" value="${escapeHtml(site.gitRepo || '')}" /></div>
+          <div data-provider-field="buildCommand"><label class="${LABEL}">Build command</label><input id="s-build" class="${INPUT}" value="${escapeHtml(site.buildCommand || '')}" /></div>
+          <div data-provider-field="deployCommand"><label class="${LABEL}">Deploy command</label><input id="s-deploy" class="${INPUT}" value="${escapeHtml(site.deployCommand || '')}" placeholder="npx wrangler deploy" /></div>
+          <div data-provider-field="outputDir"><label class="${LABEL}">Output directory</label><input id="s-output" class="${INPUT}" value="${escapeHtml(site.outputDir || '')}" /></div>
+          <div data-provider-field="rootDir"><label class="${LABEL}">Root directory</label><input id="s-root" class="${INPUT}" value="${escapeHtml(site.rootDir || '')}" /></div>
+          <div data-provider-field="contentPrefix"><label class="${LABEL}">Content prefix</label><input id="s-prefix" class="${INPUT}" value="${escapeHtml(site.contentPrefix || '')}" placeholder="docs" /></div>
+          <div data-provider-field="zoneId"><label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label><input id="s-zone" class="${INPUT}" value="${escapeHtml(site.cfZoneId || '')}" placeholder="auto-detected from the hostname" /></div>
         </div>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input type="checkbox" id="s-active" ${site.isActive ? 'checked' : ''} class="rounded border-zinc-300 dark:border-white/20" />
@@ -506,7 +878,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="settings-result" class="text-sm"></div>
           <div class="flex items-center gap-2">
-            <button onclick="syncBuildConfig(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Push build config to Cloudflare</button>
+            ${capabilities.pushBuildEnv ? `<button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Push build environment</button>` : ''}
+            ${capabilities.syncBuildConfig ? `<button onclick="syncBuildConfig(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Push build config to Cloudflare</button>` : ''}
             <button onclick="saveSite(this)" class="${PRIMARY_BTN}">Save changes</button>
           </div>
         </div>
@@ -526,7 +899,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <!-- Danger -->
       <div class="${CARD} p-6">
         <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">Danger zone</h2>
-        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Unregistering removes the site and its domain records from the CMS. Cloudflare Pages itself is left untouched.</p>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Unregistering removes the site and its domain records from the CMS. ${escapeHtml(providerInfo.label)} itself is left untouched.</p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <button onclick="deleteSite(this)" class="${SECONDARY_BTN}">Unregister site</button>
           <div id="delete-result" class="text-sm"></div>
@@ -537,6 +910,23 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
     <script>
       var SITE_ID = ${JSON.stringify(site.id)};
       var SITE_SLUG = ${JSON.stringify(site.slug)};
+      var PROVIDER_LABEL = ${JSON.stringify(providerInfo.label)};
+      var TRIGGER_VIA = ${JSON.stringify(capabilities.triggerBuildViaApi ? 'api' : 'hook')};
+      var PROVIDER_INFO = ${jsonForScript(
+        Object.fromEntries(
+          SITE_PROVIDERS.map((provider) => [
+            provider.id,
+            {
+              id: provider.id,
+              label: provider.label,
+              summary: provider.summary,
+              fields: provider.fields,
+              setup: provider.setup,
+              can: provider.can
+            }
+          ])
+        )
+      )};
 
       function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
 
@@ -562,12 +952,20 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         return null;
       }
 
-      async function triggerBuild(button) {
+      ${providerFieldsScript}
+
+      async function triggerBuild(button, via) {
         if (button) { button.disabled = true; button.textContent = 'Triggering...'; }
-        var data = await call('/admin/sites/api/sites/' + SITE_ID + '/build', { method: 'POST' }, 'action-result',
-          'Build queued on Cloudflare Pages. Refresh deployments in a minute.');
+        var data = await call('/admin/sites/api/sites/' + SITE_ID + '/build', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ via: via || TRIGGER_VIA })
+        }, 'action-result', 'Build queued on ' + PROVIDER_LABEL + '. Refresh deployments in a minute.');
         if (button) { button.disabled = false; button.textContent = 'Build now'; }
         if (!data) return;
+        report('action-result', true, 'Build queued on ' + PROVIDER_LABEL
+          + (data.via === 'api' ? ' through the Builds API' : ' through the Deploy Hook')
+          + (data.buildUrl ? ' — ' + data.buildUrl : '') + '. Refresh deployments in a minute.');
         setTimeout(function () { location.reload(); }, 2500);
       }
 
@@ -594,9 +992,28 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
 
       async function syncBuildConfig(button) {
         if (button) button.disabled = true;
-        await call('/admin/sites/api/sites/' + SITE_ID + '/sync-build-config', { method: 'POST' }, 'settings-result',
-          'Build config pushed to Cloudflare Pages');
+        await call('/admin/sites/api/sites/' + SITE_ID + '/sync-build-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rotateToken: rotateTokenChecked() })
+        }, 'settings-result', 'Build config pushed to ' + PROVIDER_LABEL);
         if (button) button.disabled = false;
+      }
+
+      function rotateTokenChecked() {
+        var el = document.getElementById('s-rotate-token');
+        return !!(el && el.checked);
+      }
+
+      async function pushBuildEnv(button) {
+        if (button) button.disabled = true;
+        var data = await call('/admin/sites/api/sites/' + SITE_ID + '/build-env', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rotateToken: rotateTokenChecked() })
+        }, 'action-result', 'Build environment pushed to ' + PROVIDER_LABEL);
+        if (button) button.disabled = false;
+        if (data) location.reload();
       }
 
       async function addDomain(button) {
@@ -646,6 +1063,12 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         if (data) window.location.href = '/admin/sites';
         if (button) button.disabled = false;
       }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        syncProviderFields();
+        var providerSelect = document.getElementById('s-provider');
+        if (providerSelect) { providerSelect.addEventListener('change', syncProviderFields); }
+      });
 
       ${credentialsScript}
     </script>

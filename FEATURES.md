@@ -266,29 +266,32 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定与内容归属都在 CMS 中登记与操作，不再分散在 GitHub Actions 和 Cloudflare 控制台。
 
-数据模型（迁移 `038_sites_registry.sql`）：`sites`（站点）→ `site_domains`（域名绑定），`content.site_id` 决定内容归属。
+数据模型（迁移 `038_sites_registry.sql` + `039_site_hosting_providers.sql` + `040_site_build_environment.sql`）：`sites`（站点）→ `site_domains`（域名绑定），`content.site_id` 决定内容归属，`api_tokens.site_id` 把构建 token 钉在单个站点上。
 
-- **站点注册表**（`sites`）：slug、Pages 项目名、Git 仓库/分支、Deploy Hook、构建命令/输出目录/根目录/Node 版本、内容前缀、启用状态、最近一次构建结果
-- **构建**：`POST` 该站点在 Cloudflare Pages 的 **Deploy Hook**；**构建由 Pages 执行**，CMS 只负责触发与回显，所以 GitHub Actions 里不再有站点构建。构建结果（queued / failed + 错误原因）写回 `sites.last_build_*`
-- **域名绑定**：通过 **Cloudflare API** 真实创建/删除 Pages 自定义域名，并把校验状态（pending / active / error + 失败原因）镜像到 `site_domains`；支持「从 Cloudflare 刷新」以采纳在控制台手工添加的域名、并把云端已消失的标记为 `removed`；可指定 primary 域名
-- **构建配置下发**：`syncBuildConfig()` 把 CMS 中的构建命令/输出目录/根目录 `PATCH` 到 Pages 项目（`build_config`），使 CMS 对「站点怎么构建」也有权威
+- **站点注册表**（`sites`）：slug、托管类型、Worker 名/Pages 项目名、Git 仓库/分支、Deploy Hook、构建命令/deploy 命令/输出目录/根目录/Node 版本、**构建期环境变量**（`build_env` JSON + CMS 自动生成的 `PUBLIC_FLARE_*`）、内容前缀、启用状态、最近一次构建结果
+- **托管类型与页面**：Admin → Sites **按类型分组**（Worker / Pages / External，各带计数与说明），支持 `?type=<provider>` 过滤；标签、可用字段与可执行动作全部来自 `services/site-providers.ts` 的元数据，因此 UI 不会给出该 provider 做不到的操作
+- **构建**：Worker 站点通过 **Workers Builds API** 直接触发（`POST /accounts/{id}/builds/triggers/{uuid}/builds`，带分支，返回 build uuid），**不再强制依赖 Deploy Hook**；Pages 站点仍走 **Deploy Hook**。构建由 Cloudflare 执行、CMS 只负责触发与回显，所以 GitHub Actions 里不再有站点构建。结果（queued / failed + 错误原因）写回 `sites.last_build_*`，并记录触发方式（`api` / `hook`）
+- **构建配置下发**：`syncBuildConfig()` 把构建命令/deploy 命令/根目录 `PATCH` 到 Workers Builds **trigger**（或 Pages 项目的 `build_config`），**并同时下发构建期环境变量**到 trigger（`PATCH .../triggers/{uuid}/environment_variables`）
+- **构建期环境变量**：CMS 自动生成 `PUBLIC_FLARE_API_URL`（CMS 自身地址，站点可固定、否则取 `FLARE_API_URL` 或请求 origin）、`PUBLIC_FLARE_SITE`（站点 slug）、`PUBLIC_FLARE_API_TOKEN`（**只读、限定该站点**的 API token，可一键轮换）。站点可在 Site settings 里用同名变量覆盖任意一个；其他变量（如运维自己在控制台加的）不被触碰
+- **域名绑定**：通过 **Cloudflare API** 真实创建/删除自定义域名，并把校验状态（pending / active / error + 失败原因）镜像到 `site_domains`；支持「从 Cloudflare 刷新」以采纳在控制台手工添加的域名、并把云端已消失的标记为 `removed`；可指定 primary 域名
+- **预设**：`services/site-presets.ts` 用 `{{slug}}` 占位描述本仓库的构建契约（`apps/docs` 已内置），可一键导入缺失的站点；新增一个 Astro 应用只需加一条预设，不必改代码
 - **内容归属**：`content.site_id` 为 `NULL` 表示**共享内容**（所有站点可读），否则只属于该站点；后台可见每个站点拥有/共享的内容条数
 
-**凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署；API token 永不返回给客户端，Deploy Hook URL（能力型 URL）在 JSON 响应中被掩码。
+**凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署；Cloudflare API token、Deploy Hook URL（能力型 URL）与构建 token 都永不返回给客户端（JSON 响应中掩码）。
 
-**代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名逻辑）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）。
+**代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名/构建环境逻辑）、`services/site-providers.ts`（托管类型元数据）、`services/site-presets.ts`（Arwes 预设）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）。
 
-**一次性前置条件**（每个站点）：托管目标需为 **Git 连接**（Pages 项目或 Worker 的 Workers Builds；Direct Upload 无法被 Deploy Hook 重建）、设置构建命令、创建 Deploy Hook 并把 URL 填入站点。
+**一次性前置条件**（每个站点）：托管目标需为 **Git 连接**（Pages 项目或 Worker 的 Workers Builds，使其存在 trigger；Direct Upload 无法重建）。Worker 站点随后由 CMS 下发构建设置与环境变量即可触发构建；Pages 站点还需创建 Deploy Hook 并填入站点。
 
 #### 3.7.1 两种托管 provider
 
 站点可选两种托管方式，域名与构建配置走**各自的 Cloudflare API**（`sites.provider`）：
 
-| `provider`                        | 托管              | 域名 API                                                         | 构建配置所在               | 构建触发                                    |
-| --------------------------------- | ----------------- | ---------------------------------------------------------------- | -------------------------- | ------------------------------------------- |
-| `cloudflare-worker`（推荐多站点） | Worker + 静态资源 | `PUT/DELETE /accounts/{id}/workers/domains`（**必须指定 zone**） | Workers Builds **trigger** | `POST .../workers/builds/deploy_hooks/{id}` |
-| `cloudflare-pages`                | Pages 项目        | `POST/DELETE /accounts/{id}/pages/projects/{p}/domains`          | Pages 项目 `build_config`  | `POST .../pages/webhooks/deploy_hooks/{id}` |
-| `external`                        | 仅登记            | —                                                                | —                          | —                                           |
+| `provider`                        | 托管              | 域名 API                                                         | 构建配置所在               | 构建触发                                                                              |
+| --------------------------------- | ----------------- | ---------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
+| `cloudflare-worker`（推荐多站点） | Worker + 静态资源 | `PUT/DELETE /accounts/{id}/workers/domains`（**必须指定 zone**） | Workers Builds **trigger** | `POST /accounts/{id}/builds/triggers/{uuid}/builds`（CMS 直接触发），Deploy Hook 兜底 |
+| `cloudflare-pages`                | Pages 项目        | `POST/DELETE /accounts/{id}/pages/projects/{p}/domains`          | Pages 项目 `build_config`  | `POST .../pages/webhooks/deploy_hooks/{id}`                                           |
+| `external`                        | 仅登记            | —                                                                | —                          | —                                                                                     |
 
 关键差异（都已按 provider 分支实现）：
 
@@ -299,6 +302,9 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **构建标识**：Workers Builds 用不可变的 **Worker tag**（不是名字）寻址，CMS 首次解析后缓存到 `sites.cf_worker_tag`；构建配置在 **trigger** 上，缓存在 `sites.cf_trigger_uuid`，并按站点的 Git 分支挑选 production trigger
 - **构建去重**：Workers Builds 在已有排队/初始化中的构建时会返回同一个构建并带 `already_exists: true`，CMS 视为成功而非冲突
 - **Deploy Hook 形状不同**：Pages 返回 `{ id, url }`，Workers 返回 `{ success, result: { build_uuid } }`；CMS 按 provider 解析，并**拒绝串用的 hook**（Worker 站点填 Pages hook 会直接报错，而不是静默不触发）
+- **Worker 可以不配 Deploy Hook**：CMS 优先用 Builds API 触发（要显式给分支），只有在没有 trigger 或 API 失败时才回落到 Deploy Hook；两者都不可用时给出可执行的报错
+- **构建环境变量**：`PUBLIC_FLARE_*` 由 CMS 计算并下发到 trigger。缺了它们，Astro 构建会静默回落到 `http://localhost:8787`，构建「成功」但内容为空——这正是把它们并入构建配置下发的原因
+- **构建 token 钉站点**：自动签发的 token 带 `api_tokens.site_id`，服务端在解析内容作用域时**优先于** `X-Site`，因此一个站点的构建 token 改 `X-Site` 也读不到别的站点内容；轮换是显式动作（`rotateToken`）
 
 **凭据**：Pages 站点需要 `Pages:Edit` + `Zone:Read`；Worker 站点额外需要 `Workers Scripts:Read`（解析 tag）与 `Workers Builds Configuration:Edit`，且 Builds API **只接受 user-scoped token**（account-scoped 会报 "Invalid token"，CMS 会在报错里补上这条提示）。
 
@@ -307,12 +313,13 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 内容归属写在 `content.site_id`：`NULL` = **共享内容**（所有站点可读），否则只属于该站点。
 读取时由服务端强制加一段作用域条件（`cms/packages/core/src/services/content-site-scope.ts`）：
 
-| 请求方                                                           | 可见内容                                                      |
-| ---------------------------------------------------------------- | ------------------------------------------------------------- |
-| 标示了某个活跃站点（`X-Site: <slug\|id>` 或 `?site=<slug\|id>`） | 该站点内容 **+ 共享内容**（`site_id = ? OR site_id IS NULL`） |
-| 未标示站点，且部署中**已注册**站点                               | **仅共享内容**（`site_id IS NULL`）                           |
-| 未标示站点，且部署中**没有**任何站点                             | 全部内容（单租户，保持向后兼容）                              |
-| 标示的站点不存在/已停用                                          | **404**（明确报错，而不是静默返回空列表）                     |
+| 请求方                                                           | 可见内容                                                                          |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 标示了某个活跃站点（`X-Site: <slug\|id>` 或 `?site=<slug\|id>`） | 该站点内容 **+ 共享内容**（`site_id = ? OR site_id IS NULL`）                     |
+| 使用**绑定了站点的 API token**（`api_tokens.site_id`）           | 固定为该站点 **+ 共享内容**，并**忽略** `X-Site`（构建 token 无法横向读别的站点） |
+| 未标示站点，且部署中**已注册**站点                               | **仅共享内容**（`site_id IS NULL`）                                               |
+| 未标示站点，且部署中**没有**任何站点                             | 全部内容（单租户，保持向后兼容）                                                  |
+| 标示的站点不存在/已停用                                          | **404**（明确报错，而不是静默返回空列表）                                         |
 
 设计要点：
 
@@ -339,7 +346,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - ARWES 动画：进入/退出切换、文字解密、背景粒子、边框
 - 音效：按钮点击、页面进入、文字打字音
 - 主题：深色科幻风，Titillium Web + Source Code Pro 字体
-- 重新构建：在 Admin → Sites 打开该站点点 **Build now**（POST Workers Builds Deploy Hook），不再由 `deploy.yml` 构建
+- 重新构建：在 Admin → Sites 打开该站点点 **Build now**（走 Workers Builds API，不需要 Deploy Hook），不再由 `deploy.yml` 构建
 
 #### Worker 托管配置
 

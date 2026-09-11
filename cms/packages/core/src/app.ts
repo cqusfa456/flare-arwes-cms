@@ -101,6 +101,8 @@ export interface Variables {
     expires_at: number | null
     last_used_at: number | null
     created_at: number
+    /** Site a pinned token may read; outranks X-Site (migration 040). */
+    site_id: string | null
   }
   requestId?: string
   startTime?: number
