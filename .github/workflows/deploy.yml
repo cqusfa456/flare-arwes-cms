@@ -79,7 +79,8 @@ jobs:
             exit 1
           fi
           sed -i "s/database_id = \"[^\"]*\"/database_id = \"${{ secrets.CF_D1_DATABASE_ID }}\"/g" wrangler.toml
-          sed -i "s/id = \"[^\"]*\"/id = \"${{ secrets.CF_KV_NAMESPACE_ID }}\"/g" wrangler.toml
+          # 注意：此行必须用行首锚定 ^，否则会误伤 database_id 行中的 “id = " 子串
+          sed -i "s/^id = \"[^\"]*\"/id = \"${{ secrets.CF_KV_NAMESPACE_ID }}\"/g" wrangler.toml
 
           # B2 storage backend (optional, from secrets) — B2 模式下移除 R2 binding
           if [ "${{ secrets.STORAGE_BACKEND }}" = "b2" ]; then
