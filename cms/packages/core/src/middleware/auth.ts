@@ -218,7 +218,9 @@ export const requireAuth = () => {
       }
 
       // Try to get cached token verification from KV
-      const kv = c.env?.KV
+      // The Worker binds CACHE_KV; `KV` is kept as a legacy alias so this cache
+      // is actually reachable instead of silently skipping on every request.
+      const kv = c.env?.CACHE_KV || c.env?.KV
       let payload: JWTPayload | null = null
 
       if (kv) {

@@ -6,11 +6,20 @@ import type { FlareConfig } from "../app";
 
 type Bindings = {
   DB: D1Database;
-  KV: KVNamespace;
+  KV?: KVNamespace;
+  CACHE_KV?: KVNamespace;
 };
 
 // Track if bootstrap has been run in this worker instance
 let bootstrapComplete = false;
+
+// KV marker so a cold isolate can skip work a previous isolate already did.
+// Without it, a recycled isolate replays migrations, collection sync and plugin
+// bootstrap on the first request it serves. The short TTL keeps deploy-time work
+// (new migrations, collection edits) converging within minutes instead of being
+// skipped for the lifetime of the namespace.
+const BOOTSTRAP_MARKER_KEY = "system:bootstrap:completed";
+const BOOTSTRAP_MARKER_TTL_SECONDS = 300;
 
 // Module-level app reference — set by createFlareApp() so PluginManager
 // can include it in PluginContext during initialize()
@@ -28,8 +37,11 @@ export function getAppReference(): Hono<any> | undefined {
 }
 
 /**
- * Bootstrap middleware that ensures system initialization
- * Runs once per worker instance
+ * Bootstrap middleware that ensures system initialization.
+ *
+ * Runs once per worker instance, and at most once per marker TTL across
+ * instances: the KV marker lets a freshly created isolate adopt the work a
+ * previous isolate already completed.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function bootstrapMiddleware(config: FlareConfig = {}, app?: Hono<any>) {
@@ -56,6 +68,21 @@ export function bootstrapMiddleware(config: FlareConfig = {}, app?: Hono<any>) {
       path.endsWith(".ico")
     ) {
       return next();
+    }
+
+    // Adopt the marker a previous isolate wrote, so a cold start does not
+    // replay migrations, collection sync and plugin bootstrap.
+    const cache = c.env.CACHE_KV ?? c.env.KV;
+    if (cache) {
+      try {
+        const marker = await cache.get(BOOTSTRAP_MARKER_KEY);
+        if (marker) {
+          bootstrapComplete = true;
+          return next();
+        }
+      } catch (error) {
+        console.error("[Bootstrap] Error reading bootstrap marker:", error);
+      }
     }
 
     try {
@@ -89,8 +116,20 @@ export function bootstrapMiddleware(config: FlareConfig = {}, app?: Hono<any>) {
         console.log("[Bootstrap] Plugin bootstrap skipped (disableAll is true)");
       }
 
-      // Mark bootstrap as complete for this worker instance
+      // Mark bootstrap as complete for this worker instance...
       bootstrapComplete = true;
+
+      // ...and for future isolates, so a cold start does not replay this work.
+      if (cache) {
+        try {
+          await cache.put(BOOTSTRAP_MARKER_KEY, new Date().toISOString(), {
+            expirationTtl: BOOTSTRAP_MARKER_TTL_SECONDS,
+          });
+        } catch (error) {
+          console.error("[Bootstrap] Error writing bootstrap marker:", error);
+        }
+      }
+
       console.log("[Bootstrap] System initialization completed");
     } catch (error) {
       console.error("[Bootstrap] Error during system initialization:", error);

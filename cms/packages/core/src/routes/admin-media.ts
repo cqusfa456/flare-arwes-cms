@@ -3,6 +3,7 @@ import { html, raw } from 'hono/html'
 import { z } from 'zod'
 import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types'
 import { requireAuth, requireRole } from '../middleware'
+import { getStorageInfo } from '../storage'
 import { renderMediaLibraryPage, MediaLibraryPageData, FolderStats, TypeStats } from '../templates/pages/admin-media-library.template'
 import { renderMediaFileDetails, MediaFileDetailsData } from '../templates/components/media-file-details.template'
 import { MediaFile, renderMediaFileCard } from '../templates/components/media-grid.template'
@@ -434,12 +435,23 @@ adminMediaRoutes.post('/upload', async (c) => {
     const uploadResults = []
     const errors = []
 
-    // Check if MEDIA_BUCKET is available
+    // withStorage() injects MEDIA_BUCKET for every backend (R2 binding or
+    // S3-compatible client), so its absence means resolution failed — not that
+    // an R2 binding is missing.
     if (!c.env.MEDIA_BUCKET) {
-      console.error('[MEDIA UPLOAD] MEDIA_BUCKET binding is not available. Check wrangler.toml r2_buckets configuration.')
+      const storageInfo = getStorageInfo(c.env)
+      console.error(
+        '[MEDIA UPLOAD] Media storage is not available.',
+        JSON.stringify({
+          provider: storageInfo.provider,
+          configured: storageInfo.configured,
+          error: storageInfo.error,
+          missingVars: storageInfo.missingVars
+        })
+      )
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          Media storage (R2) is not configured. Please check your wrangler.toml configuration.
+          Media storage (${storageInfo.providerLabel}) is not configured.${storageInfo.error ? ` ${storageInfo.error}` : ''} Check STORAGE_BACKEND and the provider variables for this Worker.
         </div>
       `)
     }
