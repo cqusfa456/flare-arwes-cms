@@ -436,19 +436,33 @@ const runWrangler = (args, opts = {}) => {
     '.bin',
     process.platform === 'win32' ? 'wrangler.cmd' : 'wrangler'
   )
+  // 优先使用内存中的 CF API Token 驱动（不依赖本机 OAuth 登录）
+  const env = {
+    ...process.env,
+    ...(cfToken ? { CLOUDFLARE_API_TOKEN: cfToken } : {}),
+    ...(cfAccountId ? { CLOUDFLARE_ACCOUNT_ID: cfAccountId } : {}),
+    ...(opts.env || {})
+  }
   try {
     return execSync(`"${wranglerBin}" ${args}`, {
       cwd: CMS_PKG,
       stdio: 'pipe',
       encoding: 'utf-8',
-      ...opts
+      ...opts,
+      env
     })
   } catch (err) {
     return `${err.stdout || ''}${err.stderr || ''}`
   }
 }
 
+// 内存中的 Cloudflare 凭据（从 TUI 输入获取，不落盘）
+let cfToken = null
+let cfAccountId = null
+
 const isWranglerLoggedIn = () => {
+  // 有 API Token 或本机 OAuth 登录都算可用
+  if (cfToken) return true
   const out = runWrangler('whoami')
   return !out.includes('Not logged in') && !out.includes('Failed to fetch auth token')
 }
@@ -545,8 +559,9 @@ const panelCloudflare = async () => {
         })
         if (token === BACK) continue
         if (token.trim()) {
+          cfToken = token.trim() // 存入内存供 wrangler 使用
           setStatus('保存 CF_API_TOKEN...')
-          const ok = await saveSecret('CF_API_TOKEN', token.trim())
+          const ok = await saveSecret('CF_API_TOKEN', cfToken)
           setStatus(ok ? '✓ CF_API_TOKEN 已保存' : '✗ 保存失败')
           await sleep(800)
         }
@@ -619,7 +634,10 @@ const panelCloudflare = async () => {
     if (action === 'secrets') {
       const accountId = await askInput('Cloudflare 账号 ID（dash.cloudflare.com 首页右下角）:', {})
       if (accountId === BACK) continue
-      if (accountId.trim()) await saveSecret('CF_ACCOUNT_ID', accountId.trim())
+      if (accountId.trim()) {
+        cfAccountId = accountId.trim() // 存入内存供 wrangler 使用
+        await saveSecret('CF_ACCOUNT_ID', cfAccountId)
+      }
       const flareUrl = await askInput('CMS Worker URL（如 https://flare-cms.xxx.workers.dev）:', {
         value: 'https://flare-cms.your-subdomain.workers.dev'
       })
