@@ -35,19 +35,35 @@ export const USER_TOKEN_PAGE = 'https://dash.cloudflare.com/profile/api-tokens'
 export const TOKEN_TEMPLATES = {
   ci: {
     label: 'Cloudflare CI / 部署 token',
-    purpose: 'wrangler deploy、d1 migrations apply、secret put（GitHub secret CF_API_TOKEN）',
+    purpose:
+      'wrangler deploy、d1 migrations apply、secret put，以及绑定自定义域名（GitHub secret CF_API_TOKEN）',
     tokenName: 'Flare CMS Deploy (CI)',
     permissions: [
+      // Account-scoped: what wrangler needs to deploy and manage resources.
       { key: 'workers_scripts', type: 'edit' },
-      { key: 'd1', type: 'edit' },
       { key: 'workers_kv_storage', type: 'edit' },
-      { key: 'workers_r2', type: 'edit' }
+      { key: 'workers_r2', type: 'edit' },
+      { key: 'd1', type: 'edit' },
+      { key: 'account_settings', type: 'read' },
+      // Zone-scoped. Cloudflare's own "Edit Cloudflare Workers" token template
+      // grants Workers Routes (Write) at Zone scope; this is the permission
+      // that lets a Worker be attached to a custom domain.
+      { key: 'workers_routes', type: 'edit' },
+      { key: 'zone', type: 'read' },
+      // NOT part of Cloudflare's Workers template: Worker custom domains have
+      // Cloudflare create the DNS record internally. Kept because the same
+      // token also covers Pages custom domains and direct DNS work.
+      { key: 'dns', type: 'edit' }
     ],
     checklist: [
-      'Workers Scripts: Edit',
-      'D1: Edit',
-      'Workers KV Storage: Edit',
-      'Workers R2 Storage: Edit（不用 R2 可去掉）'
+      'Workers Scripts: Edit（部署 Worker）',
+      'Workers KV Storage: Edit（KV 绑定）',
+      'Workers R2 Storage: Edit（R2 媒体桶；不用 R2 可去掉）',
+      'D1: Edit（数据库与迁移）',
+      'Account Settings: Read（列出账号，用于自动填写 CF_ACCOUNT_ID）',
+      'Workers Routes: Edit ← 域级权限，绑定自定义域名必需',
+      'Zone: Read（按主机名解析所属 zone）',
+      'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）'
     ]
   },
   runtime: {
@@ -57,6 +73,8 @@ export const TOKEN_TEMPLATES = {
     permissions: [
       { key: 'workers_scripts', type: 'read' },
       { key: 'zone', type: 'read' },
+      // Bind / unbind Worker custom domains.
+      { key: 'workers_routes', type: 'edit' },
       // The permissions reference lists this permission as "Workers CI"
       // (Cloudflare's name for Workers Builds) but publishes no key for it.
       // Keys follow the snake_case display name, so this is the expected value
@@ -64,8 +82,9 @@ export const TOKEN_TEMPLATES = {
       { key: 'workers_ci', type: 'edit', inferred: true }
     ],
     checklist: [
-      'Workers Scripts: Read',
-      'Zone: Read',
+      'Workers Scripts: Read（解析 Worker tag）',
+      'Zone: Read（按主机名解析所属 zone）',
+      'Workers Routes: Edit（绑定/解绑自定义域名）',
       'Workers CI: Edit（即 Workers Builds；这个 key 官方未公布，请在页面上确认已勾选）'
     ]
   }
