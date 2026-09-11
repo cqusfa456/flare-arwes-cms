@@ -57,7 +57,7 @@ WEBHOOK_SECRET = ""
 # Production environment
 [env.production]
 name = "flare-cms"
-vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "" }
+vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "", STORAGE_BACKEND = "", B2_ENDPOINT = "", B2_BUCKET = "", B2_ACCESS_KEY_ID = "", B2_SECRET_ACCESS_KEY = "" }
 
 [[env.production.d1_databases]]
 binding = "DB"
