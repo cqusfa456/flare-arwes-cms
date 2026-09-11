@@ -4,7 +4,6 @@
   "engines": {
     "node": "20"
   },
-  "packageManager": "npm@10.2.4",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -63,5 +62,6 @@
   },
   "devDependencies": {
     "libsodium-wrappers": "^0.8.4"
-  }
+  },
+  "packageManager": "npm@10.2.4"
 }
