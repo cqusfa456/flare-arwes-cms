@@ -460,6 +460,155 @@ const runWrangler = (args, opts = {}) => {
 let cfToken = null
 let cfAccountId = null
 
+// Cloudflare OAuth —— 复用 wrangler 的 OAuth client（授权码 + PKCE + 本地回调）
+// 与 wrangler login 完全一致的流程，但直接在 TUI 内完成并拿到 token
+const CF_OAUTH_CLIENT_ID = '54d11594-84e4-41aa-b438-e81b8fa78ee7'
+const CF_OAUTH_AUTH_URL = 'https://dash.cloudflare.com/oauth2/auth'
+const CF_OAUTH_TOKEN_URL = 'https://dash.cloudflare.com/oauth2/token'
+const CF_OAUTH_CALLBACK = 'http://localhost:8976/oauth/callback'
+const CF_OAUTH_SCOPES = [
+  'account:read',
+  'user:read',
+  'workers:write',
+  'workers_kv:write',
+  'workers_routes:write',
+  'workers_scripts:write',
+  'workers_tail:read',
+  'd1:write',
+  'pages:write',
+  'zone:read'
+]
+
+// PKCE 工具
+const base64urlEncode = (buf) =>
+  Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+const cloudflareOAuth = async () => {
+  // 1. 生成 PKCE code_verifier / code_challenge
+  const codeVerifier = base64urlEncode(globalThis.crypto.getRandomValues(new Uint8Array(32)))
+  const codeChallenge = base64urlEncode(
+    new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', Buffer.from(codeVerifier)))
+  )
+
+  // 2. 生成本地回调 token（随机 state）
+  const state = base64urlEncode(globalThis.crypto.getRandomValues(new Uint8Array(16)))
+
+  // 3. 组装授权 URL
+  const authUrl = `${CF_OAUTH_AUTH_URL}?response_type=code&client_id=${encodeURIComponent(
+    CF_OAUTH_CLIENT_ID
+  )}&redirect_uri=${encodeURIComponent(
+    CF_OAUTH_CALLBACK
+  )}&scope=${encodeURIComponent([...CF_OAUTH_SCOPES, 'offline_access'].join(' '))}&state=${state}&code_challenge=${encodeURIComponent(
+    codeChallenge
+  )}&code_challenge_method=S256`
+
+  // 4. 展示授权信息 + 浏览器打开
+  clearContent()
+  const infoBox = makeBox({ title: 'Cloudflare OAuth 授权', flexDirection: 'column' })
+  infoBox.add(makeText(` 浏览器将打开 Cloudflare 登录页，请完成授权（登录并允许 Wrangler 权限）`))
+  infoBox.add(makeText(` 如果没有自动打开，请手动访问:`))
+  infoBox.add(makeText(` ${authUrl}`))
+  contentBox.add(infoBox)
+
+  try {
+    const openCmd =
+      process.platform === 'win32'
+        ? `start ${authUrl}`
+        : process.platform === 'darwin'
+          ? `open ${authUrl}`
+          : `xdg-open ${authUrl}`
+    execSync(openCmd, { stdio: 'ignore' })
+  } catch {
+    // 忽略
+  }
+
+  setStatus('等待 Cloudflare 授权完成…（Ctrl+C 取消）')
+
+  // 5. 本地回调服务器（等待浏览器重定向带 code）
+  const http = await import('node:http')
+  const codePromise = new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url, 'http://localhost')
+      if (url.pathname !== '/oauth/callback') {
+        res.writeHead(404)
+        res.end('Not Found')
+        return
+      }
+      const { code, state: cbState } = Object.fromEntries(url.searchParams)
+      if (cbState !== state) {
+        res.writeHead(400)
+        res.end('State mismatch')
+        reject(new Error('OAuth state 不匹配'))
+        server.close()
+        return
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end('<h3>Cloudflare 授权成功 ✅ 可以回到终端继续</h3>')
+      server.close()
+      if (code) resolve(code)
+      else reject(new Error('授权回调中缺少 code'))
+    })
+    server.listen(8976, '127.0.0.1', () => {
+      // 等待回调
+    })
+    // 60 秒超时
+    setTimeout(() => {
+      server.close()
+      reject(new Error('授权超时（60 秒）'))
+    }, 60000)
+  })
+
+  let code
+  try {
+    code = await codePromise
+  } catch (err) {
+    setStatus(`✗ OAuth 失败: ${err.message}`)
+    await sleep(1200)
+    return null
+  }
+
+  // 6. 用 code 换取 access_token
+  try {
+    const form = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: CF_OAUTH_CALLBACK,
+      client_id: CF_OAUTH_CLIENT_ID,
+      code_verifier: codeVerifier
+    })
+    const res = await fetch(CF_OAUTH_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString()
+    })
+    if (!res.ok) {
+      const errText = (await res.text()).slice(0, 200)
+      setStatus(`✗ 换取 token 失败 (${res.status}): ${errText}`)
+      await sleep(1500)
+      return null
+    }
+    const data = await res.json()
+    const { access_token, refresh_token, expires_in } = data
+    if (!access_token) {
+      setStatus('✗ 响应中无 access_token')
+      await sleep(1200)
+      return null
+    }
+    cfToken = access_token
+    // 保存 refresh_token 以便后续刷新（存内存，不落盘）
+    globalThis.__cfRefreshToken = refresh_token || null
+    globalThis.__cfTokenExpires = Date.now() + (expires_in || 3600) * 1000
+
+    setStatus('✓ Cloudflare OAuth 授权成功')
+    await sleep(800)
+    return { token: cfToken }
+  } catch (err) {
+    setStatus(`✗ 换取 token 出错: ${err.message}`)
+    await sleep(1200)
+    return null
+  }
+}
+
 const isWranglerLoggedIn = () => {
   // 有 API Token 或本机 OAuth 登录都算可用
   if (cfToken) return true
@@ -542,15 +691,23 @@ const panelCloudflare = async () => {
         continue
       }
       const choice = await askSelect('登录方式:', [
-        { name: 'wrangler login（浏览器 OAuth，另开终端执行）', value: 'oauth' },
+        {
+          name: 'Cloudflare OAuth（浏览器授权，TUI 内完成）',
+          description: '推荐，复用 wrangler 官方客户端',
+          value: 'oauth'
+        },
         { name: '输入 API Token（立即保存到 secrets）', value: 'token' },
         { name: '取消', value: 'cancel' }
       ])
       if (choice === BACK || choice === 'cancel') continue
       if (choice === 'oauth') {
-        setStatus('请在新终端执行: cd cms/packages/cms && npx wrangler login，完成后按 Enter')
-        const r = await askInput('完成后按 Enter 继续:', { hint: 'Enter 继续' })
-        if (r === BACK) continue
+        const oauth = await cloudflareOAuth()
+        if (oauth?.token) {
+          setStatus('保存 CF_API_TOKEN...')
+          const ok = await saveSecret('CF_API_TOKEN', oauth.token)
+          setStatus(ok ? '✓ OAuth token 已保存到 secrets' : '✗ secrets 保存失败（内存已可用）')
+          await sleep(800)
+        }
         continue
       }
       if (choice === 'token') {
