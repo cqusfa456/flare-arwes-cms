@@ -59,6 +59,12 @@ jobs:
       # (ephemeral) wrangler.toml for this build. Nothing is persisted.
       - name: Configure Cloudflare resources from secrets
         working-directory: cms/packages/cms
+        env:
+          B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+          B2_BUCKET: ${{ secrets.B2_BUCKET }}
+          B2_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+          B2_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+          B2_REGION: ${{ secrets.B2_REGION }}
         run: |
           if [ -z "${{ secrets.CF_D1_DATABASE_ID }}" ]; then
             echo "::error::CF_D1_DATABASE_ID secret is required. Create a D1 database with 'wrangler d1 create' and add its ID as a secret."
@@ -81,53 +87,12 @@ jobs:
               echo "::error::STORAGE_BACKEND=b2 requires B2_ACCESS_KEY_ID and B2_SECRET_ACCESS_KEY secrets."
               exit 1
             fi
-            # B2 模式下：移除所有 R2 binding + 注入 B2 变量
-            # （顶层 [vars] 与 [env.production] vars 均需设置）
-            python3 - <<'PY'
-import re
-s = open('wrangler.toml', encoding='utf-8').read()
-# 1) 删除所有 r2_buckets 配置块（含 env.production / env.staging）
-s = re.sub(r'\n?\[\[[^\]]*r2_buckets\]\][^\[]*', '\n', s)
-# 2) 顶层 [vars] 段注入 B2 变量（替换注释行或追加）
-def set_var(content, key, value):
-    pat = re.compile(r'^#?\s*' + key + r'\s*=\s*"[^\"]*"', re.M)
-    if pat.search(content):
-        return pat.sub(key + ' = "' + value + '"', content)
-    # 追加到 [vars] 段末尾
-    content = re.sub(r'^\[vars\]\s*$', f'[vars]\n{key} = "{value}"', content, count=1, flags=re.M)
-    return content
-
-b2_vals = {
-  'STORAGE_BACKEND': 'b2',
-  'B2_ENDPOINT': '${{ secrets.B2_ENDPOINT }}',
-  'B2_BUCKET': '${{ secrets.B2_BUCKET }}',
-  'B2_ACCESS_KEY_ID': '${{ secrets.B2_ACCESS_KEY_ID }}',
-  'B2_SECRET_ACCESS_KEY': '${{ secrets.B2_SECRET_ACCESS_KEY }}',
-  'B2_REGION': '${{ secrets.B2_REGION }}'
-}
-for k, v in b2_vals.items():
-    if v.strip():
-        s = set_var(s, k, v.strip())
-
-# 3) [env.production] vars 行：把预置的 B2 占位符替换为真实值
-def set_prod_var(content, key, value):
-    return re.sub(
-        r'(' + key + r'\s*=\s*")[^"]*(")',
-        lambda m: m.group(1) + value + m.group(2),
-        content
-    )
-# 只替换 env.production 段内（限制到 staging 之前）
-prod_part_match = re.search(r'(\[env\.production\].*?)(?=\[env\.staging\]|\Z)', s, re.S)
-if prod_part_match:
-    prod_part = prod_part_match.group(1)
-    for k, v in b2_vals.items():
-        if v.strip():
-            prod_part = set_prod_var(prod_part, k, v.strip())
-    s = s[:prod_part_match.start(1)] + prod_part + s[prod_part_match.end(1):]
-
-open('wrangler.toml', 'w', encoding='utf-8').write(s)
-print('B2 storage configured from secrets')
-PY
+            # B2 模式下：移除所有 R2 binding + 注入 B2 变量（独立脚本，环境变量传值）
+            python3 "${{ github.workspace }}/scripts/b2-config.py" wrangler.toml
+            if [ $? -ne 0 ]; then
+              echo "::error::b2-config.py failed"
+              exit 1
+            fi
 
           else
             sed -i "s/bucket_name = \"[^\"]*\"/bucket_name = \"${{ secrets.CF_R2_BUCKET_NAME }}\"/g" wrangler.toml
