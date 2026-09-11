@@ -9,11 +9,10 @@ import {
   styleFrameClipOctagon,
   useFrameAssembler
 } from '@arwes/react'
-import useMediaPkg from 'react-use'
 
 import { theme } from '@/config'
+import { useMedia } from '@/tools/useMedia'
 import styles from './Card.module.css'
-const { useMedia } = useMediaPkg
 
 type CardProps = {
   title: string
