@@ -64,8 +64,8 @@ jobs:
             echo "::error::CF_D1_DATABASE_ID secret is required. Create a D1 database with 'wrangler d1 create' and add its ID as a secret."
             exit 1
           fi
-          if [ -z "${{ secrets.CF_R2_BUCKET_NAME }}" ]; then
-            echo "::error::CF_R2_BUCKET_NAME secret is required. Create an R2 bucket with 'wrangler r2 bucket create' and add its name as a secret."
+          if [ "${{ secrets.STORAGE_BACKEND }}" != "b2" ] && [ -z "${{ secrets.CF_R2_BUCKET_NAME }}" ]; then
+            echo "::error::CF_R2_BUCKET_NAME secret is required (or set STORAGE_BACKEND=b2 to use Backblaze)."
             exit 1
           fi
           if [ -z "${{ secrets.CF_KV_NAMESPACE_ID }}" ]; then
@@ -73,25 +73,41 @@ jobs:
             exit 1
           fi
           sed -i "s/database_id = \"[^\"]*\"/database_id = \"${{ secrets.CF_D1_DATABASE_ID }}\"/g" wrangler.toml
-          sed -i "s/bucket_name = \"[^\"]*\"/bucket_name = \"${{ secrets.CF_R2_BUCKET_NAME }}\"/g" wrangler.toml
           sed -i "s/id = \"[^\"]*\"/id = \"${{ secrets.CF_KV_NAMESPACE_ID }}\"/g" wrangler.toml
 
-          # B2 storage backend (optional, from secrets)
+          # B2 storage backend (optional, from secrets) — B2 模式下移除 R2 binding
           if [ "${{ secrets.STORAGE_BACKEND }}" = "b2" ]; then
             if [ -z "${{ secrets.B2_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.B2_SECRET_ACCESS_KEY }}" ]; then
               echo "::error::STORAGE_BACKEND=b2 requires B2_ACCESS_KEY_ID and B2_SECRET_ACCESS_KEY secrets."
               exit 1
             fi
-            sed -i "s/^#\?\s*STORAGE_BACKEND = \"[^\"]*\"/STORAGE_BACKEND = \"b2\"/" wrangler.toml
-            sed -i "s/^#\?\s*B2_ENDPOINT = \"[^\"]*\"/B2_ENDPOINT = \"${{ secrets.B2_ENDPOINT }}\"/" wrangler.toml
-            sed -i "s/^#\?\s*B2_BUCKET = \"[^\"]*\"/B2_BUCKET = \"${{ secrets.B2_BUCKET }}\"/" wrangler.toml
-            sed -i "s/^#\?\s*B2_ACCESS_KEY_ID = \"[^\"]*\"/B2_ACCESS_KEY_ID = \"${{ secrets.B2_ACCESS_KEY_ID }}\"/" wrangler.toml
-            sed -i "s/^#\?\s*B2_SECRET_ACCESS_KEY = \"[^\"]*\"/B2_SECRET_ACCESS_KEY = \"${{ secrets.B2_SECRET_ACCESS_KEY }}\"/" wrangler.toml
-            sed -i "s/^#\?\s*B2_REGION = \"[^\"]*\"/B2_REGION = \"${{ secrets.B2_REGION }}\"/" wrangler.toml
-            echo "B2 storage configured from secrets"
+            # 移除 R2 binding（否则 wrangler 校验会要求 R2 可用）
+            python3 - <<'PY'
+import re
+s = open('wrangler.toml', encoding='utf-8').read()
+# 删除 [[r2_buckets]] 配置块
+s = re.sub(r'\n?\[\[r2_buckets\]\][^\[]*', '\n', s)
+# 设置 B2 变量
+for k, v in {
+  'STORAGE_BACKEND': 'b2',
+  'B2_ENDPOINT': '${{ secrets.B2_ENDPOINT }}',
+  'B2_BUCKET': '${{ secrets.B2_BUCKET }}',
+  'B2_ACCESS_KEY_ID': '${{ secrets.B2_ACCESS_KEY_ID }}',
+  'B2_SECRET_ACCESS_KEY': '${{ secrets.B2_SECRET_ACCESS_KEY }}',
+  'B2_REGION': '${{ secrets.B2_REGION }} '
+}.items():
+    v = v.strip()
+    if not v:
+        continue
+    s = re.sub(r'^#?\s*' + k + r'\s*=\s*\"[^\"]*\"', k + ' = \"' + v + '\"', s, flags=re.M)
+open('wrangler.toml', 'w', encoding='utf-8').write(s)
+print('B2 storage configured from secrets')
+PY
+          else
+            sed -i "s/bucket_name = \"[^\"]*\"/bucket_name = \"${{ secrets.CF_R2_BUCKET_NAME }}\"/g" wrangler.toml
           fi
 
-          # JWT_SECRET for the production worker (injected at deploy via env)
+          # JWT_SECRET for the production worker
           if [ -z "${{ secrets.JWT_SECRET }}" ]; then
             echo "::warning::JWT_SECRET secret not set. CMS auth will use a default value."
           fi
