@@ -5,7 +5,7 @@
  * compatible with Astro's Content Layer API.
  */
 import { z } from 'astro/zod'
-import type { CollectionSchema, FieldConfig } from '@flare-cms/core'
+import type { CollectionSchema, FieldConfig } from './types-cms'
 
 /**
  * Map of Flare CMS field types to Zod schema constructors.

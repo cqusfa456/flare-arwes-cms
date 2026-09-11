@@ -4,7 +4,7 @@
  * Used by both build-time and live Content Layer loaders
  * to fetch collection data and schemas from the CMS API.
  */
-import type { CollectionSchema } from '@flare-cms/core'
+import type { CollectionSchema } from './types-cms'
 import type { FlareLoaderOptions, FlareContentItem, FlareApiResponse } from './types'
 
 interface CollectionMeta {
