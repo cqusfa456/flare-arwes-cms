@@ -159,7 +159,7 @@ router.get('/storage', async (c) => {
       console.error('Error fetching media size:', error)
     }
 
-    const html = renderStorageUsage(databaseSize, mediaSize)
+    const html = renderStorageUsage(databaseSize, mediaSize, getStorageInfo(c.env).providerLabel)
     return c.html(html)
   } catch (error) {
     console.error('Error fetching storage usage:', error)

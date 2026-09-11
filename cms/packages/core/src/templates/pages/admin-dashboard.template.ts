@@ -735,7 +735,11 @@ function renderSystemStatus(): string {
   `;
 }
 
-export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: number): string {
+export function renderStorageUsage(
+  databaseSizeBytes?: number,
+  mediaSizeBytes?: number,
+  providerLabel?: string
+): string {
   // Helper to format bytes to human readable
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
@@ -768,7 +772,7 @@ export function renderStorageUsage(databaseSizeBytes?: number, mediaSizeBytes?: 
       total: "∞",
       percentage: 0,
       color: "bg-emerald-500 dark:bg-emerald-400",
-      note: "Stored in R2"
+      note: providerLabel ? `Stored in ${providerLabel}` : "Object storage",
     },
     {
       label: "Cache (KV)",
