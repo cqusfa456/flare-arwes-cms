@@ -32,6 +32,13 @@ import { fileURLToPath } from 'node:url'
 import { ProxyAgent, setGlobalDispatcher } from 'undici'
 
 import {
+  buildTokenTemplateUrl,
+  openUrl,
+  tokenChecklist,
+  verifyCfToken
+} from './lib/cf-token-template.mjs'
+
+import {
   BoxRenderable,
   TextRenderable,
   SelectRenderable,
@@ -692,36 +699,76 @@ const panelCloudflare = async () => {
       }
       const choice = await askSelect('登录方式:', [
         {
+          name: '打开 Cloudflare 页面生成 API Token（推荐）',
+          description: '自动预填权限，页面里点两下即可；生成的是长期 token，适合写入 CF_API_TOKEN',
+          value: 'token'
+        },
+        {
           name: 'Cloudflare OAuth（浏览器授权，TUI 内完成）',
-          description: '推荐，复用 wrangler 官方客户端',
+          description:
+            '仅本次会话用于 wrangler 操作；OAuth token 只有 1 小时寿命，不会写入 CF_API_TOKEN',
           value: 'oauth'
         },
-        { name: '输入 API Token（立即保存到 secrets）', value: 'token' },
         { name: '取消', value: 'cancel' }
       ])
       if (choice === BACK || choice === 'cancel') continue
       if (choice === 'oauth') {
         const oauth = await cloudflareOAuth()
         if (oauth?.token) {
-          setStatus('保存 CF_API_TOKEN...')
-          const ok = await saveSecret('CF_API_TOKEN', oauth.token)
-          setStatus(ok ? '✓ OAuth token 已保存到 secrets' : '✗ secrets 保存失败（内存已可用）')
-          await sleep(800)
+          // Used in memory for the wrangler calls this TUI makes. Deliberately
+          // NOT persisted: an OAuth access token expires after an hour, and
+          // storing one in CF_API_TOKEN is what made the deploy workflow fail
+          // roughly hourly. Use the template flow for that secret.
+          cfToken = oauth.token
+          setStatus(
+            '✓ OAuth token 已就绪（仅本次会话）。如需写入 CF_API_TOKEN 请选「生成 API Token」'
+          )
+          await sleep(1200)
         }
         continue
       }
       if (choice === 'token') {
-        const token = await askInput('Cloudflare API Token:', {
-          hint: '需要 Workers Scripts: Edit, Pages: Edit, D1, R2, KV 权限'
+        const url = buildTokenTemplateUrl('ci', { accountId: cfAccountId || undefined })
+
+        clearContent()
+        const info = makeBox({ title: '生成 Cloudflare API Token', flexDirection: 'column' })
+        info.add(makeText(' 页面会自动勾选这些权限，请在页面上核对：'))
+        for (const line of tokenChecklist('ci')) info.add(makeText(`   · ${line}`))
+        info.add(makeText(' '))
+        info.add(makeText(' 在页面上点「继续以显示摘要」→「创建令牌」，然后复制生成的 token。'))
+        info.add(makeText(' 如果没有自动打开浏览器，请手动访问：'))
+        info.add(makeText(` ${url}`))
+        contentBox.add(info)
+
+        const opened = await openUrl(url)
+        setStatus(
+          opened
+            ? '已打开浏览器，复制 token 后按 Enter 继续…'
+            : '⚠ 无法自动打开浏览器，请手动访问上方链接，然后按 Enter 继续…'
+        )
+        await askInput('（按 Enter 继续）', { hint: 'Enter 继续，Esc 返回' })
+
+        const token = await askInput('粘贴 Cloudflare API Token:', {
+          hint: 'Enter 确认后会先校验，校验通过才写入 secrets'
         })
         if (token === BACK) continue
-        if (token.trim()) {
-          cfToken = token.trim() // 存入内存供 wrangler 使用
-          setStatus('保存 CF_API_TOKEN...')
-          const ok = await saveSecret('CF_API_TOKEN', cfToken)
-          setStatus(ok ? '✓ CF_API_TOKEN 已保存' : '✗ 保存失败')
-          await sleep(800)
+        const value = token.trim()
+        if (!value) continue
+
+        setStatus('校验 token...')
+        const verified = await verifyCfToken(value)
+        if (!verified.ok) {
+          setStatus(
+            `✗ Cloudflare 拒绝了该 token：${JSON.stringify(verified.errors)}（未写入任何 secret）`
+          )
+          await sleep(2000)
+          continue
         }
+        setStatus(`✓ token 有效（${verified.status ?? 'unknown'}），正在保存 CF_API_TOKEN...`)
+        cfToken = value // 存入内存供 wrangler 使用
+        const ok = await saveSecret('CF_API_TOKEN', value)
+        setStatus(ok ? '✓ CF_API_TOKEN 已保存（长期 token）' : '✗ 保存失败')
+        await sleep(900)
       }
       continue
     }

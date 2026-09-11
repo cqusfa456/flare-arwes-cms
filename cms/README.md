@@ -208,9 +208,29 @@ CMS 是所有网站的**唯一控制面**：站点的构建、域名绑定与内
 | 场景 | token 权限 |
 | ---- | ---------- |
 | Pages 站点 | `Pages:Edit`、`Zone:Read` |
-| Worker 站点 | 额外需要 `Workers Scripts:Read`（解析 tag）、`Workers Builds Configuration:Edit` |
+| Worker 站点 | 额外需要 `Workers Scripts:Read`（解析 tag）、`Workers CI:Edit`（即 Workers Builds） |
 
 Builds API **只接受 user-scoped token**（account-scoped 会返回 "Invalid token"）。CMS 会在该错误上补一句提示，避免误判成 token 写错。
+
+#### 一键生成 token
+
+Cloudflare 支持把权限预填进 token 创建页的 URL，所以不需要手工勾选十几个权限行：
+
+```powershell
+# CI token（写入 GitHub secret CF_API_TOKEN）—— 打开页面 → 点两下 → 粘贴回来
+node scripts/set-cf-token.mjs
+```
+
+脚本会：打印并打开已预填权限的页面 → 列出需要在页面上核对的权限 → 让你粘贴 token →
+**先用 `/user/tokens/verify` 校验，通过后才写入 secret**（校验失败不写入任何东西）→
+只改 `CF_API_TOKEN`（账号唯一时顺带 `CF_ACCOUNT_ID`），不碰 `JWT_SECRET` 等其他 secret。
+
+`npm run setup`（OpenTUI 向导）里的 Cloudflare 面板也走同一套流程，并会显示同样的权限核对清单。
+权限模板定义在 `scripts/lib/cf-token-template.mjs`（含 `ci` 与 `runtime` 两套）。
+
+> ⚠️ **不要用 OAuth token 当 `CF_API_TOKEN`。** OAuth access token 只有 **1 小时**寿命，
+> 这是部署流水线每小时失败一次（`Invalid access token [code: 9109]`）的原因。
+> 向导里的 OAuth 登录只用在本会话内执行 wrangler 命令，不再写入 secret。
 
 凭据：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，未设置时回落到 D1 设置
 （可在 Admin → Sites 页面底部保存，便于轮换而无需重新部署）。API token 永不返回给客户端；

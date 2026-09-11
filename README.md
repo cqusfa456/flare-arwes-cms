@@ -96,6 +96,12 @@ cd apps/docs && npm run dev   # http://localhost:9002
 | `STORAGE_BACKEND`                                                | 存储后端：`r2`（默认）/ `b2` / `s3` |
 | `B2_*` / `S3_*`                                                  | （可选）S3 兼容后端凭据             |
 
+`CF_API_TOKEN` 必须是**长期 API Token**（不是 1 小时寿命的 OAuth token）。用预填权限的页面一键生成：
+
+```powershell
+node scripts/set-cf-token.mjs     # 打开页面 → 确认 → 粘贴 → 自动校验并写入 secret
+```
+
 ## 功能亮点
 
 - **ARWES** — 科幻风格 UI 框架：动画、音效、帧边框、动态背景

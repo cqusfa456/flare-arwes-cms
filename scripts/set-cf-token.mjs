@@ -49,21 +49,55 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  buildTokenTemplateUrl,
+  openUrl,
+  tokenChecklist,
+  verifyCfToken,
+  listCfAccounts,
+  TOKEN_TEMPLATES
+} from './lib/cf-token-template.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const STATE_FILE = join(ROOT, 'node_modules', '.oauth-state.json')
-
-const token = (process.env.CF_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN || '').trim()
-const accountId = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
 
 const fail = (message) => {
   console.error(`✗ ${message}`)
   process.exit(1)
 }
 
+let token = (process.env.CF_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN || '').trim()
+const accountId = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
+
+// ---- 0) 没有 token 时，打开预填权限的 Cloudflare 页面，粘贴回来即可 ----
 if (!token) {
-  fail('未提供 token。请设置 CF_API_TOKEN 环境变量（见本文件顶部 usage）')
+  if (!process.stdin.isTTY) {
+    const url = buildTokenTemplateUrl('ci', { accountId })
+    fail(`未提供 token。设置 CF_API_TOKEN 环境变量，或打开这个已预填权限的页面创建：\n  ${url}`)
+  }
+
+  const template = TOKEN_TEMPLATES.ci
+  const url = buildTokenTemplateUrl('ci', { accountId })
+
+  console.log(`\n即将创建：${template.label}`)
+  console.log(`用途：${template.purpose}\n`)
+  console.log('页面会自动勾选这些权限（请在页面上核对）：')
+  for (const line of tokenChecklist('ci')) console.log(`  · ${line}`)
+  console.log('\n如果没有自动打开浏览器，请手动访问：')
+  console.log(`  ${url}\n`)
+
+  const opened = await openUrl(url)
+  console.log(opened ? '已尝试打开浏览器。' : '⚠ 无法自动打开浏览器，请手动访问上面的链接。')
+  console.log('在页面上点「继续以显示摘要」→「创建令牌」，然后复制生成的 token。\n')
+
+  const { createInterface } = await import('node:readline/promises')
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const answer = (await rl.question('粘贴 token（直接回车取消）: ')).trim()
+  rl.close()
+
+  if (!answer) fail('已取消，未做任何改动')
+  token = answer
 }
 
 if (!existsSync(STATE_FILE)) {
@@ -79,41 +113,38 @@ if (!gh?.token || !gh?.repo) {
 }
 
 // ---- 1) 先验证 Cloudflare 是否接受这个 token，避免写入一个坏值 ----
-console.log('[1/3] 验证 Cloudflare token ...')
-const verifyRes = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
-  headers: { Authorization: `Bearer ${token}` }
-})
-const verifyJson = await verifyRes.json().catch(() => ({}))
-if (!verifyRes.ok || verifyJson.success !== true) {
+console.log('\n[1/3] 验证 Cloudflare token ...')
+const verified = await verifyCfToken(token)
+if (!verified.ok) {
   fail(
-    `Cloudflare 拒绝了该 token (HTTP ${verifyRes.status}): ` +
-      JSON.stringify(verifyJson.errors ?? verifyJson.messages ?? verifyJson)
+    `Cloudflare 拒绝了该 token (HTTP ${verified.httpStatus}): ` +
+      JSON.stringify(verified.errors ?? {})
   )
 }
-console.log(`  ✓ token 有效，状态: ${verifyJson.result?.status ?? 'unknown'}`)
+console.log(`  ✓ token 有效，状态: ${verified.status ?? 'unknown'}`)
 
-// ---- 2) 确认它至少能看到账号（deploy 需要）----
-console.log('[2/3] 检查账号可见性 ...')
-const accountsRes = await fetch('https://api.cloudflare.com/client/v4/accounts', {
-  headers: { Authorization: `Bearer ${token}` }
-})
-const accountsJson = await accountsRes.json().catch(() => ({}))
-if (!accountsRes.ok || accountsJson.success !== true) {
-  fail(
-    `无法列出账号 (HTTP ${accountsRes.status}) — CI token 需要至少一个 account 级权限: ` +
-      JSON.stringify(accountsJson.errors ?? {})
+// ---- 2) 账号可见性（仅作提示）----
+//
+// A valid token that can deploy perfectly well may still be refused by
+// GET /accounts, so this must not block writing the secret. It is only used to
+// fill CF_ACCOUNT_ID when that is unambiguous.
+console.log('[2/3] 检查账号可见性（仅提示）...')
+const accountLookup = await listCfAccounts(token)
+if (!accountLookup.ok) {
+  console.log(
+    `  ⚠ 无法列出账号（${JSON.stringify(accountLookup.errors)}）— 不影响写入 token。` +
+      'CF_ACCOUNT_ID 请自行确认。'
   )
+} else if (accountLookup.accounts.length === 0) {
+  console.log('  ⚠ token 有效但看不到账号，请检查 token 的账号范围')
+} else {
+  console.log('  可见账号:')
+  for (const a of accountLookup.accounts) console.log(`    - ${a.name}  ${a.id}`)
 }
-const accounts = accountsJson.result ?? []
-if (accounts.length === 0) {
-  fail('token 有效但看不到任何账号，请检查 token 的账号范围')
-}
-console.log('  可见账号:')
-for (const a of accounts) console.log(`    - ${a.name}  ${a.id}`)
 
 let resolvedAccountId = accountId
-if (!resolvedAccountId && accounts.length === 1) {
-  resolvedAccountId = accounts[0].id
+if (!resolvedAccountId && accountLookup.ok && accountLookup.accounts.length === 1) {
+  resolvedAccountId = accountLookup.accounts[0].id
   console.log(`  (只有一个账号，将同时写入 CF_ACCOUNT_ID = ${resolvedAccountId})`)
 }
 
