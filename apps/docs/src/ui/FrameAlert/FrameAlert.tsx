@@ -1,8 +1,9 @@
-import { useMedia } from 'react-use'
 import { Animated, Animator, FrameLines, Illuminator, memo } from '@arwes/react'
+import useMediaPkg from 'react-use'
 
 import { theme } from '@/config'
 import { spring } from 'motion'
+const { useMedia } = useMediaPkg
 
 const FrameAlert = memo((): JSX.Element => {
   const isMD = useMedia(theme.breakpoints.up('md', { strip: true }), false)

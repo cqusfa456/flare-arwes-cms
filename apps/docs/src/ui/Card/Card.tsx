@@ -1,5 +1,4 @@
 import { useRef } from 'react'
-import { useMedia } from 'react-use'
 import {
   Animated,
   Animator,
@@ -10,9 +9,11 @@ import {
   styleFrameClipOctagon,
   useFrameAssembler
 } from '@arwes/react'
+import useMediaPkg from 'react-use'
 
 import { theme } from '@/config'
 import styles from './Card.module.css'
+const { useMedia } = useMediaPkg
 
 type CardProps = {
   title: string
