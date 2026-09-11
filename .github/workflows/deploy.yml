@@ -156,8 +156,11 @@ jobs:
           pnpm build
           pnpm --filter @flare-cms/astro build
 
-      - name: Install root dependencies
-        run: npm install --engine-strict=false
+      # 构建 ARWES packages（apps/docs 通过 workspace 链接引用其 build 产物）
+      - name: Install and build ARWES packages
+        run: |
+          npm install --engine-strict=false
+          npm run build
         env:
           HUSKY: 0
 
