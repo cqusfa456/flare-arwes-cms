@@ -1,0 +1,5 @@
+.root :global(.arwes-frames-frame [data-name='bg']),
+.root :global(.arwes-frames-framenero [data-name='deco']:nth-child(1)),
+.root :global(.arwes-frames-framenero [data-name='deco']:nth-child(3)) {
+  display: none;
+}

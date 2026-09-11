@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>react-animated | ARWES Perf</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/perf/common.css" />
+    <script src="/perf/common.js" defer></script>
+    <style>
+      .items {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+      }
+      .item {
+        width: 10px;
+        height: 10px;
+        background: #233;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ARWES Perf | react-animated</h1>
+    <p>
+      An <code>&lt;Animator&gt;</code> with a defined number of children
+      <code>HTMLDivElement</code> rendered with an <code>&lt;Animated&gt;</code> with transition
+      animations. Every 2s updating the root <code>&lt;Animator&gt;</code> state which takes 0.5s
+      for enter and exit transitions.
+    </p>
+    <div id="root"></div>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0-next.25020502",
+  "command": {
+    "publish": {
+      "allowBranch": "dev",
+      "message": "chore(release): %s"
+    }
+  }
+}

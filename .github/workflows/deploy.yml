@@ -1,0 +1,181 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [next, main]
+  workflow_dispatch:
+
+# All credentials are stored as GitHub Actions secrets (never in the repo).
+# Required GitHub secrets (set via: node scripts/setup-tui.mjs → GitHub step,
+# or manually in Settings → Secrets and variables → Actions):
+#   CF_API_TOKEN          — Cloudflare API token (Workers Scripts: Edit,
+#                           Pages: Edit, D1, R2, KV permissions)
+#   CF_ACCOUNT_ID         — Cloudflare account ID
+#   CF_D1_DATABASE_ID     — D1 database ID (create: wrangler d1 create)
+#   CF_R2_BUCKET_NAME     — R2 bucket name (create: wrangler r2 bucket create)
+#   CF_KV_NAMESPACE_ID    — KV namespace ID (create: wrangler kv namespace create)
+#   JWT_SECRET            — CMS auth secret
+#   FLARE_API_URL         — deployed CMS worker URL
+#   FLARE_API_TOKEN       — (optional) read-only CMS API token
+#   PAGES_PROJECT_NAME    — (optional) Pages project name, default: arwes-docs
+# B2 storage (optional — only when using Backblaze B2 instead of R2):
+#   STORAGE_BACKEND       — set to "b2" to enable
+#   B2_ENDPOINT           — B2 S3-compatible endpoint
+#   B2_BUCKET             — B2 private bucket name
+#   B2_ACCESS_KEY_ID      — B2 application key ID
+#   B2_SECRET_ACCESS_KEY  — B2 application key secret
+#   B2_REGION             — (optional) B2 bucket region, default: us-west-004
+
+jobs:
+  deploy-cms:
+    name: Deploy CMS Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: cms/pnpm-lock.yaml
+
+      - name: Install CMS dependencies
+        working-directory: cms
+        run: pnpm install --frozen-lockfile
+
+      - name: Build core
+        working-directory: cms
+        run: pnpm build
+
+      - name: Build astro integration
+        working-directory: cms/packages/astro
+        run: pnpm build
+
+      # Inject all private values from GitHub secrets into the local
+      # (ephemeral) wrangler.toml for this build. Nothing is persisted.
+      - name: Configure Cloudflare resources from secrets
+        working-directory: cms/packages/cms
+        run: |
+          if [ -z "${{ secrets.CF_D1_DATABASE_ID }}" ]; then
+            echo "::error::CF_D1_DATABASE_ID secret is required. Create a D1 database with 'wrangler d1 create' and add its ID as a secret."
+            exit 1
+          fi
+          if [ -z "${{ secrets.CF_R2_BUCKET_NAME }}" ]; then
+            echo "::error::CF_R2_BUCKET_NAME secret is required. Create an R2 bucket with 'wrangler r2 bucket create' and add its name as a secret."
+            exit 1
+          fi
+          if [ -z "${{ secrets.CF_KV_NAMESPACE_ID }}" ]; then
+            echo "::error::CF_KV_NAMESPACE_ID secret is required. Create a KV namespace with 'wrangler kv namespace create' and add its ID as a secret."
+            exit 1
+          fi
+          sed -i "s/database_id = \"[^\"]*\"/database_id = \"${{ secrets.CF_D1_DATABASE_ID }}\"/g" wrangler.toml
+          sed -i "s/bucket_name = \"[^\"]*\"/bucket_name = \"${{ secrets.CF_R2_BUCKET_NAME }}\"/g" wrangler.toml
+          sed -i "s/id = \"[^\"]*\"/id = \"${{ secrets.CF_KV_NAMESPACE_ID }}\"/g" wrangler.toml
+
+          # B2 storage backend (optional, from secrets)
+          if [ "${{ secrets.STORAGE_BACKEND }}" = "b2" ]; then
+            if [ -z "${{ secrets.B2_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.B2_SECRET_ACCESS_KEY }}" ]; then
+              echo "::error::STORAGE_BACKEND=b2 requires B2_ACCESS_KEY_ID and B2_SECRET_ACCESS_KEY secrets."
+              exit 1
+            fi
+            sed -i "s/^#\?\s*STORAGE_BACKEND = \"[^\"]*\"/STORAGE_BACKEND = \"b2\"/" wrangler.toml
+            sed -i "s/^#\?\s*B2_ENDPOINT = \"[^\"]*\"/B2_ENDPOINT = \"${{ secrets.B2_ENDPOINT }}\"/" wrangler.toml
+            sed -i "s/^#\?\s*B2_BUCKET = \"[^\"]*\"/B2_BUCKET = \"${{ secrets.B2_BUCKET }}\"/" wrangler.toml
+            sed -i "s/^#\?\s*B2_ACCESS_KEY_ID = \"[^\"]*\"/B2_ACCESS_KEY_ID = \"${{ secrets.B2_ACCESS_KEY_ID }}\"/" wrangler.toml
+            sed -i "s/^#\?\s*B2_SECRET_ACCESS_KEY = \"[^\"]*\"/B2_SECRET_ACCESS_KEY = \"${{ secrets.B2_SECRET_ACCESS_KEY }}\"/" wrangler.toml
+            sed -i "s/^#\?\s*B2_REGION = \"[^\"]*\"/B2_REGION = \"${{ secrets.B2_REGION }}\"/" wrangler.toml
+            echo "B2 storage configured from secrets"
+          fi
+
+          # JWT_SECRET for the production worker (injected at deploy via env)
+          if [ -z "${{ secrets.JWT_SECRET }}" ]; then
+            echo "::warning::JWT_SECRET secret not set. CMS auth will use a default value."
+          fi
+          echo "Cloudflare resources configured from secrets"
+
+      - name: Run D1 migrations
+        working-directory: cms/packages/cms
+        run: npx wrangler d1 migrations apply DB --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy CMS to Cloudflare Workers
+        working-directory: cms/packages/cms
+        run: npx wrangler deploy --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      # Set the JWT_SECRET as an encrypted Worker secret (never in repo).
+      - name: Set JWT_SECRET worker secret
+        working-directory: cms/packages/cms
+        run: |
+          if [ -n "${{ secrets.JWT_SECRET }}" ]; then
+            echo "${{ secrets.JWT_SECRET }}" | npx wrangler secret put JWT_SECRET --env production
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+  deploy-docs:
+    name: Deploy Docs Site to Pages
+    needs: deploy-cms
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: cms/pnpm-lock.yaml
+
+      # Build @flare-cms/astro first so the file: dependency in apps/docs
+      # picks up the built dist during npm install.
+      - name: Build astro integration
+        working-directory: cms
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm --filter @flare-cms/astro build
+
+      - name: Install root dependencies
+        run: npm install --engine-strict=false
+        env:
+          HUSKY: 0
+
+      - name: Build docs site
+        working-directory: apps/docs
+        shell: bash
+        run: |
+          # The docs site fetches CMS content at build time. Without a
+          # deployed CMS URL the build still succeeds but CMS-managed
+          # pages are skipped, so warn loudly instead.
+          if [ -z "${{ secrets.FLARE_API_URL }}" ]; then
+            echo "::warning::FLARE_API_URL secret not set. CMS-managed pages will be skipped."
+          fi
+          npm run build
+        env:
+          PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
+          PUBLIC_FLARE_API_TOKEN: ${{ secrets.FLARE_API_TOKEN }}
+
+      # Create the Pages project on first deploy (ignore "already exists").
+      - name: Create Pages project
+        working-directory: apps/docs
+        run: |
+          ../../cms/packages/cms/node_modules/.bin/wrangler pages project create ${{ secrets.PAGES_PROJECT_NAME || 'arwes-docs' }} --production-branch next || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: apps/docs
+        run: ../../cms/packages/cms/node_modules/.bin/wrangler pages deploy ./build --project-name ${{ secrets.PAGES_PROJECT_NAME || 'arwes-docs' }} --branch ${{ github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

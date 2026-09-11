@@ -1,0 +1,6 @@
+.next
+.astro
+public
+out
+build
+src/dynamics.ts

@@ -1,0 +1,67 @@
+{
+  "name": "arwes",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "packageManager": "npm@10.2.4",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "@opentui/core": "^0.5.11",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "all-contributors-cli": "^6.26.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-config-love": "^43.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "glob": "^11.0.0",
+    "husky": "^9.1.1",
+    "jsdom": "^24.1.0",
+    "lerna": "^8.1.6",
+    "markdownlint": "^0.34.0",
+    "markdownlint-cli": "^0.41.0",
+    "motion": "^10.18.0",
+    "prettier": "^3.3.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "serve": "^14.2.6",
+    "solid-js": "^1.8.19",
+    "turbo": "^2.0.9",
+    "typescript": "5.3",
+    "vitest": "^2.0.3"
+  },
+  "scripts": {
+    "postinstall": "husky",
+    "format-check": "prettier . --check",
+    "format": "prettier . --write",
+    "lint": "npm run lint-js && npm run lint-md",
+    "lint-js": "eslint \"./@(packages|apps)/*/src/**/*.ts?(x)\"",
+    "lint-js-fix": "eslint \"./@(packages|apps)/*/src/**/*.ts?(x)\" --fix",
+    "lint-md": "markdownlint .",
+    "lint-md-fix": "markdownlint . --fix",
+    "test": "vitest",
+    "clean": "sh ./scripts/clean.sh",
+    "build": "turbo build",
+    "www": "npm run build && sh ./scripts/www.sh",
+    "serve": "serve ./www",
+    "integration": "npm run build && npm run format-check && npm run lint && npm run test -- --run",
+    "release": "npm run integration && lerna publish --force-publish",
+    "contributors-add": "all-contributors add",
+    "readme-contributors-generate": "all-contributors generate",
+    "readme-community-generate": "node ./scripts/readme-community-generate.js",
+    "setup": "node --experimental-ffi scripts/setup-tui-opentui.mjs",
+    "setup:legacy": "node scripts/setup-tui.mjs"
+  },
+  "devDependencies": {
+    "libsodium-wrappers": "^0.8.4"
+  }
+}

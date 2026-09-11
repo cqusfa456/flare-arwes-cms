@@ -1,0 +1,53 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "node_modules",
+    "build",
+    "coverage",
+    "public",
+    "static",
+    "out",
+    "www",
+    "__testUtils__",
+    ".github",
+    ".deprecated",
+    ".cache",
+    ".next",
+    "webpack.config.js",
+    "next.config.js",
+    "commitlint.config.js",
+    "scripts/readme-community-generate.js",
+    "apps/docs/next-env.d.ts",
+    "apps/docs/src/dynamics.ts",
+    "apps/play/scripts/generateTypes.js",
+    "apps/play/src/examples",
+    "apps/play/src/playground/typeDefinitions.js",
+    "apps/play/src/playground/sandboxes.js"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "plugins": ["react", "react-hooks"],
+  "extends": ["love", "prettier"],
+  "rules": {
+    "semi": ["off"],
+    "@typescript-eslint/semi": ["off"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-dynamic-delete": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/restrict-template-expressions": ["error", { "allowAny": true }],
+    "@typescript-eslint/promise-function-async": ["error", { "checkArrowFunctions": false }],
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "react/prop-types": "off",
+    "no-unused-vars": "off",
+    "no-use-before-define": "off",
+    "prefer-regex-literals": "off",
+    "prefer-promise-reject-errors": "off"
+  }
+}

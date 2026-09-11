@@ -1,0 +1,13 @@
+.rotation {
+  transform-origin: center;
+  animation: imageRotate 30s infinite linear;
+}
+
+@keyframes imageRotate {
+  to {
+    transform: rotate(0deg);
+  }
+  from {
+    transform: rotate(-360deg);
+  }
+}

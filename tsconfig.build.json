@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "removeComments": true,
+    "resolveJsonModule": false
+  },
+  "exclude": [
+    "**/node_modules",
+    "**/static",
+    "**/public",
+    "**/build",
+    "**/out",
+    "**/www",
+    "**/.next",
+    "**/.deprecated",
+    "**/__testUtils__",
+    "**/scripts",
+    "**/webpack.config.js",
+    "**/next.config.js",
+    "**/commitlint.config.js",
+    "apps/play/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.sandbox.ts",
+    "**/*.sandbox.tsx"
+  ]
+}

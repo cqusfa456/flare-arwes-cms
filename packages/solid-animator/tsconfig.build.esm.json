@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.build.esm.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "rootDir": "src",
+    "outDir": "build/esm",
+    "tsBuildInfoFile": ".tsbuildinfo"
+  }
+}

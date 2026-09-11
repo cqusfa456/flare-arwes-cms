@@ -1,0 +1,100 @@
+name = "flare-cms-dev"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Workers settings
+workers_dev = true
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "my-astro-cms-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "./node_modules/@flare-cms/core/migrations"
+
+# R2 Bucket for media storage (default backend)
+# To use a private Backblaze B2 bucket instead, set STORAGE_BACKEND=b2
+# and the B2_* vars below (see [vars.b2] section). The R2 binding can
+# then be removed.
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "my-astro-cms-media"
+
+# KV Namespace for rate limiting cache
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+CORS_ORIGINS = "http://localhost:4321,http://localhost:8787"
+MEDIA_DOMAIN = "images.flarecms.dev"
+
+# Backblaze B2 storage backend (optional)
+# Set STORAGE_BACKEND=b2 to use a private B2 bucket instead of R2.
+# B2_ENDPOINT: S3-compatible endpoint, e.g. https://s3.us-west-004.backblazeb2.com
+# B2_BUCKET: your private bucket name
+# B2_ACCESS_KEY_ID / B2_SECRET_ACCESS_KEY: application key from B2 dashboard
+# B2_REGION: bucket region, e.g. us-west-004 (default)
+# STORAGE_BACKEND = "b2"
+# B2_ENDPOINT = "https://s3.us-west-004.backblazeb2.com"
+# B2_BUCKET = "arwes-cms-media"
+# B2_ACCESS_KEY_ID = ""
+# B2_SECRET_ACCESS_KEY = ""
+# B2_REGION = "us-west-004"
+
+# Webhook configuration (Phase 4)
+# Comma-separated URLs to POST on content publish/unpublish events
+# Leave empty to disable webhooks; fill in a URL to test locally
+WEBHOOK_URLS = ""
+# Shared secret for HMAC-SHA256 webhook signatures
+# Leave empty to send unsigned webhooks (a console.warn will be logged)
+# Production values should be set in [env.production] below
+WEBHOOK_SECRET = ""
+
+# Production environment
+[env.production]
+name = "flare-cms"
+vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "my-astro-cms-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "./node_modules/@flare-cms/core/migrations"
+
+[[env.production.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "my-astro-cms-media"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Staging environment (migration testing)
+[env.staging]
+name = "flare-cms-staging"
+vars = { ENVIRONMENT = "staging", CORS_ORIGINS = "http://localhost:4321,http://localhost:8787" }
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "my-astro-cms-db-staging"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[[env.staging.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "my-astro-cms-media"
+
+# Cron triggers for scheduled content publishing
+[triggers]
+crons = ["* * * * *"]
+
+# Observability
+[observability]
+enabled = true

@@ -1,0 +1,21 @@
+{
+  "name": "apps-perf",
+  "version": "1.0.0-next.25020502",
+  "private": true,
+  "dependencies": {
+    "@arwes/react": "^1.0.0-next.25020502",
+    "arwes": "^1.0.0-next.25020502",
+    "copy-webpack-plugin": "^12.0.2",
+    "html-webpack-plugin": "^5.6.0",
+    "ts-loader": "^9.5.1",
+    "tsconfig-paths-webpack-plugin": "^4.1.0",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  },
+  "scripts": {
+    "build": "sh ./scripts/build.sh",
+    "dev": "sh ./scripts/dev.sh",
+    "start": "serve ./build -p 9001"
+  }
+}

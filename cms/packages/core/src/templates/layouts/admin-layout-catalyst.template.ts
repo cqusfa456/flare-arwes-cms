@@ -1,0 +1,1293 @@
+import { HtmlEscapedString } from "hono/utils/html";
+import { renderLogo } from "../components/logo.template";
+import { getVersionDisplay } from "../../utils/version";
+import {
+  icon,
+  LayoutDashboard,
+  Layers,
+  ClipboardList,
+  CircleHelp,
+  FileText,
+  Image,
+  Users,
+  Plug,
+  HardDrive,
+  Database,
+  Settings,
+  Menu,
+  X,
+  User,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
+  Rocket,
+  BarChart3,
+  Trash2,
+  Sun,
+  Moon,
+  GitBranch,
+} from "../icons";
+
+// Catalyst Checkbox Component (HTML implementation)
+export interface CatalystCheckboxProps {
+  id: string;
+  name: string;
+  checked?: boolean;
+  disabled?: boolean;
+  label?: string;
+  description?: string;
+  color?:
+    | "dark/zinc"
+    | "dark/white"
+    | "white"
+    | "dark"
+    | "zinc"
+    | "blue"
+    | "green"
+    | "red";
+  className?: string;
+}
+
+export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
+  const {
+    id,
+    name,
+    checked = false,
+    disabled = false,
+    label,
+    description,
+    color = "dark/zinc",
+    className = "",
+  } = props;
+
+  const colorConfig = {
+    "dark/zinc": {
+      bg: "#18181b",
+      border: "#09090b",
+      check: "#ffffff",
+      darkBg: "#52525b",
+    },
+    "dark/white": {
+      bg: "#18181b",
+      border: "#09090b",
+      check: "#ffffff",
+      darkBg: "#ffffff",
+      darkCheck: "#18181b",
+    },
+    white: { bg: "#ffffff", border: "#09090b", check: "#18181b" },
+    dark: { bg: "#18181b", border: "#09090b", check: "#ffffff" },
+    zinc: { bg: "#52525b", border: "#3f3f46", check: "#ffffff" },
+    blue: { bg: "#2563eb", border: "#1d4ed8", check: "#ffffff" },
+    green: { bg: "#16a34a", border: "#15803d", check: "#ffffff" },
+    red: { bg: "#dc2626", border: "#b91c1c", check: "#ffffff" },
+  };
+
+  const _config = colorConfig[color] || colorConfig["dark/zinc"];
+
+  const colorClasses = {
+    "dark/zinc":
+      "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-zinc-600",
+    "dark/white":
+      "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-white",
+    white: "peer-checked:bg-white peer-checked:before:bg-white",
+    dark: "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900",
+    zinc: "peer-checked:bg-zinc-600 peer-checked:before:bg-zinc-600",
+    blue: "peer-checked:bg-blue-600 peer-checked:before:bg-blue-600",
+    green: "peer-checked:bg-green-600 peer-checked:before:bg-green-600",
+    red: "peer-checked:bg-red-600 peer-checked:before:bg-red-600",
+  };
+
+  const checkColor =
+    color === "dark/white" ? "dark:text-zinc-900" : "text-white";
+
+  const baseClasses = `
+    relative isolate flex w-4 h-4 items-center justify-center rounded-[0.3125rem]
+    before:absolute before:inset-0 before:-z-10 before:rounded-[calc(0.3125rem-1px)] before:bg-white before:shadow-sm
+    dark:before:hidden
+    dark:bg-white/5
+    border border-zinc-950/15 peer-checked:border-transparent
+    dark:border-white/15 dark:peer-checked:border-white/5
+    peer-focus:outline peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-blue-500
+    peer-disabled:opacity-50
+    peer-disabled:border-zinc-950/25 peer-disabled:bg-zinc-950/5
+    dark:peer-disabled:border-white/20 dark:peer-disabled:bg-white/2.5
+  `
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const checkIconClasses = `
+    w-4 h-4 opacity-0 peer-checked:opacity-100 pointer-events-none
+  `
+    .trim()
+    .replace(/\s+/g, " ");
+
+  if (description) {
+    // Field layout with description
+    return `
+      <div class="grid grid-cols-[1.125rem_1fr] gap-x-4 gap-y-1 sm:grid-cols-[1rem_1fr] ${className}">
+        <div class="col-start-1 row-start-1 mt-0.75 sm:mt-1">
+          <input
+            type="checkbox"
+            id="${id}"
+            name="${name}"
+            ${checked ? "checked" : ""}
+            ${disabled ? "disabled" : ""}
+            class="peer sr-only"
+          />
+          <label for="${id}" class="inline-flex cursor-pointer">
+            <span class="${baseClasses} ${colorClasses[color] || colorClasses["dark/zinc"]}">
+              <svg class="${checkIconClasses} ${checkColor}" viewBox="0 0 14 14" fill="none" stroke="currentColor">
+                <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </label>
+        </div>
+        ${label ? `<label for="${id}" class="col-start-2 row-start-1 text-sm/6 font-medium text-zinc-950 dark:text-white cursor-pointer">${label}</label>` : ""}
+        ${description ? `<p class="col-start-2 row-start-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${description}</p>` : ""}
+      </div>
+    `;
+  } else {
+    // Simple checkbox with optional label
+    return `
+      <label class="inline-flex items-center gap-3 cursor-pointer ${className}">
+        <input
+          type="checkbox"
+          id="${id}"
+          name="${name}"
+          ${checked ? "checked" : ""}
+          ${disabled ? "disabled" : ""}
+          class="peer sr-only"
+        />
+        <span class="${baseClasses} ${colorClasses[color] || colorClasses["dark/zinc"]}">
+          <svg class="${checkIconClasses} ${checkColor}" viewBox="0 0 14 14" fill="none" stroke="currentColor">
+            <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        ${label ? `<span class="text-sm/6 font-medium text-zinc-950 dark:text-white">${label}</span>` : ""}
+      </label>
+    `;
+  }
+}
+
+export interface AdminLayoutCatalystData {
+  title: string;
+  pageTitle?: string;
+  currentPath?: string;
+  version?: string;
+  enableExperimentalFeatures?: boolean;
+  user?: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  scripts?: string[];
+  styles?: string[];
+  content: string | HtmlEscapedString;
+  dynamicMenuItems?: Array<{
+    label: string;
+    slug: string;
+    collectionId: string;
+    icon: string;
+  }>;
+}
+
+/**
+ * Module-level menu items set by adminMenuMiddleware.
+ * Safe for Workers: the set→render path is synchronous
+ * (no await between set and render), so concurrent requests cannot interleave.
+ */
+let _pendingMenuItems: AdminLayoutCatalystData['dynamicMenuItems'] | undefined
+
+export function setCatalystDynamicMenuItems(items: AdminLayoutCatalystData['dynamicMenuItems']) {
+  _pendingMenuItems = items
+}
+
+export function renderAdminLayoutCatalyst(
+  data: AdminLayoutCatalystData
+): string {
+  // Auto-inject menu items from middleware if not explicitly provided
+  if (_pendingMenuItems && !data.dynamicMenuItems) {
+    data = { ...data, dynamicMenuItems: _pendingMenuItems }
+  }
+  if (!data.version) data.version = getVersionDisplay();
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${data.title} - Flare CMS Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Dark mode init (before any rendering to prevent FOUC) -->
+  <script>
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            zinc: {
+              50: '#fafafa',
+              100: '#f4f4f5',
+              200: '#e4e4e7',
+              300: '#d4d4d8',
+              400: '#a1a1aa',
+              500: '#71717a',
+              600: '#52525b',
+              700: '#3f3f46',
+              800: '#27272a',
+              900: '#18181b',
+              950: '#09090b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Additional Styles -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Custom scrollbar - light mode */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f4f4f5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a1a1aa;
+    }
+
+    /* Custom scrollbar - dark mode */
+    .dark ::-webkit-scrollbar-track {
+      background: #27272a;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #52525b;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #71717a;
+    }
+
+    /* Alpine.js cloak */
+    [x-cloak] { display: none !important; }
+
+    /* Smooth transitions */
+    * {
+      transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+  </style>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- CSRF: Auto-attach token to all HTMX and fetch requests -->
+  <script>
+    function getCsrfToken() {
+      var cookie = document.cookie.split('; ')
+        .find(function(row) { return row.startsWith('csrf_token='); });
+      return cookie ? cookie.substring(cookie.indexOf('=') + 1) : '';
+    }
+
+    document.addEventListener('htmx:configRequest', function(event) {
+      var token = getCsrfToken();
+      if (token) {
+        event.detail.headers['X-CSRF-Token'] = token;
+      }
+    });
+
+    (function() {
+      var originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        options = options || {};
+        var method = (options.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+          options.headers = options.headers || {};
+          if (options.headers instanceof Headers) {
+            if (!options.headers.has('X-CSRF-Token')) {
+              options.headers.set('X-CSRF-Token', getCsrfToken());
+            }
+          } else if (!Array.isArray(options.headers) && !options.headers['X-CSRF-Token']) {
+            options.headers['X-CSRF-Token'] = getCsrfToken();
+          }
+        }
+        return originalFetch.call(this, url, options);
+      };
+    })();
+
+    // Inject _csrf hidden field into regular form submissions (non-HTMX)
+    document.addEventListener('submit', function(event) {
+      var form = event.target;
+      if (!form || !form.tagName || form.tagName !== 'FORM') return;
+      var method = (form.method || 'GET').toUpperCase();
+      if (method === 'GET') return;
+      if (form.hasAttribute('hx-post') || form.hasAttribute('hx-put') ||
+          form.hasAttribute('hx-delete') || form.hasAttribute('hx-patch')) return;
+      if (!form.querySelector('input[name="_csrf"]')) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_csrf';
+        input.value = getCsrfToken();
+        form.appendChild(input);
+      }
+    });
+  </script>
+
+  ${
+    data.styles
+      ? data.styles
+          .map((style) => `<link rel="stylesheet" href="${style}">`)
+          .join("\n  ")
+      : ""
+  }
+  ${
+    data.scripts
+      ? data.scripts
+          .map((script) => `<script src="${script}"></script>`)
+          .join("\n  ")
+      : ""
+  }
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-zinc-900">
+  <div class="relative isolate flex min-h-svh w-full max-lg:flex-col lg:bg-zinc-100 dark:lg:bg-zinc-950">
+    <!-- Sidebar on desktop -->
+    <div class="fixed inset-y-0 left-0 w-64 max-lg:hidden">
+      ${renderCatalystSidebar(
+        data.currentPath,
+        data.user,
+        data.dynamicMenuItems,
+        false,
+        data.version,
+        data.enableExperimentalFeatures
+      )}
+    </div>
+
+    <!-- Mobile sidebar (hidden by default) -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/30 lg:hidden hidden z-40" onclick="closeMobileSidebar()"></div>
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-80 transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden z-50">
+      ${renderCatalystSidebar(
+        data.currentPath,
+        data.user,
+        data.dynamicMenuItems,
+        true,
+        data.version,
+        data.enableExperimentalFeatures
+      )}
+    </div>
+
+    <!-- Main content area -->
+    <main class="flex flex-1 flex-col pb-2 lg:min-w-0 lg:pr-2 lg:pl-64">
+      <!-- Mobile header with menu toggle -->
+      <header class="flex items-center px-4 py-2.5 lg:hidden border-b border-zinc-950/5 dark:border-white/5">
+        <button onclick="openMobileSidebar()" class="relative flex items-center justify-center rounded-lg p-2 text-zinc-950 hover:bg-zinc-950/5 dark:text-white dark:hover:bg-white/5" aria-label="Open navigation">
+          ${icon(Menu, 'h-5 w-5')}
+        </button>
+        <div class="ml-4 flex-1 text-zinc-900 dark:text-white">
+          ${renderLogo({ size: "sm", showText: true, href: "/admin" })}
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-sm lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+        ${data.content}
+      </div>
+    </main>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <!-- Migration Warning Banner (hidden by default) -->
+  <div id="migration-banner" class="hidden fixed top-0 left-0 right-0 z-50 bg-amber-500 dark:bg-amber-600 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between flex-wrap">
+        <div class="flex items-center flex-1">
+          <span class="flex p-2 rounded-lg bg-amber-600 dark:bg-amber-700">
+            ${icon(AlertTriangle, 'h-5 w-5 text-white')}
+          </span>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-white">
+              <span id="migration-count"></span> pending database migration(s) detected
+            </p>
+            <p class="text-xs text-amber-100 dark:text-amber-200 mt-1">
+              Run: <code class="bg-amber-700 dark:bg-amber-800 px-2 py-0.5 rounded font-mono text-white">wrangler d1 migrations apply DB --local</code>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/admin/settings/migrations" class="text-xs font-semibold text-white hover:text-amber-100 underline">
+            View Details
+          </a>
+          <button onclick="closeMigrationBanner()" class="p-1 rounded-md text-white hover:bg-amber-600 dark:hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-white">
+            ${icon(X, 'h-5 w-5')}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mobile sidebar toggle
+    function openMobileSidebar() {
+      const sidebar = document.getElementById('mobile-sidebar');
+      const overlay = document.getElementById('mobile-sidebar-overlay');
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('mobile-sidebar');
+      const overlay = document.getElementById('mobile-sidebar-overlay');
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+
+    // User dropdown toggle
+    function toggleUserDropdown() {
+      const dropDowns = document.querySelectorAll('.userDropdown');
+      dropDowns.forEach(dropdown => {
+        dropdown.classList.toggle('hidden');
+      });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('userDropdown');
+      const button = event.target.closest('[data-user-menu]');
+      if (!button && dropdown && !dropdown.contains(event.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      const container = document.getElementById('notification-container');
+      const notification = document.createElement('div');
+      const colors = {
+        success: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-green-600/20 dark:ring-green-500/20',
+        error: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-red-600/20 dark:ring-red-500/20',
+        warning: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-600/20 dark:ring-amber-500/20',
+        info: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-blue-600/20 dark:ring-blue-500/20'
+      };
+
+      notification.className = \`rounded-lg p-4 ring-1 \${colors[type] || colors.info} max-w-sm shadow-lg\`;
+      notification.innerHTML = \`
+        <div class="flex items-center justify-between">
+          <span class="text-sm">\${message}</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-4 hover:opacity-70">
+            ${icon(X, 'w-4 h-4')}
+          </button>
+        </div>
+      \`;
+
+      container.appendChild(notification);
+
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 5000);
+    }
+
+    // Show URL-based notifications (e.g. from requireRole redirect)
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      const message = params.get('message');
+      const type = params.get('type') || (error ? 'error' : 'success');
+      const text = error || message;
+      if (text) {
+        showNotification(text, type);
+        // Clean up URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('error');
+        url.searchParams.delete('message');
+        url.searchParams.delete('type');
+        window.history.replaceState({}, '', url.pathname + url.hash);
+      }
+    })();
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+    }
+
+    // Migration banner functions
+    function closeMigrationBanner() {
+      const banner = document.getElementById('migration-banner');
+      if (banner) {
+        banner.classList.add('hidden');
+        // Store in session storage so it doesn't show again during this session
+        sessionStorage.setItem('migrationBannerDismissed', 'true');
+      }
+    }
+
+    // Check for pending migrations on page load
+    async function checkPendingMigrations() {
+      // Don't check if user dismissed the banner in this session
+      if (sessionStorage.getItem('migrationBannerDismissed') === 'true') {
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/api/migrations/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data && data.data.pendingMigrations > 0) {
+            const banner = document.getElementById('migration-banner');
+            const countElement = document.getElementById('migration-count');
+            if (banner && countElement) {
+              countElement.textContent = data.data.pendingMigrations;
+              banner.classList.remove('hidden');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check migration status:', error);
+      }
+    }
+
+    // Check for pending migrations when the page loads
+    document.addEventListener('DOMContentLoaded', checkPendingMigrations);
+
+    // --- Idle Timeout ---
+    (function() {
+      fetch('/admin/settings/api/idle-config').then(function(r) { return r.json(); }).then(function(cfg) {
+        initIdleTimeout(cfg.idleTimeout || 0, cfg.idleWarningMinutes || 5);
+      }).catch(function() {});
+
+      function initIdleTimeout(IDLE_TIMEOUT, WARNING_BEFORE) {
+      if (IDLE_TIMEOUT <= 0) return;
+
+      const timeoutMs = IDLE_TIMEOUT * 60 * 1000;
+      const warningMs = (IDLE_TIMEOUT - WARNING_BEFORE) * 60 * 1000;
+      let lastActivity = Date.now();
+      let warningShown = false;
+      let warningModal = null;
+
+      function resetTimer() {
+        lastActivity = Date.now();
+        if (warningShown && warningModal) {
+          warningModal.remove();
+          warningShown = false;
+        }
+      }
+
+      ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function(evt) {
+        document.addEventListener(evt, resetTimer, { passive: true });
+      });
+
+      function buildWarningModal(secsLeft) {
+        var modal = document.createElement('div');
+        modal.id = 'idle-warning-modal';
+        modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm';
+
+        var card = document.createElement('div');
+        card.className = 'bg-white dark:bg-zinc-800 rounded-xl shadow-2xl p-6 max-w-sm mx-4 ring-1 ring-zinc-200 dark:ring-zinc-700';
+
+        var header = document.createElement('div');
+        header.className = 'flex items-center gap-3 mb-3';
+
+        var iconWrap = document.createElement('div');
+        iconWrap.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20';
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('class', 'h-5 w-5 text-amber-600 dark:text-amber-400');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        var path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z');
+        svg.appendChild(path);
+        iconWrap.appendChild(svg);
+        header.appendChild(iconWrap);
+
+        var title = document.createElement('h3');
+        title.className = 'text-lg font-semibold text-zinc-900 dark:text-white';
+        title.textContent = 'Session Expiring';
+        header.appendChild(title);
+        card.appendChild(header);
+
+        var msg = document.createElement('p');
+        msg.className = 'text-sm text-zinc-600 dark:text-zinc-400 mb-4';
+        msg.textContent = 'You will be logged out in ';
+        var countdown = document.createElement('strong');
+        countdown.id = 'idle-countdown';
+        countdown.className = 'text-amber-600 dark:text-amber-400';
+        countdown.textContent = String(Math.ceil(secsLeft));
+        msg.appendChild(countdown);
+        var suffix = document.createTextNode(' seconds due to inactivity.');
+        msg.appendChild(suffix);
+        card.appendChild(msg);
+
+        var btn = document.createElement('button');
+        btn.className = 'w-full rounded-lg bg-zinc-900 dark:bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-700 dark:hover:bg-blue-700 transition-colors';
+        btn.textContent = "I'm still here";
+        btn.addEventListener('click', function() { modal.remove(); warningShown = false; });
+        card.appendChild(btn);
+
+        modal.appendChild(card);
+        return modal;
+      }
+
+      function showWarning(secsLeft) {
+        if (warningShown) {
+          var counter = document.getElementById('idle-countdown');
+          if (counter) counter.textContent = String(Math.max(0, Math.ceil(secsLeft)));
+          return;
+        }
+        warningShown = true;
+        warningModal = buildWarningModal(secsLeft);
+        document.body.appendChild(warningModal);
+      }
+
+      setInterval(function() {
+        var elapsed = Date.now() - lastActivity;
+        if (elapsed >= timeoutMs) {
+          window.location.href = '/auth/logout?error=Session expired due to inactivity';
+        } else if (elapsed >= warningMs && warningMs > 0) {
+          var secsLeft = (timeoutMs - elapsed) / 1000;
+          showWarning(secsLeft);
+        }
+      }, 1000);
+      } // end initIdleTimeout
+    })();
+  </script>
+
+  <!-- Sync Modal -->
+  <div id="sync-modal" class="hidden fixed inset-0 z-50">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSyncModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl ring-1 ring-zinc-950/5 dark:ring-white/10 max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
+          <div>
+            <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Sync</h2>
+            <p id="sync-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400">Review pending changes before going live</p>
+          </div>
+          <button onclick="closeSyncModal()" class="rounded-lg p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div id="sync-body" class="flex-1 overflow-y-auto px-6 py-4">
+          <div class="flex items-center justify-center py-8">
+            <div class="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600"></div>
+            <span class="ml-3 text-sm text-zinc-500">Loading pending changes...</span>
+          </div>
+        </div>
+        <div id="sync-footer" class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
+          <div id="sync-status" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
+          <div class="flex gap-3">
+            <button onclick="closeSyncModal()" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Cancel</button>
+            <button id="sync-confirm-btn" onclick="syncAll()" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Go Live</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Confirmation Modal -->
+  <div id="reject-confirm-modal" class="hidden fixed inset-0 z-[60]">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeRejectConfirm()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-sm rounded-xl bg-white dark:bg-zinc-800 shadow-2xl ring-1 ring-zinc-200 dark:ring-zinc-700 p-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20">
+            <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Reject Revision</h3>
+        </div>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-5">This revision will be discarded. The live content will remain unchanged.</p>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeRejectConfirm()" class="rounded-lg bg-zinc-100 dark:bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">Cancel</button>
+          <button onclick="confirmReject()" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sync feature — content staging
+    let _syncRevisions = [];
+
+    async function checkPendingSync() {
+      try {
+        const res = await fetch('/admin/sync/api/pending-count');
+        const data = await res.json();
+        const badge = document.getElementById('sync-badge');
+        const btn = document.getElementById('sync-btn');
+        const subtext = document.getElementById('sync-subtext');
+        if (data.count > 0) {
+          if (badge) { badge.textContent = data.count; badge.classList.remove('hidden'); }
+          if (btn) { btn.disabled = false; btn.classList.add('ring-2', 'ring-blue-500/50'); btn.style.animation = 'sync-pulse 2s ease-in-out infinite'; }
+          if (subtext) { subtext.textContent = data.count + ' pending'; subtext.classList.remove('hidden'); }
+        } else {
+          if (badge) badge.classList.add('hidden');
+          if (btn) { btn.disabled = true; btn.classList.remove('ring-2', 'ring-blue-500/50'); btn.style.animation = ''; }
+          if (subtext) { subtext.textContent = 'Up to date'; subtext.classList.remove('hidden'); }
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    async function openSyncModal() {
+      document.getElementById('sync-modal').classList.remove('hidden');
+      const body = document.getElementById('sync-body');
+      const subtitle = document.getElementById('sync-subtitle');
+      const confirmBtn = document.getElementById('sync-confirm-btn');
+      const status = document.getElementById('sync-status');
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Go Live';
+      confirmBtn.className = 'rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+      try {
+        const res = await fetch('/admin/sync/api/pending');
+        const data = await res.json();
+        _syncRevisions = data.revisions || [];
+
+        body.textContent = '';
+
+        if (_syncRevisions.length === 0) {
+          subtitle.textContent = 'Everything is in sync';
+          const msg = document.createElement('div');
+          msg.className = 'py-8 text-center';
+          const p = document.createElement('p');
+          p.className = 'text-zinc-500 dark:text-zinc-400';
+          p.textContent = 'No pending changes. All content is live.';
+          msg.appendChild(p);
+          body.appendChild(msg);
+          confirmBtn.disabled = true;
+          status.textContent = '';
+        } else {
+          subtitle.textContent = _syncRevisions.length + ' change' + (_syncRevisions.length === 1 ? '' : 's') + ' ready for review';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Go Live (' + _syncRevisions.length + ')';
+          status.textContent = '';
+
+          // Group by collection
+          const groups = {};
+          for (const rev of _syncRevisions) {
+            const col = rev.collectionName || 'Unknown';
+            if (!groups[col]) groups[col] = [];
+            groups[col].push(rev);
+          }
+
+          for (const [collection, revs] of Object.entries(groups)) {
+            const section = document.createElement('div');
+            section.className = 'mb-4';
+
+            const heading = document.createElement('h3');
+            heading.className = 'text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2';
+            heading.textContent = collection + ' (' + revs.length + ')';
+            section.appendChild(heading);
+
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+
+            for (const rev of revs) {
+              const card = document.createElement('div');
+              card.className = 'rounded-lg border border-zinc-200 dark:border-zinc-700 p-3';
+
+              const row = document.createElement('div');
+              row.className = 'flex items-start justify-between';
+
+              const info = document.createElement('div');
+              info.className = 'min-w-0 flex-1';
+
+              const titleLink = document.createElement('a');
+              titleLink.href = '/admin/content/' + rev.contentId + '/edit';
+              titleLink.className = 'text-sm font-medium text-zinc-950 dark:text-white hover:text-blue-600 dark:hover:text-blue-400';
+              titleLink.textContent = rev.contentTitle;
+
+              const meta = document.createElement('p');
+              meta.className = 'text-xs text-zinc-500 dark:text-zinc-400 mt-0.5';
+              meta.textContent = 'by ' + rev.submittedByEmail + ' \u00b7 ' + formatTimeAgo(rev.submittedAt);
+
+              info.appendChild(titleLink);
+              info.appendChild(meta);
+
+              // Show changed fields with expandable diff
+              if (rev.diffs && rev.diffs.length > 0) {
+                var diffToggle = document.createElement('button');
+                diffToggle.className = 'text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 flex items-center gap-1';
+                diffToggle.textContent = rev.diffs.length + ' field' + (rev.diffs.length === 1 ? '' : 's') + ' changed';
+                var arrow = document.createElement('span');
+                arrow.className = 'transition-transform text-[10px]';
+                arrow.textContent = '\u25B6';
+                diffToggle.prepend(arrow);
+
+                var diffDetails = document.createElement('div');
+                diffDetails.className = 'hidden mt-2 space-y-1.5';
+
+                for (var di = 0; di < rev.diffs.length; di++) {
+                  var d = rev.diffs[di];
+                  var diffRow = document.createElement('div');
+                  diffRow.className = 'text-xs rounded bg-zinc-50 dark:bg-zinc-800/50 px-2 py-1.5';
+
+                  var fieldName = document.createElement('span');
+                  fieldName.className = 'font-medium text-zinc-600 dark:text-zinc-300';
+                  fieldName.textContent = d.field;
+                  diffRow.appendChild(fieldName);
+
+                  var oldVal = truncateValue(d.oldValue);
+                  var newVal = truncateValue(d.newValue);
+
+                  if (oldVal && newVal) {
+                    // Changed value
+                    var oldSpan = document.createElement('div');
+                    oldSpan.className = 'text-red-500/70 dark:text-red-400/70 line-through mt-0.5';
+                    oldSpan.textContent = oldVal;
+                    diffRow.appendChild(oldSpan);
+                    var newSpan = document.createElement('div');
+                    newSpan.className = 'text-emerald-600 dark:text-emerald-400';
+                    newSpan.textContent = newVal;
+                    diffRow.appendChild(newSpan);
+                  } else if (newVal) {
+                    // Added
+                    var addedSpan = document.createElement('div');
+                    addedSpan.className = 'text-emerald-600 dark:text-emerald-400 mt-0.5';
+                    addedSpan.textContent = '+ ' + newVal;
+                    diffRow.appendChild(addedSpan);
+                  } else if (oldVal) {
+                    // Removed
+                    var removedSpan = document.createElement('div');
+                    removedSpan.className = 'text-red-500 dark:text-red-400 line-through mt-0.5';
+                    removedSpan.textContent = oldVal;
+                    diffRow.appendChild(removedSpan);
+                  }
+
+                  diffDetails.appendChild(diffRow);
+                }
+
+                diffToggle.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  var details = this.nextElementSibling;
+                  var arr = this.querySelector('span');
+                  if (details.classList.contains('hidden')) {
+                    details.classList.remove('hidden');
+                    arr.style.transform = 'rotate(90deg)';
+                  } else {
+                    details.classList.add('hidden');
+                    arr.style.transform = '';
+                  }
+                });
+
+                info.appendChild(diffToggle);
+                info.appendChild(diffDetails);
+              }
+
+              const rejectBtn = document.createElement('button');
+              rejectBtn.className = 'shrink-0 ml-2 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors';
+              rejectBtn.textContent = 'Reject';
+              rejectBtn.title = 'Reject';
+              rejectBtn.setAttribute('data-version-id', rev.versionId);
+              rejectBtn.addEventListener('click', function() { showRejectConfirm(this.getAttribute('data-version-id')); });
+
+              row.appendChild(info);
+              row.appendChild(rejectBtn);
+              card.appendChild(row);
+              list.appendChild(card);
+            }
+
+            section.appendChild(list);
+            body.appendChild(section);
+          }
+        }
+      } catch (e) {
+        body.textContent = '';
+        const err = document.createElement('div');
+        err.className = 'py-8 text-center text-red-500';
+        err.textContent = 'Failed to load pending changes';
+        body.appendChild(err);
+      }
+    }
+
+    function closeSyncModal() {
+      document.getElementById('sync-modal').classList.add('hidden');
+    }
+
+    async function syncAll() {
+      const btn = document.getElementById('sync-confirm-btn');
+      const status = document.getElementById('sync-status');
+      btn.disabled = true;
+      btn.textContent = 'Publishing...';
+      status.textContent = 'Pushing changes live...';
+      try {
+        const res = await fetch('/admin/sync/api/approve-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          status.textContent = data.count + ' change(s) are now live!';
+          btn.textContent = 'Synced';
+          btn.className = 'rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+          checkPendingSync();
+          setTimeout(closeSyncModal, 2000);
+        } else {
+          status.textContent = data.error || 'Sync failed';
+          btn.textContent = 'Go Live';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        status.textContent = 'Network error';
+        btn.textContent = 'Go Live';
+        btn.disabled = false;
+      }
+    }
+
+    var _rejectTargetId = null;
+
+    function showRejectConfirm(versionId) {
+      _rejectTargetId = versionId;
+      document.getElementById('reject-confirm-modal').classList.remove('hidden');
+    }
+
+    function closeRejectConfirm() {
+      _rejectTargetId = null;
+      document.getElementById('reject-confirm-modal').classList.add('hidden');
+    }
+
+    async function confirmReject() {
+      if (!_rejectTargetId) return;
+      var versionId = _rejectTargetId;
+      closeRejectConfirm();
+      try {
+        var res = await fetch('/admin/sync/api/reject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ versionId: versionId })
+        });
+        var data = await res.json();
+        if (data.success) {
+          openSyncModal();
+          checkPendingSync();
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    function truncateValue(val) {
+      if (val === null || val === undefined || val === '') return '';
+      var str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+      return str.length > 300 ? str.substring(0, 300) + '...' : str;
+    }
+
+    function formatTimeAgo(ts) {
+      var diff = Date.now() - ts;
+      var mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      var hours = Math.floor(mins / 60);
+      if (hours < 24) return hours + 'h ago';
+      var days = Math.floor(hours / 24);
+      return days + 'd ago';
+    }
+
+    document.addEventListener('DOMContentLoaded', checkPendingSync);
+  </script>
+
+  <style>
+    @keyframes sync-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
+    }
+  </style>
+</body>
+</html>`;
+}
+
+function renderCatalystSidebar(
+  currentPath: string = "",
+  user?: any,
+  dynamicMenuItems?: Array<{ label: string; slug: string; collectionId: string; icon: string }>,
+  isMobile: boolean = false,
+  version?: string,
+  _enableExperimentalFeatures?: boolean
+): string {
+  // --- Helper: render a single nav link ---
+  const navLink = (item: { label: string; path: string; iconHtml: string }, isActive: boolean) => `
+    <span class="relative">
+      ${isActive ? `<span class="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-blue-600 dark:bg-blue-500"></span>` : ''}
+      <a
+        href="${item.path}"
+        class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm/5 font-medium ${
+          isActive
+            ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+            : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5'
+        }"
+        ${isActive ? 'data-current="true"' : ''}
+      >
+        <span class="shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 dark:text-zinc-500'}">${item.iconHtml}</span>
+        <span class="truncate">${item.label}</span>
+      </a>
+    </span>
+  `
+
+  // --- Helper: render a collection nav item with Alpine.js flyout ---
+  const collectionNavItem = (item: { label: string; slug: string; collectionId: string; icon: string }) => {
+    const contentPath = `/admin/content?collection=${item.collectionId}`
+    const isActive = currentPath === contentPath || currentPath?.includes(`collection=${item.collectionId}`) || currentPath?.includes(`model=${item.slug}`)
+    return `
+    <div x-data="{ open: false }" class="relative">
+      <span class="relative">
+        ${isActive ? `<span class="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-blue-600 dark:bg-blue-500"></span>` : ''}
+        <button
+          @click="open = !open"
+          class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm/5 font-medium ${
+            isActive
+              ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+              : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5'
+          }"
+        >
+          <span class="shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 dark:text-zinc-500'}">${item.icon}</span>
+          <span class="flex-1 truncate">${item.label}</span>
+          <span class="shrink-0 text-zinc-400" :class="open ? 'rotate-90' : ''">${icon(ChevronRight, 'h-3.5 w-3.5 transition-transform')}</span>
+        </button>
+      </span>
+      <div x-show="open" x-cloak class="ml-8 mt-0.5 flex flex-col gap-0.5">
+        <a href="/admin/content?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">All ${item.label}</a>
+        <a href="/admin/content/new?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">Add New</a>
+      </div>
+    </div>
+    `
+  }
+
+  // --- Helper: section header ---
+  const sectionHeader = (label: string) => `
+    <div class="px-2 pt-4 pb-1">
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">${label}</p>
+    </div>
+  `
+
+  // --- Check active states ---
+  const isActivePath = (path: string) =>
+    currentPath === path || (path !== '/admin' && currentPath?.startsWith(path))
+
+  // --- Build sidebar sections ---
+
+  // Dashboard (top, no section header)
+  const dashboardItem = navLink(
+    { label: 'Dashboard', path: '/admin', iconHtml: icon(LayoutDashboard, 'h-5 w-5') },
+    currentPath === '/admin' || currentPath === '/admin/dashboard'
+  )
+
+  // --- Role-based visibility ---
+  const userRole = user?.role || 'viewer'
+  const isAdmin = userRole === 'admin'
+  const isEditorOrAbove = isAdmin || userRole === 'editor'
+
+  // CONTENT section: dynamic collections + Content (all) + Media
+  const hasCollections = dynamicMenuItems && dynamicMenuItems.length > 0
+  const collectionItems = hasCollections
+    ? dynamicMenuItems!.map(item => collectionNavItem(item)).join('')
+    : ''
+  const contentAllItem = navLink(
+    { label: 'Content', path: '/admin/content', iconHtml: icon(FileText, 'h-5 w-5') },
+    isActivePath('/admin/content') && !currentPath?.includes('collection=')
+  )
+  const mediaItem = navLink(
+    { label: 'Media', path: '/admin/media', iconHtml: icon(Image, 'h-5 w-5') },
+    isActivePath('/admin/media')
+  )
+  const trashItem = navLink(
+    { label: 'Trash', path: '/admin/content?status=deleted', iconHtml: icon(Trash2, 'h-5 w-5') },
+    currentPath?.includes('status=deleted') || false
+  )
+
+  // Analytics (between content and system)
+  const analyticsItem = navLink(
+    { label: 'Analytics', path: '/admin/analytics', iconHtml: icon(BarChart3, 'h-5 w-5') },
+    isActivePath('/admin/analytics')
+  )
+
+  // Workflow (admin/editor only, between analytics and system)
+  const workflowItem = isEditorOrAbove ? navLink(
+    { label: 'Workflow', path: '/admin/workflow/dashboard', iconHtml: icon(GitBranch, 'h-5 w-5') },
+    isActivePath('/admin/workflow')
+  ) : ''
+
+  // SYSTEM section — filtered by role
+  // Admin-only: Users, Collections, Plugins, Cache, Migrations
+  // Editor+: Forms, FAQs
+  const systemItemsList: Array<{ label: string; path: string; iconHtml: string }> = []
+  if (isAdmin) {
+    systemItemsList.push({ label: 'Users', path: '/admin/users', iconHtml: icon(Users, 'h-5 w-5') })
+    systemItemsList.push({ label: 'Collections', path: '/admin/collections', iconHtml: icon(Layers, 'h-5 w-5') })
+  }
+  if (isEditorOrAbove) {
+    systemItemsList.push({ label: 'Forms', path: '/admin/forms', iconHtml: icon(ClipboardList, 'h-5 w-5') })
+    systemItemsList.push({ label: 'FAQs', path: '/admin/faq', iconHtml: icon(CircleHelp, 'h-5 w-5') })
+  }
+  if (isAdmin) {
+    systemItemsList.push({ label: 'Audit Log', path: '/admin/audit-log', iconHtml: icon(ClipboardList, 'h-5 w-5') })
+    systemItemsList.push({ label: 'Plugins', path: '/admin/plugins', iconHtml: icon(Plug, 'h-5 w-5') })
+    systemItemsList.push({ label: 'Cache', path: '/admin/cache', iconHtml: icon(HardDrive, 'h-5 w-5') })
+    systemItemsList.push({ label: 'Migrations', path: '/admin/schema-migrations', iconHtml: icon(Database, 'h-5 w-5') })
+  }
+  const systemItems = systemItemsList.map(item => navLink(item, isActivePath(item.path))).join('')
+
+  // Sync button (always visible, disabled when no pending changes)
+  const syncItem = `
+    <div class="flex flex-col">
+      <button
+        id="sync-btn"
+        onclick="openSyncModal()"
+        disabled
+        class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5 sm:text-sm/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
+      >
+        ${icon(Rocket, 'h-5 w-5 shrink-0')}
+        <span>Sync</span>
+        <span id="sync-badge" class="ml-auto hidden min-w-[20px] rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white"></span>
+      </button>
+      <span id="sync-subtext" class="hidden pl-10 -mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Up to date</span>
+    </div>
+  `
+
+  // Settings (admin only, pinned bottom)
+  const settingsItem = isAdmin ? navLink(
+    { label: 'Settings', path: '/admin/settings', iconHtml: icon(Settings, 'h-5 w-5') },
+    isActivePath('/admin/settings')
+  ) : ''
+
+  // Close button for mobile
+  const closeButton = isMobile ? `
+    <div class="-mb-3 px-4 pt-3">
+      <button onclick="closeMobileSidebar()" class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/5 sm:text-sm/5" aria-label="Close navigation">
+        ${icon(X, 'h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500')}
+        <span>Close menu</span>
+      </button>
+    </div>
+  ` : ''
+
+  return `
+    <nav class="flex h-full min-h-0 flex-col bg-white shadow-sm ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10 ${
+      isMobile ? 'is-mobile rounded-lg p-2 m-2' : ''
+    }">
+      ${closeButton}
+
+      <!-- Sidebar Header -->
+      <div class="relative flex flex-col items-center justify-center border-b border-zinc-200 px-4 py-6 dark:border-zinc-800 text-zinc-900 dark:text-white">
+        ${renderLogo({ size: 'lg', showText: true, showVersion: false, href: '/admin' })}
+        ${version ? `<span class="absolute bottom-2 right-4 text-[10px] text-zinc-400 dark:text-zinc-500">${version}</span>` : ''}
+      </div>
+
+      <!-- Sidebar Body -->
+      <div class="flex flex-1 flex-col overflow-y-auto px-4 pb-4">
+        <!-- Dashboard -->
+        <div class="flex flex-col gap-0.5 pt-2">
+          ${dashboardItem}
+        </div>
+
+        <!-- CONTENT -->
+        ${sectionHeader('Content')}
+        <div class="flex flex-col gap-0.5">
+          ${collectionItems}
+          ${contentAllItem}
+          ${mediaItem}
+          ${trashItem}
+        </div>
+
+        <!-- ANALYTICS + WORKFLOW -->
+        <div class="flex flex-col gap-0.5 pt-2">
+          ${analyticsItem}
+          ${workflowItem}
+        </div>
+
+        <!-- SYSTEM -->
+        ${systemItemsList.length > 0 ? `
+          ${sectionHeader('System')}
+          <div class="flex flex-col gap-0.5">
+            ${systemItems}
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Sync + Settings (Bottom) -->
+      <div class="border-t border-zinc-200 px-4 py-2 dark:border-zinc-800 flex flex-col gap-0.5">
+        ${syncItem}
+        ${isAdmin ? settingsItem : ''}
+      </div>
+
+
+      <!-- Sidebar Footer (User) -->
+      ${user ? `
+        <div class="flex flex-col border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
+          <div class="relative">
+            <button
+              data-user-menu
+              onclick="toggleUserDropdown()"
+              class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm/5 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5"
+            >
+              <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                <span class="text-xs font-semibold">${(user.name || user.email || 'U').charAt(0).toUpperCase()}</span>
+              </div>
+              <span class="flex-1 truncate">${user.name || user.email || 'User'}</span>
+              ${icon(ChevronDown, 'h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500')}
+            </button>
+
+            <!-- User Dropdown -->
+            <div class="userDropdown hidden absolute bottom-full mb-2 left-0 right-0 mx-2 rounded-xl bg-white shadow-lg ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700 z-50">
+              <div class="p-2">
+                <div class="px-3 py-2 border-b border-zinc-100 dark:border-zinc-700">
+                  <p class="text-sm font-medium text-zinc-900 dark:text-white">${user.name || user.email || 'User'}</p>
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400">${user.email || ''}</p>
+                </div>
+                <a href="/admin/profile" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
+                  ${icon(User, 'h-4 w-4')}
+                  My Profile
+                </a>
+                <button onclick="toggleDarkMode()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
+                  <span class="dark:hidden">${icon(Moon, 'h-4 w-4')}</span>
+                  <span class="hidden dark:inline">${icon(Sun, 'h-4 w-4')}</span>
+                  <span class="dark:hidden">Dark Mode</span>
+                  <span class="hidden dark:inline">Light Mode</span>
+                </button>
+                <a href="/auth/logout" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
+                  ${icon(LogOut, 'h-4 w-4')}
+                  Sign Out
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    </nav>
+  `
+}

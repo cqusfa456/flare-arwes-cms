@@ -1,0 +1,25 @@
+{
+  "name": "apps-docs",
+  "version": "1.0.0-next.25020502",
+  "private": true,
+  "dependencies": {
+    "@arwes/react": "^1.0.0-next.25020502",
+    "@astrojs/react": "^6.0.5",
+    "@tailwindcss/typography": "^0.5.14",
+    "astro": "^7.3.2",
+    "autoprefixer": "^10.4.20",
+    "iconoir-react": "^7.8.0",
+    "jotai": "^2.9.2",
+    "postcss": "^8.4.41",
+    "prism-react-renderer": "^2.3.1",
+    "react-use": "^17.5.1",
+    "tailwindcss": "^3.4.9",
+    "@flare-cms/astro": "file:../../cms/packages/astro",
+    "markdown-it": "^14.1.0"
+  },
+  "scripts": {
+    "dev": "sh ./scripts/setup.sh && astro dev --port 9002",
+    "build": "sh ./scripts/setup.sh && astro build",
+    "start": "serve ./build -p 9002"
+  }
+}

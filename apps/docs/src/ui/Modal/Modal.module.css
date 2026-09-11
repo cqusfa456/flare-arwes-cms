@@ -1,0 +1,15 @@
+.root {
+}
+
+.frame {
+}
+
+.frame [data-name='bg'] {
+  @apply fill-primary-main-12/80
+    stroke-primary-main-9/50;
+}
+
+.frame [data-name='line'] {
+  @apply fill-none
+    stroke-primary-main-7;
+}
