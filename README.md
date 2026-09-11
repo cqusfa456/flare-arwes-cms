@@ -53,13 +53,15 @@ cd cms && pnpm install && pnpm build && pnpm build:astro
 npm run setup
 ```
 
-向导交互式完成：
+向导交互式完成（**GitHub 先行**，作为 secrets 管理基础）：
 
-1. **Cloudflare 登录** — wrangler OAuth 或 API Token
-2. **创建资源** — D1 数据库 / R2 存储桶 / KV namespace 自动创建并登记
-3. **GitHub 登录** — WebAuth 设备流（浏览器授权，无需 token）
-4. **账号信息入 GitHub Secrets** — CF/B2/JWT 全部加密写入 secrets，本地零留存
-5. **本地开发配置** — 按需写入 `.dev.vars`（gitignored）、前端 `.env`
+1. **GitHub 登录** — WebAuth 设备流（浏览器授权，无需 token）
+2. **GitHub Actions 状态** — 查看 workflow / 最近运行（可选）
+3. **Cloudflare 登录** — wrangler OAuth 或 API Token，登录后**立即写入 secrets**
+4. **创建资源** — D1 / R2 / KV 自动创建，**每个 ID 立即写入 secrets**
+5. **Backblaze B2**（可选）— 密钥立即写入 secrets
+6. **JWT_SECRET / GH_TOKEN** — 写入 secrets（GH_TOKEN 默认不上传）
+7. **本地配置** — 按需写入 `.dev.vars`（gitignored）、前端 `.env`
 
 > 所有账号凭据（Cloudflare、Backblaze B2、JWT）默认只存于 GitHub Actions secrets，
 > 不进入仓库、不留在本地。
