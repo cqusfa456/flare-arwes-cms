@@ -2,6 +2,11 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { schemaDefinitions } from '../schemas'
 import { getCacheService, CACHE_CONFIGS } from '../services'
+import {
+  resolveContentSiteScope,
+  applyContentSiteScope,
+  describeSiteScope
+} from '../services/content-site-scope'
 import { QueryFilterBuilder, QueryFilter } from '../utils'
 import { isPluginActive } from '../middleware'
 import { validateApiToken } from '../services/api-tokens'
@@ -645,6 +650,21 @@ apiRoutes.get('/content', async (c) => {
     // Parse filter from query parameters
     const filter: QueryFilter = QueryFilterBuilder.parseFromQuery(queryParams)
 
+    // Per-site content isolation. The scope is server-controlled and is folded
+    // into `filter`, so it also changes the cache key below — one site can
+    // never be served another site's cached response.
+    const siteScope = await resolveContentSiteScope(db, {
+      header: c.req.header('X-Site'),
+      query: queryParams.site
+    })
+    if (siteScope.unknown) {
+      return c.json({
+        error: `Unknown site "${siteScope.requested}"`,
+        details: 'Register the site in Admin → Sites, or omit X-Site / ?site= to read shared content only.'
+      }, 404)
+    }
+    applyContentSiteScope(filter, siteScope)
+
     // Set default limit if not provided
     if (!filter.limit) {
       filter.limit = 50
@@ -714,6 +734,7 @@ apiRoutes.get('/content', async (c) => {
       slug: row.slug,
       status: row.status,
       collectionId: row.collection_id,
+      siteId: row.site_id ?? null,
       data: row.data ? JSON.parse(row.data) : {},
       created_at: row.created_at,
       updated_at: row.updated_at
@@ -725,6 +746,7 @@ apiRoutes.get('/content', async (c) => {
         count: results.length,
         timestamp: new Date().toISOString(),
         filter: filter,
+        siteScope: describeSiteScope(siteScope),
         query: {
           sql: queryResult.sql,
           params: queryResult.params
@@ -786,6 +808,19 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
       operator: 'equals',
       value: (collectionResult as any).id
     })
+
+    // Per-site content isolation (server-controlled; also keys the cache below)
+    const siteScope = await resolveContentSiteScope(db, {
+      header: c.req.header('X-Site'),
+      query: queryParams.site
+    })
+    if (siteScope.unknown) {
+      return c.json({
+        error: `Unknown site "${siteScope.requested}"`,
+        details: 'Register the site in Admin → Sites, or omit X-Site / ?site= to read shared content only.'
+      }, 404)
+    }
+    applyContentSiteScope(filter, siteScope)
 
     // Set default limit if not provided
     if (!filter.limit) {
@@ -857,6 +892,7 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
       slug: row.slug,
       status: row.status,
       collectionId: row.collection_id,
+      siteId: row.site_id ?? null,
       data: row.data ? JSON.parse(row.data) : {},
       created_at: row.created_at,
       updated_at: row.updated_at
@@ -872,6 +908,7 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
         count: results.length,
         timestamp: new Date().toISOString(),
         filter: filter,
+        siteScope: describeSiteScope(siteScope),
         query: {
           sql: queryResult.sql,
           params: queryResult.params

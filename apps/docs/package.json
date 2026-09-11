@@ -20,6 +20,9 @@
   "scripts": {
     "dev": "sh ./scripts/setup.sh && astro dev --port 9002",
     "build": "sh ./scripts/setup.sh && astro build",
-    "start": "serve ./build -p 9002"
+    "start": "serve ./build -p 9002",
+    "worker:build": "sh ./scripts/build-worker.sh",
+    "worker:dev": "../../cms/packages/cms/node_modules/.bin/wrangler dev",
+    "worker:deploy": "../../cms/packages/cms/node_modules/.bin/wrangler deploy"
   }
 }

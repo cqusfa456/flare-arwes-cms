@@ -27,6 +27,9 @@
   - [3.4 存储后端：R2 与 Backblaze B2](#34-存储后端)
   - [3.5 Astro 内容加载器](#35-astro-内容加载器)
   - [3.6 认证与 API Tokens](#36-认证与-api-tokens)
+  - [3.7 站点控制面 (Sites)](#37-站点控制面sites)
+    - [3.7.1 两种托管 provider](#371-两种托管-provider)
+    - [3.7.2 按站点隔离内容](#372-按站点隔离内容)
 - [4. 前端应用](#4-前端应用)
   - [4.1 文档站 (apps/docs)](#41-文档站)
   - [4.2 沙盒 (apps/play)](#42-沙盒)
@@ -192,9 +195,9 @@ Flare CMS 是 fork 自 SonicJS 的 headless CMS，运行在 Cloudflare Workers �
 **`cms/packages/cms`** — Cloudflare Worker 应用
 
 - `createFlareApp`：应用工厂（Hono 框架）
-- D1 数据库绑定（`DB`）、KV 缓存（`CACHE_KV`）、R2 或 B2 存储（`MEDIA_BUCKET`）
-- `scheduled` 处理器：定时发布内容（cron 每分钟）
-- 存储后端自动切换：`STORAGE_BACKEND=b2` 时用 B2，否则用 R2
+- D1 数据库绑定（`DB`）、KV 缓存（`CACHE_KV`）、媒体存储（`MEDIA_BUCKET` binding 或 S3 兼容适配器）
+- `scheduled` 处理器：定时发布内容（cron 每分钟），与 HTTP 请求走同一套 provider 解析
+- 存储后端由 `STORAGE_BACKEND` 选择（`r2` / `b2` / `s3`）；所选后端配置不完整时**启动即报错并列出缺失变量**，不会静默回退到 R2
 
 ### 3.2 Collections 集合系统
 
@@ -212,7 +215,8 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 ### 3.3 Admin 管理后台
 
 - **内容管理**：集合 CRUD、富文本编辑、字段校验
-- **媒体库**：图片/文件上传（R2 或 B2）
+- **媒体库**：图片/文件上传（R2 / B2 / 任意 S3 兼容后端）
+- **存储设置**：只读展示当前生效 provider（bucket / endpoint / region / 寻址方式）+ 连通性自检
 - **用户管理**：角色（admin/editor/viewer）、邀请、会话
 - **API Tokens**：只读访问令牌（`st_` 前缀，SHA-256 哈希存储）
 - **工作流**：Draft → Review → Published 审批链
@@ -220,18 +224,27 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 ### 3.4 存储后端
 
-| 后端          | 绑定/配置                          | 说明                     |
-| ------------- | ---------------------------------- | ------------------------ |
-| Cloudflare R2 | `MEDIA_BUCKET` R2 binding          | 默认，需账号启用 R2      |
-| Backblaze B2  | `STORAGE_BACKEND=b2` + `B2_*` vars | S3 兼容 API + SigV4 签名 |
+由 `STORAGE_BACKEND` 单一开关决定，三种 provider 共用同一套 `StorageBucket` 接口（`head` / `get` / `put` / `delete`）：
 
-**`cms/packages/cms/src/storage/b2-storage.ts`** — B2 适配器（R2 兼容接口）：
+| `STORAGE_BACKEND` | Provider                                            | 配置                                                                                                                | 说明                                    |
+| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 未设置 / `r2`     | Cloudflare R2                                       | `MEDIA_BUCKET` R2 binding                                                                                           | 默认，媒体读写不出 Cloudflare           |
+| `b2`              | Backblaze B2                                        | `B2_BUCKET` / `B2_ACCESS_KEY_ID` / `B2_SECRET_ACCESS_KEY`（可选 `B2_ENDPOINT`、`B2_REGION`＝`us-west-004`）         | S3 兼容 API + SigV4 签名                |
+| `s3`              | 通用 S3 兼容（AWS S3 / MinIO / Wasabi / R2 S3 API） | `S3_BUCKET` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`（可选 `S3_ENDPOINT`、`S3_REGION`、`S3_FORCE_PATH_STYLE`） | 省略 endpoint 时按 region 推导 AWS 端点 |
 
-- `put` / `get` / `head` / `delete`（含批量删除）
-- AWS Signature V4 签名（SHA-256 + HMAC）
-- 支持 string / ArrayBuffer / Blob / ReadableStream
-- `writeHttpMetadata`：HTTP 元数据回写
-- Content-Type 推断（按扩展名）
+别名：`cloudflare`/`cf` → r2，`backblaze` → b2，`aws`/`minio`/`wasabi`/`s3-compatible` → s3。
+
+**`cms/packages/core/src/storage/`** — 存储抽象层：
+
+- `resolveStorage(env)`：**唯一的 provider 决策点**，返回 `{ bucket, info }`；配置不完整时返回 `configured: false` + `missingVars`，绝不回退到 R2
+- `S3Storage`：通用 S3 兼容适配器 —— `head` / `get` / `put` / `delete`（含批量删除）、AWS SigV4 签名（SHA-256 + HMAC）、string / ArrayBuffer / Blob / ReadableStream、`writeHttpMetadata` 元数据回写、按扩展名推断 Content-Type、path-style 与 virtual-hosted 寻址
+- `STORAGE_PROVIDERS`：provider 目录（UI 展示与报错文案的唯一来源）
+- `getStorageInfo(env)`：无凭据的运行时描述，供 API 与 Admin UI 使用
+- `testStorageConnection(env)`：对当前 bucket 发起带签名的 `HEAD` 自检，404 视为连通，403/网络错误才判失败
+
+**Admin UI（Settings → Storage）**：provider 由环境变量决定，因此 UI **只读**展示当前生效后端，并并列展示全部支持的 provider 及各自所需变量；提供"Test connection"按钮调用 `POST /admin/settings/storage/test`。媒体大小上限、备份频率、允许类型等仍可编辑。旧的 `storageProvider`（`cloudflare`/`s3`/`local`）下拉框已移除 —— 它保存到 D1 后从不被后端读取。
+
+**`cms/packages/cms/src/storage/b2-storage.ts`** 现为兼容垫片，转发到 `@flare-cms/core` 的 `S3Storage`。
 
 ### 3.5 Astro 内容加载器
 
@@ -249,13 +262,76 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 - 首个用户自动允许注册（bootstrap）
 - API Token：只读 GET（`X-API-Key` 头），写入需用户 JWT
 
+### 3.7 站点控制面（Sites）
+
+CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定与内容归属都在 CMS 中登记与操作，不再分散在 GitHub Actions 和 Cloudflare 控制台。
+
+数据模型（迁移 `038_sites_registry.sql`）：`sites`（站点）→ `site_domains`（域名绑定），`content.site_id` 决定内容归属。
+
+- **站点注册表**（`sites`）：slug、Pages 项目名、Git 仓库/分支、Deploy Hook、构建命令/输出目录/根目录/Node 版本、内容前缀、启用状态、最近一次构建结果
+- **构建**：`POST` 该站点在 Cloudflare Pages 的 **Deploy Hook**；**构建由 Pages 执行**，CMS 只负责触发与回显，所以 GitHub Actions 里不再有站点构建。构建结果（queued / failed + 错误原因）写回 `sites.last_build_*`
+- **域名绑定**：通过 **Cloudflare API** 真实创建/删除 Pages 自定义域名，并把校验状态（pending / active / error + 失败原因）镜像到 `site_domains`；支持「从 Cloudflare 刷新」以采纳在控制台手工添加的域名、并把云端已消失的标记为 `removed`；可指定 primary 域名
+- **构建配置下发**：`syncBuildConfig()` 把 CMS 中的构建命令/输出目录/根目录 `PATCH` 到 Pages 项目（`build_config`），使 CMS 对「站点怎么构建」也有权威
+- **内容归属**：`content.site_id` 为 `NULL` 表示**共享内容**（所有站点可读），否则只属于该站点；后台可见每个站点拥有/共享的内容条数
+
+**凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署；API token 永不返回给客户端，Deploy Hook URL（能力型 URL）在 JSON 响应中被掩码。
+
+**代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名逻辑）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）。
+
+**一次性前置条件**（每个站点）：托管目标需为 **Git 连接**（Pages 项目或 Worker 的 Workers Builds；Direct Upload 无法被 Deploy Hook 重建）、设置构建命令、创建 Deploy Hook 并把 URL 填入站点。
+
+#### 3.7.1 两种托管 provider
+
+站点可选两种托管方式，域名与构建配置走**各自的 Cloudflare API**（`sites.provider`）：
+
+| `provider`                        | 托管              | 域名 API                                                         | 构建配置所在               | 构建触发                                    |
+| --------------------------------- | ----------------- | ---------------------------------------------------------------- | -------------------------- | ------------------------------------------- |
+| `cloudflare-worker`（推荐多站点） | Worker + 静态资源 | `PUT/DELETE /accounts/{id}/workers/domains`（**必须指定 zone**） | Workers Builds **trigger** | `POST .../workers/builds/deploy_hooks/{id}` |
+| `cloudflare-pages`                | Pages 项目        | `POST/DELETE /accounts/{id}/pages/projects/{p}/domains`          | Pages 项目 `build_config`  | `POST .../pages/webhooks/deploy_hooks/{id}` |
+| `external`                        | 仅登记            | —                                                                | —                          | —                                           |
+
+关键差异（都已按 provider 分支实现）：
+
+- **多域名**：一个 Worker 可以挂**多个自定义域名**，所以「一个 Worker 服务多个站点」比「每站点一个 Pages 项目」省事得多；Pages 的域名是按项目挂的
+- **Worker 域名必须属于某个 zone**：CMS 会自动把主机名匹配到该 token 可见的 zone（**最长后缀优先**，`example.co.uk` 胜过 `co.uk`），也可以在站点上固定 `cfZoneId`；匹配不到会给出明确报错。Pages 域名不需要 zone
+- **绑定即生效**：Worker 域名由 Cloudflare 自动创建 DNS 记录并签发证书，因此绑定成功即为 `active`；Pages 域名需要运维自己指 DNS，所以先 `pending`
+- **删除 Worker 域名不会删除自动签发的证书**（Cloudflare 明确说明），证书需另行清理
+- **构建标识**：Workers Builds 用不可变的 **Worker tag**（不是名字）寻址，CMS 首次解析后缓存到 `sites.cf_worker_tag`；构建配置在 **trigger** 上，缓存在 `sites.cf_trigger_uuid`，并按站点的 Git 分支挑选 production trigger
+- **构建去重**：Workers Builds 在已有排队/初始化中的构建时会返回同一个构建并带 `already_exists: true`，CMS 视为成功而非冲突
+- **Deploy Hook 形状不同**：Pages 返回 `{ id, url }`，Workers 返回 `{ success, result: { build_uuid } }`；CMS 按 provider 解析，并**拒绝串用的 hook**（Worker 站点填 Pages hook 会直接报错，而不是静默不触发）
+
+**凭据**：Pages 站点需要 `Pages:Edit` + `Zone:Read`；Worker 站点额外需要 `Workers Scripts:Read`（解析 tag）与 `Workers Builds Configuration:Edit`，且 Builds API **只接受 user-scoped token**（account-scoped 会报 "Invalid token"，CMS 会在报错里补上这条提示）。
+
+#### 3.7.2 按站点隔离内容
+
+内容归属写在 `content.site_id`：`NULL` = **共享内容**（所有站点可读），否则只属于该站点。
+读取时由服务端强制加一段作用域条件（`cms/packages/core/src/services/content-site-scope.ts`）：
+
+| 请求方                                                           | 可见内容                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| 标示了某个活跃站点（`X-Site: <slug\|id>` 或 `?site=<slug\|id>`） | 该站点内容 **+ 共享内容**（`site_id = ? OR site_id IS NULL`） |
+| 未标示站点，且部署中**已注册**站点                               | **仅共享内容**（`site_id IS NULL`）                           |
+| 未标示站点，且部署中**没有**任何站点                             | 全部内容（单租户，保持向后兼容）                              |
+| 标示的站点不存在/已停用                                          | **404**（明确报错，而不是静默返回空列表）                     |
+
+设计要点：
+
+- **作用域不可被调用方放宽**：条件通过 `QueryFilter.internalAnd` 注入（`parseFromQuery` 永不产生该字段），且站点 id 来自数据库查询而非请求原文
+- **缓存不串站**：作用域作为 `filter` 的一部分参与缓存 key 计算，因此一个站点永远不会命中另一个站点的缓存
+- **写归属**：后台内容表单新增 **Site 选择器**（未注册任何站点时整块隐藏，单租户部署表单不变）；`POST /api/content` 接受 `siteId`（id）或 `site`（slug）；不传则创建共享内容；站点不存在返回 400
+- **不会误清空归属**：更新路径仅在表单**确实提交了** `site_id` 字段时才改写，因此任何没有渲染该字段的表单（如校验失败回显）都不会把已有归属静默清空；复制内容会继承原内容的站点
+- **可见性回显**：响应 `meta.siteScope` 返回 `{ mode, siteSlug, identifiedBy, reason }`，便于排查「构建出来是空的」
+- **构建端接入**：`@flare-cms/astro` 的 `flareLoader` / `flareLiveLoader` 新增 `site` 选项（发送 `X-Site`）；未识别到站点时会打印明确的告警而不是静默出空页面
+
+**代码**：`services/content-site-scope.ts`（作用域解析 + `resolveSiteId`）、`utils/query-filter.ts`（`internalAnd` 支持）、`routes/api.ts` 与 `routes/api-content-crud.ts`（读隔离 + 写归属）、`routes/admin-content.ts` 与 `templates/pages/admin-content-form.template.ts`（后台归属编辑）。
+
 ---
 
 ## 4. 前端应用
 
 ### 4.1 文档站
 
-**`apps/docs`** — Astro 7 + React islands + Tailwind
+**`apps/docs`** — Astro 7 + React islands + Tailwind，以 **Worker + 静态资源**方式托管（构建由 CMS 的 Sites 面板触发）
 
 - 26 个静态路由（首页、文档、设计、开发指南、社区等）
 - 自研客户端路由（`src/router/`）：拦截内部导航，history.pushState，无刷新切换
@@ -263,6 +339,15 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 - ARWES 动画：进入/退出切换、文字解密、背景粒子、边框
 - 音效：按钮点击、页面进入、文字打字音
 - 主题：深色科幻风，Titillium Web + Source Code Pro 字体
+- 重新构建：在 Admin → Sites 打开该站点点 **Build now**（POST Workers Builds Deploy Hook），不再由 `deploy.yml` 构建
+
+#### Worker 托管配置
+
+- `src/worker.ts` — 静态资源 Worker；`wrangler.jsonc` — `main` + `assets.directory = ./build` + `ASSETS` 绑定
+- `assets.html_handling = "none"` + `run_worker_first = true`：Astro 用 `build.format: 'directory'`（页面在 `about/index.html`），若交给 Cloudflare 默认的 `auto-trailing-slash`，`/about` 会被 307 重定向到 `/about/`。因此由 Worker **显式**解析候选路径（原路径 → `<path>/index.html` → `<path>.html`），URL 稳定且单站点/多站点行为一致
+- 只处理 `GET`/`HEAD`，其他方法 405；未命中时优先返回站点的 `404.html`
+- `scripts/build-worker.sh` — Workers Builds 的构建链：先建 cms 工作区（core + `@flare-cms/astro`），再建 ARWES packages，最后 `astro build`（顺序与原 `deploy-docs` job 一致）
+- **一个 Worker 服务多个站点**：`SITE_ROUTES`（JSON，主机名 → 资源前缀）把不同域名映射到同一份 bundle 下的不同子目录，`DEFAULT_SITE_PREFIX` 作为兜底；不配置即单站点布局（资源在根目录），此时任意数量的自定义域名都可指向它
 
 组件库（`src/ui/`）：`Header`（导航栏+设置+音效开关）、`Nav`（侧边栏菜单）、`Button`、`Card`、`CodeBlock`（prism 高亮）、`Table`、`Modal`、`Breadcrumbs`、`FrameAlert` 等
 
@@ -286,17 +371,16 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 ### 5.1 GitHub Actions 自动部署
 
-**`.github/workflows/deploy.yml`** — 推送 `main` 触发：
+**`.github/workflows/deploy.yml`** — 只部署 CMS Worker（推送 `main`/`next` 或 `workflow_dispatch`）：
 
-1. **Deploy CMS Worker**：
-   - pnpm 安装（`--ignore-scripts`）、构建 core + astro
-   - secrets 注入 wrangler.toml（D1/KV 资源 ID；B2 模式移除 R2 binding 并注入 B2 vars）
-   - D1 迁移 → `wrangler deploy --env production`
-   - JWT_SECRET 设为 Worker secret
-2. **Deploy Docs Site**：
-   - 构建 ARWES packages + `@flare-cms/astro`
-   - Node 22 + Astro 7 构建 docs（`PUBLIC_FLARE_API_URL` 指向 CMS）
-   - `wrangler pages deploy` → Cloudflare Pages（生产分支 main）
+1. pnpm 安装（`--ignore-scripts`）、构建 core + astro
+2. secrets 注入 wrangler.toml（D1/KV 资源 ID；`STORAGE_BACKEND=b2|s3` 时移除 R2 binding 并注入对应 provider 变量）
+3. D1 迁移 → `wrangler deploy --env production`
+4. JWT_SECRET 设为 Worker secret
+
+> **为什么只有 CMS**：站点的构建、域名与内容统一由 CMS 自身管理（见 3.7 站点控制面），
+> 因此原先的 `deploy-docs` job（构建 `apps/docs` + `wrangler pages deploy`）已移除。
+> 站点重建由 CMS 通过 Cloudflare Pages Deploy Hook 触发，站点构建不再出现在 GitHub Actions 中。
 
 另：**`.github/workflows/ci.yml`** — 常规 CI（构建、格式、lint、测试）。
 
@@ -332,12 +416,15 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 ### 5.5 B2 部署配置脚本
 
-**`scripts/b2-config.py`** — 部署时改写 wrangler.toml：
+**`scripts/storage-config.py`** — 部署时按 `STORAGE_BACKEND` 改写 wrangler.toml（多 provider）：
 
-- 移除所有 `[[*r2_buckets]]` 块（顶层 + env.production + env.staging）
-- 顶层 `[vars]` 注入 B2 变量
-- `[env.production]` vars 注入 B2 变量（env 不继承顶层）
-- 值从环境变量读取（secrets 传递）
+- `STORAGE_BACKEND` 为 `b2` / `s3` 时：移除所有 `[[*r2_buckets]]` 块（顶层 + env.production + env.staging）
+- 顶层 `[vars]` 与 `[env.production]` vars 分别注入 `STORAGE_BACKEND` + 对应 provider 变量（env 不继承顶层）
+- 必填变量缺失时以 `::error::` 退出（exit 1），不会生成半成品配置
+- `STORAGE_BACKEND` 未设置或为 `r2` 时不做任何修改
+- 值从环境变量读取（secrets 传递），只改运行器内的临时 wrangler.toml
+
+**`scripts/b2-config.py`** — 向后兼容垫片：`STORAGE_BACKEND` 未设置时按 `b2` 委托给 `storage-config.py`。
 
 ### 5.6 本地开发脚本
 
@@ -354,30 +441,45 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 ┌─────────────────────────────────────────────────────────────┐
 │                          GitHub                              │
 │  repo: cqusfa456/flare-arwes-cms                             │
-│  push main → Actions (deploy.yml)                            │
+│  push main → Actions (deploy.yml: 只部署 CMS Worker)          │
 │  Secrets: CF_API_TOKEN / CF_ACCOUNT_ID / D1/KV IDs /        │
-│           JWT_SECRET / FLARE_API_URL / B2_*                 │
-└───────────┬─────────────────────────────┬───────────────────┘
-            │                             │
-   ┌────────▼─────────┐          ┌────────▼─────────┐
-   │  CMS Worker     │          │  Docs Pages     │
-   │  flare-cms      │          │  arwes-docs     │
-   │  Workers        │          │  Astro 7 build  │
-   │                 │          │  React islands  │
-   │  D1 (内容)      │          │  Tailwind       │
-   │  KV (缓存)      │          │  ARWES 动画      │
-   │  R2 / B2 (媒体) │          └──────────────────┘
-   └────────┬─────────┘
-            │  /api/collections/*/content
-            ▼
-   ┌──────────────────┐   build-time    ┌──────────────────┐
-   │  Admin UI        │←────────────────│  @flare-cms/astro│
-   │  (browser)       │    flareLoader   │  content loader  │
-   └──────────────────┘                  └──────────────────┘
+│           JWT_SECRET / FLARE_API_URL / B2_* / S3_*          │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ 仅 CMS Worker
+                   ┌────────▼─────────┐
+                   │  CMS Worker     │
+                   │  flare-cms      │
+                   │  D1 (内容/站点) │
+                   │  KV (缓存)      │
+                   │  R2/B2/S3 (媒体)│
+                   └────────┬─────────┘
+                            │
+       ┌────────────────────┼──────────────────────────┐
+       │ 站点控制面          │                          │
+       │ (Admin → Sites)    │ Deploy Hook              │
+       │ · 构建触发 ─────────┼──────────────┐           │
+       │ · 域名绑定 ─ CF API ┼───────────┐  │           │
+       │ · 构建配置下发 ─────┼─────────┐ │  │           │
+       └────────────────────┘         │ │  │           │
+                                      ▼ ▼  ▼           │
+                     ┌──────────────────────────────┐  │
+                     │ Cloudflare Worker            │  │
+                     │ (arwes-docs-worker)          │◄─┘
+                     │ 静态资源 + host→站点 路由    │  内容 API
+                     │ 可挂多个自定义域名           │
+                     │ Cloudflare 执行构建          │
+                     └──────────────────────────────┘
+                       │  build-time
+                       ▼
+                ┌──────────────────┐
+                │  @flare-cms/astro│
+                │  flareLoader     │
+                └──────────────────┘
 
 本地开发:
   sh ./scripts/cms.sh dev      → CMS @ :8787 (/admin)
   cd apps/docs && npm run dev  → Docs @ :9002
+  cd apps/docs && npm run worker:dev → Worker @ :8787（wrangler dev）
   npm run setup                → OpenTUI 初始化向导
 ```
 
@@ -385,14 +487,15 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 ## 7. 技术栈汇总
 
-| 层    | 技术                                                                                       |
-| ----- | ------------------------------------------------------------------------------------------ |
-| 框架  | Astro 7、React 18、SolidJS                                                                 |
-| 前端  | Tailwind CSS 3、prism-react-renderer、iconoir 图标                                         |
-| 状态  | jotai（客户端路由 pathname）                                                               |
-| 后端  | Cloudflare Workers（Hono）、D1（SQLite）、KV                                               |
-| 存储  | Cloudflare R2 / Backblaze B2（S3 兼容 + SigV4）                                            |
-| 构建  | turbo（monorepo）、pnpm（cms 工作区）、tsup（包构建）、vite（Astro）、webpack（play/perf） |
-| CI/CD | GitHub Actions（deploy + ci workflow）                                                     |
-| 工具  | OpenTUI（TUI 向导）、libsodium（secrets 加密）、undici（代理）                             |
-| 语言  | TypeScript（strict）、Python（b2 配置脚本）、Shell                                         |
+| 层    | 技术                                                                                              |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| 框架  | Astro 7、React 18、SolidJS                                                                        |
+| 前端  | Tailwind CSS 3、prism-react-renderer、iconoir 图标                                                |
+| 状态  | jotai（客户端路由 pathname）                                                                      |
+| 后端  | Cloudflare Workers（Hono）、D1（SQLite）、KV                                                      |
+| 存储  | Cloudflare R2 binding / Backblaze B2 / 通用 S3 兼容（统一 `StorageBucket` + SigV4）               |
+| 构建  | turbo（monorepo）、pnpm（cms 工作区）、tsup（包构建）、vite（Astro）、webpack（play/perf）        |
+| CI/CD | GitHub Actions（deploy：仅 CMS Worker；ci）                                                       |
+| 站点  | CMS 站点控制面：Pages Deploy Hook 触发构建 + Cloudflare API 管理域名 + `content.site_id` 内容归属 |
+| 工具  | OpenTUI（TUI 向导）、libsodium（secrets 加密）、undici（代理）                                    |
+| 语言  | TypeScript（strict）、Python（存储配置脚本）、Shell                                               |

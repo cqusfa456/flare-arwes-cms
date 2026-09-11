@@ -5,6 +5,7 @@ import { renderConfirmationDialog, getConfirmationDialogScript } from '../confir
 import { getTinyMCEScript, getTinyMCEInitScript } from '../../plugins/available/tinymce-plugin'
 import { getQuillCDN, getQuillInitScript } from '../../plugins/core-plugins/quill-editor'
 import { getMDXEditorScripts, getMDXEditorInitScript } from '../../plugins/available/easy-mdx'
+import { escapeHtml } from '../../utils/sanitize'
 
 export interface Collection {
   id: string
@@ -27,6 +28,17 @@ export interface ContentFormData {
   meta_description?: string
   collection: Collection
   fields: FieldDefinition[]
+  /**
+   * Owning site of this content item. `null`/undefined means shared content,
+   * readable by every site.
+   */
+  siteId?: string | null
+  /**
+   * Sites available for assignment. When absent or empty the "Site" selector is
+   * hidden entirely — a deployment with no registered sites keeps its previous
+   * single-tenant form.
+   */
+  sites?: Array<{ id: string; slug: string; name: string }>
   isEdit?: boolean
   error?: string
   success?: string
@@ -121,6 +133,36 @@ export function renderContentFormPage(data: ContentFormData): string {
       contentId: data.id
     }))
 
+  // Site assignment. Hidden when the deployment has no registered sites, so a
+  // single-tenant install sees exactly the form it saw before.
+  const siteOptions = data.sites || []
+  const siteSelectorHTML = siteOptions.length === 0
+    ? ''
+    : `
+          <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Site</h3>
+            <label for="site_id" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Owning site</label>
+            <div class="mt-2 grid grid-cols-1">
+              <select
+                id="site_id"
+                name="site_id"
+                form="content-form"
+                class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
+              >
+                <option value="" ${data.siteId ? '' : 'selected'}>Shared — visible to every site</option>
+                ${siteOptions.map((site) => `
+                <option value="${escapeHtml(site.id)}" ${data.siteId === site.id ? 'selected' : ''}>${escapeHtml(site.name)} (${escapeHtml(site.slug)})</option>`).join('')}
+              </select>
+              <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
+                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+              </svg>
+            </div>
+            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              Site content is only returned to that site (via <code>X-Site</code>). Shared content is readable by every site.
+            </p>
+          </div>
+  `
+
   const pageContent = `
     <div class="space-y-6">
       <!-- Header -->
@@ -194,6 +236,9 @@ export function renderContentFormPage(data: ContentFormData): string {
 
         <!-- Sidebar -->
         <div class="lg:col-span-1 space-y-6">
+          <!-- Site assignment -->
+          ${siteSelectorHTML}
+
           <!-- Publishing Options -->
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
             <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Publishing</h3>

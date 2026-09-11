@@ -10,6 +10,7 @@ import { z } from 'zod'
 // import { zValidator } from '@hono/zod-validator'
 import { requireAuth, requireRole } from '../middleware'
 import type { Bindings, Variables } from '../app'
+import { getStorageInfo } from '../storage'
 
 export const adminApiRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -132,6 +133,7 @@ adminApiRoutes.get('/storage', async (c) => {
       databaseSize,
       mediaSize,
       totalSize: databaseSize + mediaSize,
+      storage: getStorageInfo(c.env),
       timestamp: new Date().toISOString()
     })
   } catch (error) {

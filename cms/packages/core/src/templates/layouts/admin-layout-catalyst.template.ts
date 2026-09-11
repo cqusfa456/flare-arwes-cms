@@ -13,6 +13,7 @@ import {
   Plug,
   HardDrive,
   Database,
+  Globe,
   Settings,
   Menu,
   X,
@@ -1157,6 +1158,7 @@ function renderCatalystSidebar(
   }
   if (isAdmin) {
     systemItemsList.push({ label: 'Audit Log', path: '/admin/audit-log', iconHtml: icon(ClipboardList, 'h-5 w-5') })
+    systemItemsList.push({ label: 'Sites', path: '/admin/sites', iconHtml: icon(Globe, 'h-5 w-5') })
     systemItemsList.push({ label: 'Plugins', path: '/admin/plugins', iconHtml: icon(Plug, 'h-5 w-5') })
     systemItemsList.push({ label: 'Cache', path: '/admin/cache', iconHtml: icon(HardDrive, 'h-5 w-5') })
     systemItemsList.push({ label: 'Migrations', path: '/admin/schema-migrations', iconHtml: icon(Database, 'h-5 w-5') })

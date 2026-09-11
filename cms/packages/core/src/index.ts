@@ -295,6 +295,66 @@ export {
 // Lib - Lightweight utilities (Phase 5+)
 export { log } from './lib/logger'
 
+// Storage - multi-provider media storage (R2 / B2 / S3-compatible)
+export {
+  S3Storage,
+  STORAGE_PROVIDERS,
+  BACKEND_ALIASES,
+  SUPPORTED_BACKEND_VALUES,
+  STORAGE_HEALTH_CHECK_KEY,
+  getProviderOption,
+  getProviderLabel,
+  resolveStorage,
+  getStorageInfo,
+  testStorageConnection,
+} from './storage'
+export type {
+  StorageProviderId,
+  StorageBindingSource,
+  StorageProviderOption,
+  StorageHttpMetadata,
+  StoragePutOptions,
+  StorageObject,
+  StorageObjectBody,
+  StorageBucket,
+  StorageInfo,
+  StorageTestResult,
+  StorageEnv,
+  ResolvedStorage,
+  S3StorageOptions,
+} from './storage'
+
+// Sites - the CMS as the control plane for every website
+// (registry, Cloudflare Pages builds, domain bindings)
+export { SitesService, SitesConfigError, normalizeSiteSlug, normalizeHostname } from './services/sites'
+export type {
+  Site,
+  SiteInput,
+  SiteDomain,
+  SiteDomainStatus,
+  SiteProvider,
+  SiteDeploymentInfo,
+  BuildTriggerResult,
+  CloudflareCredentialStatus,
+} from './services/sites'
+
+// Content site scoping - per-site content isolation for readers and writers
+export {
+  resolveContentSiteScope,
+  contentSiteScopeFragment,
+  applyContentSiteScope,
+  describeSiteScope,
+  resolveSiteId,
+  hasActiveSites,
+} from './services/content-site-scope'
+export type {
+  ContentSiteScope,
+  SiteScopeMode,
+  SiteScopeSource,
+  ResolveSiteScopeInput,
+  ResolvedSiteId,
+} from './services/content-site-scope'
+
 export type {
   User,
   NewUser,

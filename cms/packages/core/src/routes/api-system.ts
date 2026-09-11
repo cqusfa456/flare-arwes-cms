@@ -7,6 +7,7 @@
 
 import { Hono } from 'hono'
 import type { Bindings, Variables } from '../app'
+import { getStorageInfo, STORAGE_HEALTH_CHECK_KEY } from '../storage'
 
 export const apiSystemRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -48,22 +49,32 @@ apiSystemRoutes.get('/health', async (c) => {
       }
     }
 
-    // Check R2 connectivity (if available)
-    let r2Status = 'not_configured'
+    // Check storage connectivity for whichever backend is active
+    // (Cloudflare R2 binding or an S3-compatible endpoint such as Backblaze B2).
+    const storageInfo = getStorageInfo(c.env)
+    const storageBucket = c.env.MEDIA_BUCKET
+    let storageStatus = 'not_configured'
+    let storageLatency = 0
 
-    if (c.env.MEDIA_BUCKET) {
+    if (storageInfo.configured && storageBucket && typeof storageBucket.head === 'function') {
       try {
-        await c.env.MEDIA_BUCKET.head('__health_check__')
-        r2Status = 'healthy'
+        const storageStart = Date.now()
+        // A missing key returns null rather than throwing, so a successful
+        // round-trip proves endpoint + bucket + credentials are all valid.
+        await storageBucket.head(STORAGE_HEALTH_CHECK_KEY)
+        storageLatency = Date.now() - storageStart
+        storageStatus = 'healthy'
       } catch (error) {
-        // R2 head on non-existent key returns null, not an error
-        // This is expected, so we consider it healthy
-        r2Status = 'healthy'
+        console.error(`Storage health check failed (${storageInfo.provider}):`, error)
+        storageStatus = 'unhealthy'
       }
+    } else if (storageInfo.configured) {
+      storageStatus = 'misconfigured'
     }
 
     const totalLatency = Date.now() - startTime
-    const overall = dbStatus === 'healthy' ? 'healthy' : 'degraded'
+    const storageFailing = storageStatus === 'unhealthy' || storageStatus === 'misconfigured'
+    const overall = dbStatus === 'healthy' && !storageFailing ? 'healthy' : 'degraded'
 
     return c.json({
       status: overall,
@@ -79,7 +90,11 @@ apiSystemRoutes.get('/health', async (c) => {
           latency: kvLatency
         },
         storage: {
-          status: r2Status
+          status: storageStatus,
+          provider: storageInfo.provider,
+          providerLabel: storageInfo.providerLabel,
+          latency: storageLatency,
+          ...(storageInfo.error ? { error: storageInfo.error } : {})
         }
       },
       environment: c.env.ENVIRONMENT || 'production'
@@ -100,6 +115,7 @@ apiSystemRoutes.get('/health', async (c) => {
  */
 apiSystemRoutes.get('/info', (c) => {
   const appVersion = c.get('appVersion') || '1.0.0'
+  const storageInfo = getStorageInfo(c.env)
 
   return c.json({
     name: 'Flare CMS',
@@ -117,7 +133,15 @@ apiSystemRoutes.get('/info', (c) => {
       auth: true,
       collections: true,
       caching: !!c.env.CACHE_KV,
-      storage: !!c.env.MEDIA_BUCKET
+      storage: storageInfo.configured,
+      storageProvider: storageInfo.provider
+    },
+    storage: {
+      provider: storageInfo.provider,
+      providerLabel: storageInfo.providerLabel,
+      bucketName: storageInfo.bucketName,
+      endpointHost: storageInfo.endpointHost,
+      region: storageInfo.region
     },
     timestamp: new Date().toISOString()
   })
@@ -202,12 +226,15 @@ apiSystemRoutes.get('/ping', async (c) => {
  * GET /api/system/env
  */
 apiSystemRoutes.get('/env', (c) => {
+  const storageInfo = getStorageInfo(c.env)
+
   return c.json({
     environment: c.env.ENVIRONMENT || 'production',
     features: {
       database: !!c.env.DB,
       cache: !!c.env.CACHE_KV,
       media_bucket: !!c.env.MEDIA_BUCKET,
+      storage_provider: storageInfo.provider,
       email_queue: !!c.env.EMAIL_QUEUE,
       sendgrid: !!c.env.SENDGRID_API_KEY,
       cloudflare_images: !!(c.env.IMAGES_ACCOUNT_ID && c.env.IMAGES_API_TOKEN)

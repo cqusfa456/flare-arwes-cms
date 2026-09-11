@@ -5,6 +5,7 @@ import { renderSettingsPage, SettingsPageData } from '../templates/pages/admin-s
 import { MigrationService } from '../services/migrations'
 import { SettingsService } from '../services/settings'
 import { logAudit, getClientIP } from '../services/audit-log'
+import { getStorageInfo, testStorageConnection, STORAGE_PROVIDERS } from '../storage'
 
 type Bindings = {
   DB: D1Database
@@ -82,7 +83,6 @@ function getMockSettings(user: any) {
     storage: {
       maxFileSize: 10,
       allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'docx'],
-      storageProvider: 'cloudflare' as 'local' | 'cloudflare' | 's3',
       backupFrequency: 'daily' as 'daily' | 'weekly' | 'monthly',
       retentionPeriod: 30
     },
@@ -223,10 +223,32 @@ adminSettingsRoutes.get('/storage', async (c) => {
       role: user.role
     } : undefined,
     settings: mockSettings,
+    // Read-only view of the backend this Worker actually resolved at runtime.
+    storageRuntime: getStorageInfo(c.env),
+    storageProviders: STORAGE_PROVIDERS,
     activeTab: 'storage',
     version: c.get('appVersion')
   }
   return c.html(renderSettingsPage(pageData))
+})
+
+// Storage connectivity self-check for the active backend
+adminSettingsRoutes.post('/storage/test', async (c) => {
+  try {
+    const result = await testStorageConnection(c.env)
+    return c.json(result, result.ok ? 200 : 502)
+  } catch (error) {
+    console.error('Error testing storage connection:', error)
+    const info = getStorageInfo(c.env)
+    return c.json({
+      ok: false,
+      provider: info.provider,
+      providerLabel: info.providerLabel,
+      bucketName: info.bucketName,
+      latencyMs: 0,
+      error: 'Storage connection test failed unexpectedly'
+    }, 500)
+  }
 })
 
 // Migrations settings
@@ -709,7 +731,6 @@ adminSettingsRoutes.post('/storage', async (c) => {
     const settings = {
       maxFileSize: parseInt(formData.get('maxFileSize') as string, 10) || 10,
       allowedFileTypes: typesList,
-      storageProvider: ((['local', 'cloudflare', 's3'].includes(formData.get('storageProvider') as string) ? formData.get('storageProvider') : 'cloudflare') as 'local' | 'cloudflare' | 's3'),
       backupFrequency: ((['daily', 'weekly', 'monthly'].includes(formData.get('backupFrequency') as string) ? formData.get('backupFrequency') : 'daily') as 'daily' | 'weekly' | 'monthly'),
       retentionPeriod: parseInt(formData.get('retentionPeriod') as string, 10) || 30
     }

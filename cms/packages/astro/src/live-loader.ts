@@ -50,6 +50,7 @@ export function flareLiveLoader(options: FlareLoaderOptions): LiveLoader<Record<
       const client = new FlareClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
+        site: options.site,
       })
 
       try {
@@ -75,6 +76,7 @@ export function flareLiveLoader(options: FlareLoaderOptions): LiveLoader<Record<
       const client = new FlareClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
+        site: options.site,
       })
 
       const id = typeof filter === 'string' ? filter : (filter as any).id

@@ -16,6 +16,7 @@ import type { Bindings, Variables } from '../app'
 import { PluginService } from '../services/plugin-service'
 import { getBlocksFieldConfig, parseBlocksValue } from '../utils/blocks'
 import { SettingsService } from '../services/settings'
+import { resolveSiteId } from '../services/content-site-scope'
 
 const adminContentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -278,6 +279,34 @@ async function getCollectionFields(db: D1Database, collectionId: string) {
       }))
     }
   )
+}
+
+/**
+ * Sites available for content assignment.
+ *
+ * Read defensively: an installation that has not yet applied migration 038 (or
+ * has no sites registered) must still be able to open the content form, so any
+ * failure yields an empty list and the site selector is simply hidden.
+ */
+async function getSiteOptions(db: D1Database): Promise<Array<{ id: string; slug: string; name: string }>> {
+  try {
+    const { results } = await db
+      .prepare('SELECT id, slug, name FROM sites ORDER BY name ASC')
+      .all()
+    return (results || []).map((row: any) => ({
+      id: String(row.id),
+      slug: String(row.slug),
+      name: String(row.name)
+    }))
+  } catch {
+    return []
+  }
+}
+
+/** Resolve a submitted `site_id`: '' means shared content, unknown names yield null. */
+async function resolveSubmittedSiteId(db: D1Database, raw: unknown): Promise<string | null> {
+  const resolved = await resolveSiteId(db, raw)
+  return resolved.siteId
 }
 
 // Get collection by ID
@@ -608,11 +637,15 @@ adminContentRoutes.get('/new', async (c) => {
 
     const db = c.env.DB
 
+    // Sites are offered in the form's "Site" selector (empty list hides it).
+    const siteOptions = await getSiteOptions(db)
+
     // RBAC: check create permission on this collection
     if (user && user.role !== 'admin') {
       const canCreate = await checkCollectionPermission(db, user.userId, user.role, collectionId, 'create')
       if (!canCreate) {
         const formData: ContentFormData = {
+          sites: siteOptions,
           collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
           fields: [],
           error: 'You do not have permission to create content in this collection.',
@@ -626,6 +659,7 @@ adminContentRoutes.get('/new', async (c) => {
 
     if (!collection) {
       const formData: ContentFormData = {
+        sites: siteOptions,
         collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
         fields: [],
         error: 'Collection not found.',
@@ -678,6 +712,7 @@ adminContentRoutes.get('/new', async (c) => {
     })
 
     const formData: ContentFormData = {
+      sites: siteOptions,
       collection,
       fields,
       isEdit: false,
@@ -699,6 +734,8 @@ adminContentRoutes.get('/new', async (c) => {
   } catch (error) {
     console.error('Error loading new content form:', error)
     const formData: ContentFormData = {
+      // Error fallback: do not attempt another DB round-trip for the selector.
+      sites: [],
       collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
       fields: [],
       error: 'Failed to load content form.',
@@ -719,6 +756,9 @@ adminContentRoutes.get('/:id/edit', async (c) => {
     const user = c.get('user')
     const db = c.env.DB
     const url = new URL(c.req.url)
+
+    // Sites are offered in the form's "Site" selector (empty list hides it).
+    const siteOptions = await getSiteOptions(db)
 
     // Capture referrer parameters to preserve filters when returning to list
     const referrerParams = url.searchParams.get('ref') || ''
@@ -744,6 +784,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
 
     if (!content) {
       const formData: ContentFormData = {
+        sites: siteOptions,
         collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
         fields: [],
         error: 'Content not found.',
@@ -761,6 +802,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       const canEdit = await checkCollectionPermission(db, user.userId, user.role, content.collection_id, 'edit')
       if (!canEdit) {
         const formData: ContentFormData = {
+          sites: siteOptions,
           collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
           fields: [],
           error: 'You do not have permission to edit content in this collection.',
@@ -774,6 +816,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       ).bind(user.userId, content.collection_id).first<{ role: string }>()
       if (permRow && !isAuthorAllowedToEdit(permRow.role, content.author_id, user.userId)) {
         const formData: ContentFormData = {
+          sites: siteOptions,
           collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
           fields: [],
           error: 'Authors can only edit their own content.',
@@ -846,11 +889,13 @@ adminContentRoutes.get('/:id/edit', async (c) => {
     }
 
     const formData: ContentFormData = {
+      sites: siteOptions,
       id: content.id,
       title: content.title,
       slug: content.slug,
       data: contentData,
       status: content.status,
+      siteId: content.site_id ?? null,
       scheduled_publish_at: content.scheduled_publish_at,
       scheduled_unpublish_at: content.scheduled_unpublish_at,
       review_status: content.review_status,
@@ -879,6 +924,8 @@ adminContentRoutes.get('/:id/edit', async (c) => {
   } catch (error) {
     console.error('Error loading edit content form:', error)
     const formData: ContentFormData = {
+      // Error fallback: do not attempt another DB round-trip for the selector.
+      sites: [],
       collection: { id: '', name: '', display_name: 'Unknown', schema: {} },
       fields: [],
       error: 'Failed to load content for editing.',
@@ -941,6 +988,11 @@ adminContentRoutes.post('/', async (c) => {
         collection,
         fields,
         data,
+        // Preserve the submitted site so a validation error does not reset it.
+        sites: await getSiteOptions(db),
+        siteId: formData.has('site_id')
+          ? await resolveSubmittedSiteId(db, formData.get('site_id'))
+          : null,
         validationErrors: errors,
         error: 'Please fix the validation errors below.',
         user: user ? {
@@ -982,12 +1034,18 @@ adminContentRoutes.post('/', async (c) => {
     const contentId = crypto.randomUUID()
     const now = Date.now()
 
+    // Content ownership: only touched when the form submitted the field, so a
+    // form rendered without the site selector can never silently unassign.
+    const siteId = formData.has('site_id')
+      ? await resolveSubmittedSiteId(db, formData.get('site_id'))
+      : null
+
     const insertStmt = db.prepare(`
       INSERT INTO content (
         id, collection_id, slug, title, data, status,
-        author_id, created_at, updated_at
+        author_id, site_id, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -998,6 +1056,7 @@ adminContentRoutes.post('/', async (c) => {
       JSON.stringify(data),
       status,
       user?.userId || 'unknown',
+      siteId,
       now,
       now
     ).run()
@@ -1133,6 +1192,11 @@ adminContentRoutes.put('/:id', async (c) => {
         collection,
         fields,
         data,
+        // Preserve the submitted site so a validation error does not reset it.
+        sites: await getSiteOptions(db),
+        siteId: formData.has('site_id')
+          ? await resolveSubmittedSiteId(db, formData.get('site_id'))
+          : null,
         validationErrors: errors,
         error: 'Please fix the validation errors below.',
         isEdit: true,
@@ -1265,6 +1329,12 @@ adminContentRoutes.put('/:id', async (c) => {
     // Direct save path: draft content, or admin with "publish immediately" bypass
     const now = Date.now()
 
+    // Re-assign the owning site only when the form actually submitted the
+    // field, so partial form renders cannot silently unassign content.
+    const siteAssignment = formData.has('site_id')
+      ? await resolveSubmittedSiteId(db, formData.get('site_id'))
+      : undefined
+
     const updateStmt = db.prepare(`
       UPDATE content SET
         slug = ?, title = ?, data = ?, status = ?,
@@ -1287,6 +1357,13 @@ adminContentRoutes.put('/:id', async (c) => {
       now,
       id,
     ).run()
+
+    if (siteAssignment !== undefined) {
+      await db
+        .prepare('UPDATE content SET site_id = ?, updated_at = ? WHERE id = ?')
+        .bind(siteAssignment, now, id)
+        .run()
+    }
 
     // Invalidate content cache + bump version for frontend freshness
     const cache = getCacheService(CACHE_CONFIGS.content!)
@@ -1492,9 +1569,9 @@ adminContentRoutes.post('/duplicate', async (c) => {
     const insertStmt = db.prepare(`
       INSERT INTO content (
         id, collection_id, slug, title, data, status,
-        author_id, created_at, updated_at
+        author_id, site_id, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -1505,6 +1582,8 @@ adminContentRoutes.post('/duplicate', async (c) => {
       JSON.stringify(originalData),
       'draft', // Always start as draft
       user?.userId || 'unknown',
+      // A duplicate belongs to the same site as its original.
+      original.site_id ?? null,
       now,
       now
     ).run()

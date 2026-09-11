@@ -43,6 +43,37 @@ export type { CacheConfig } from './cache'
 export { SettingsService } from './settings'
 export type { Setting, GeneralSettings } from './settings'
 
+// Sites Service — the CMS as the control plane for every website
+// (registry, Cloudflare Pages builds, domain bindings, content ownership)
+export { SitesService, SitesConfigError, normalizeSiteSlug, normalizeHostname } from './sites'
+export type {
+  Site,
+  SiteInput,
+  SiteDomain,
+  SiteDomainStatus,
+  SiteProvider,
+  SiteDeploymentInfo,
+  BuildTriggerResult,
+  CloudflareCredentialStatus,
+} from './sites'
+
+// Content site scoping — per-site content isolation for readers
+export {
+  resolveContentSiteScope,
+  contentSiteScopeFragment,
+  applyContentSiteScope,
+  describeSiteScope,
+  resolveSiteId,
+  hasActiveSites,
+} from './content-site-scope'
+export type {
+  ContentSiteScope,
+  SiteScopeMode,
+  SiteScopeSource,
+  ResolveSiteScopeInput,
+  ResolvedSiteId,
+} from './content-site-scope'
+
 // Telemetry Service
 export {
   TelemetryService,

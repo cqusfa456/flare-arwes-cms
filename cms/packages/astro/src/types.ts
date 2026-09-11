@@ -15,6 +15,15 @@ export interface FlareLoaderOptions {
   /** Optional API token for authenticated access */
   apiToken?: string
 
+  /**
+   * Site this build belongs to (a slug or id registered in Admin → Sites).
+   *
+   * Sent as `X-Site`, which scopes every request to that site's content plus
+   * shared content. Omit it only for a single-tenant deployment: once any site
+   * is registered, an unidentified request sees **shared content only**.
+   */
+  site?: string
+
   /** Filter content by status or custom fields */
   filter?: {
     status?: 'draft' | 'published' | 'archived'
@@ -33,6 +42,8 @@ export interface FlareContentItem {
   title: string
   slug: string
   status: string
+  /** Owning site id, or null for shared content. */
+  siteId?: string | null
   data: Record<string, unknown>
   created_at: number
   updated_at: number
@@ -49,6 +60,13 @@ export interface FlareApiResponse<T> {
     cache: {
       hit: boolean
       source: string
+    }
+    /** How the CMS scoped this response to a site (useful when a build is empty). */
+    siteScope?: {
+      mode: 'all' | 'site+shared' | 'shared-only'
+      siteSlug: string | null
+      identifiedBy: 'header' | 'query' | 'none'
+      reason: string
     }
   }
 }

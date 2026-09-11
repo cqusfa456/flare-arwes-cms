@@ -1,6 +1,12 @@
 import { Hono } from 'hono'
 import { requireAuth } from '../middleware'
 import { getCacheService, CACHE_CONFIGS, validateStatusTransition, isSlugLocked, getUnpublishUpdates, checkCollectionPermission, isAuthorAllowedToEdit, logStatusChange, logContentEdit, computeFieldDiff } from '../services'
+import {
+  resolveContentSiteScope,
+  contentSiteScopeFragment,
+  describeSiteScope,
+  resolveSiteId
+} from '../services/content-site-scope'
 import { getHookSystem } from '../plugins/hooks-singleton'
 import { HOOKS } from '../types'
 import { deliverWebhooks } from '../services/webhook-delivery'
@@ -58,8 +64,22 @@ apiContentCrudRoutes.get('/:id', async (c) => {
     const id = c.req.param('id')
     const db = c.env.DB
 
-    const stmt = db.prepare('SELECT * FROM content WHERE id = ?')
-    const content = await stmt.bind(id).first()
+    // Per-site isolation: an identified site may only read its own content plus
+    // shared content, so guessing an id cannot cross tenants.
+    const scope = await resolveContentSiteScope(db, {
+      header: c.req.header('X-Site'),
+      query: c.req.query('site')
+    })
+    if (scope.unknown) {
+      return c.json({ error: `Unknown site "${scope.requested}"` }, 404)
+    }
+    const scopeFragment = contentSiteScopeFragment(scope)
+
+    const sql = scopeFragment
+      ? `SELECT * FROM content WHERE id = ? AND (${scopeFragment.sql})`
+      : 'SELECT * FROM content WHERE id = ?'
+    const stmt = db.prepare(sql)
+    const content = await stmt.bind(id, ...(scopeFragment?.params ?? [])).first()
 
     if (!content) {
       return c.json({ error: 'Content not found' }, 404)
@@ -71,12 +91,13 @@ apiContentCrudRoutes.get('/:id', async (c) => {
       slug: (content as any).slug,
       status: (content as any).status,
       collectionId: (content as any).collection_id,
+      siteId: (content as any).site_id ?? null,
       data: (content as any).data ? JSON.parse((content as any).data) : {},
       created_at: (content as any).created_at,
       updated_at: (content as any).updated_at,
     }
 
-    return c.json({ data: transformedContent })
+    return c.json({ data: transformedContent, meta: { siteScope: describeSiteScope(scope) } })
   } catch (error) {
     console.error('Error fetching content:', error)
     return c.json({
@@ -103,6 +124,15 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
     if (!title) {
       return c.json({ error: 'title is required' }, 400)
     }
+
+    // Content ownership: `siteId` (id) or `site` (slug) assigns this item to a
+    // site; omitting both creates shared content readable by every site.
+    const requestedSite = body.siteId ?? body.site
+    const resolved = await resolveSiteId(db, requestedSite)
+    if (resolved.unknown) {
+      return c.json({ error: `Unknown site "${resolved.requested}". Register it in Admin → Sites first.` }, 400)
+    }
+    const siteId = resolved.siteId
 
     // Collection-level RBAC: check create permission
     const canCreate = await checkCollectionPermission(db, user!.userId, user!.role, collectionId, 'create')
@@ -152,9 +182,9 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
     const insertStmt = db.prepare(`
       INSERT INTO content (
         id, collection_id, slug, title, data, status,
-        author_id, created_at, updated_at
+        author_id, site_id, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -165,6 +195,7 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       JSON.stringify(data || {}),
       status || 'draft',
       user?.userId || 'system',
+      siteId,
       now,
       now,
     ).run()
@@ -226,6 +257,7 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
         slug: createdContent.slug,
         status: createdContent.status,
         collectionId: createdContent.collection_id,
+        siteId: createdContent.site_id ?? null,
         data: createdContent.data ? JSON.parse(createdContent.data) : {},
         created_at: createdContent.created_at,
         updated_at: createdContent.updated_at,

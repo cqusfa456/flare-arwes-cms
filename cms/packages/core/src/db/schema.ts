@@ -41,8 +41,53 @@ export const content = sqliteTable('content', {
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   deletedAt: integer('deleted_at', { mode: 'timestamp' }),
   authorId: text('author_id').notNull().references(() => users.id),
+  // Owning site. NULL = shared content readable by every site (migration 038).
+  siteId: text('site_id'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Sites registry — the CMS is the control plane for every website it owns.
+// Builds run on Cloudflare Pages via Deploy Hooks, domains are bound through
+// the Cloudflare API, and content is scoped by content.site_id (migration 038).
+export const sites = sqliteTable('sites', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description'),
+  provider: text('provider').notNull().default('cloudflare-pages'),
+  cfProjectName: text('cf_project_name'),
+  gitRepo: text('git_repo'),
+  gitBranch: text('git_branch').default('main'),
+  deployHookUrl: text('deploy_hook_url'),
+  buildCommand: text('build_command'),
+  outputDir: text('output_dir'),
+  rootDir: text('root_dir'),
+  nodeVersion: text('node_version'),
+  buildConfigSyncedAt: integer('build_config_synced_at'),
+  contentPrefix: text('content_prefix'),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  lastBuildAt: integer('last_build_at'),
+  lastBuildStatus: text('last_build_status'),
+  lastBuildId: text('last_build_id'),
+  lastBuildUrl: text('last_build_url'),
+  lastBuildError: text('last_build_error'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+// Custom domain bindings per site.
+export const siteDomains = sqliteTable('site_domains', {
+  id: text('id').primaryKey(),
+  siteId: text('site_id').notNull().references(() => sites.id),
+  hostname: text('hostname').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'active' | 'error' | 'removed'
+  cfDomainId: text('cf_domain_id'),
+  validationStatus: text('validation_status'),
+  validationErrors: text('validation_errors'),
+  isPrimary: integer('is_primary', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
 });
 
 // Content versions for versioning system

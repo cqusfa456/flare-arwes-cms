@@ -37,6 +37,7 @@ export function flareLoader(options: FlareLoaderOptions): Loader {
       const client = new FlareClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
+        site: options.site,
       })
 
       logger.info(`Fetching "${options.collection}" from ${options.apiUrl}`)
@@ -119,6 +120,7 @@ export function flareLoader(options: FlareLoaderOptions): Loader {
       const client = new FlareClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
+        site: options.site,
       })
 
       try {

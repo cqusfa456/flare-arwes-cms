@@ -1,0 +1,36 @@
+{
+  // Worker configuration for the docs site.
+  //
+  // Deployed by Cloudflare Workers Builds (Git-connected) or manually with:
+  //   cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy
+  //
+  // Custom domains are NOT declared here: the CMS owns them (Admin → Sites)
+  // and attaches them through the Workers custom-domains API. This Worker can
+  // be attached to many hostnames at once, which is the reason for hosting the
+  // site as a Worker rather than a Pages project.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "arwes-docs-worker",
+  "main": "./src/worker.ts",
+  "compatibility_date": "2026-09-11",
+
+  "assets": {
+    // Astro output (astro.config.mjs sets outDir: 'build').
+    "directory": "./build",
+    "binding": "ASSETS",
+
+    // Resolve HTML ourselves in src/worker.ts: Astro uses
+    // `build.format: 'directory'`, and Cloudflare's default HTML handling would
+    // answer `/about` with a 307 redirect to `/about/`. With "none" the Worker
+    // decides, so URLs stay stable.
+    "html_handling": "none",
+    "not_found_handling": "404-page",
+
+    // Every request goes through the Worker so hostname → site routing works
+    // for assets too, not just for paths that miss a file.
+    "run_worker_first": true
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

@@ -13,10 +13,23 @@ database_name = "my-astro-cms-db"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 migrations_dir = "./node_modules/@flare-cms/core/migrations"
 
-# R2 Bucket for media storage (default backend)
-# To use a private Backblaze B2 bucket instead, set STORAGE_BACKEND=b2
-# and the B2_* vars below (see [vars.b2] section). The R2 binding can
-# then be removed.
+# ---------------------------------------------------------------------------
+# Media storage backend
+#
+# Which backend the CMS reads and writes is decided by STORAGE_BACKEND:
+#   unset / "r2"  → Cloudflare R2 via the MEDIA_BUCKET binding (default)
+#   "b2"          → Backblaze B2      (B2_* vars, S3-compatible API + SigV4)
+#   "s3"          → any S3-compatible (S3_* vars: AWS S3, MinIO, Wasabi, R2 S3 API)
+#
+# The active provider is reported by GET /api/system/health and shown read-only
+# in Admin → Settings → Storage. A selected backend with incomplete
+# configuration fails with an explicit error naming the missing variables; it
+# never silently falls back to R2.
+# ---------------------------------------------------------------------------
+
+# R2 bucket for media storage (default backend).
+# Remove this block when STORAGE_BACKEND is "b2" or "s3" — `scripts/storage-config.py`
+# does that automatically at deploy time.
 [[r2_buckets]]
 binding = "MEDIA_BUCKET"
 bucket_name = "my-astro-cms-media"
@@ -32,18 +45,31 @@ ENVIRONMENT = "development"
 CORS_ORIGINS = "http://localhost:4321,http://localhost:8787"
 MEDIA_DOMAIN = "images.flarecms.dev"
 
-# Backblaze B2 storage backend (optional)
-# Set STORAGE_BACKEND=b2 to use a private B2 bucket instead of R2.
+# Active storage backend. Leave unset (or "r2") to use the R2 binding above.
+# Set to "b2" or "s3" to use an S3-compatible backend — deploy-time rewriting
+# via scripts/storage-config.py fills in STORAGE_BACKEND and the provider vars.
+# STORAGE_BACKEND = "b2"
+
+# Backblaze B2 storage backend (STORAGE_BACKEND = "b2")
 # B2_ENDPOINT: S3-compatible endpoint, e.g. https://s3.us-west-004.backblazeb2.com
 # B2_BUCKET: your private bucket name
-# B2_ACCESS_KEY_ID / B2_SECRET_ACCESS_KEY: application key from B2 dashboard
+# B2_ACCESS_KEY_ID / B2_SECRET_ACCESS_KEY: application key from the B2 dashboard
 # B2_REGION: bucket region, e.g. us-west-004 (default)
-# STORAGE_BACKEND = "b2"
 # B2_ENDPOINT = "https://s3.us-west-004.backblazeb2.com"
 # B2_BUCKET = "arwes-cms-media"
 # B2_ACCESS_KEY_ID = ""
 # B2_SECRET_ACCESS_KEY = ""
 # B2_REGION = "us-west-004"
+
+# Generic S3-compatible backend (STORAGE_BACKEND = "s3")
+# S3_ENDPOINT: optional — derived from S3_REGION for AWS S3 when omitted
+# S3_FORCE_PATH_STYLE: "true" (default) for MinIO/B2, "false" for virtual-hosted
+# S3_ENDPOINT = "https://s3.us-east-1.amazonaws.com"
+# S3_BUCKET = "arwes-cms-media"
+# S3_ACCESS_KEY_ID = ""
+# S3_SECRET_ACCESS_KEY = ""
+# S3_REGION = "us-east-1"
+# S3_FORCE_PATH_STYLE = "true"
 
 # Webhook configuration (Phase 4)
 # Comma-separated URLs to POST on content publish/unpublish events
@@ -57,7 +83,7 @@ WEBHOOK_SECRET = ""
 # Production environment
 [env.production]
 name = "flare-cms"
-vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "", STORAGE_BACKEND = "", B2_ENDPOINT = "", B2_BUCKET = "", B2_ACCESS_KEY_ID = "", B2_SECRET_ACCESS_KEY = "", B2_REGION = "" }
+vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", MEDIA_DOMAIN = "images.flarecms.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "", STORAGE_BACKEND = "", B2_ENDPOINT = "", B2_BUCKET = "", B2_ACCESS_KEY_ID = "", B2_SECRET_ACCESS_KEY = "", B2_REGION = "", S3_ENDPOINT = "", S3_BUCKET = "", S3_ACCESS_KEY_ID = "", S3_SECRET_ACCESS_KEY = "", S3_REGION = "", S3_FORCE_PATH_STYLE = "" }
 
 [[env.production.d1_databases]]
 binding = "DB"

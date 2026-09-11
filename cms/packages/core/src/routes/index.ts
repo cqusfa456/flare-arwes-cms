@@ -38,6 +38,7 @@ export { adminApiTokensRoutes } from './admin-api-tokens'
 export { adminPreviewRoutes } from './admin-preview'
 export { adminSchemaMigrationsRoutes } from './admin-schema-migrations'
 export { adminDeployRoutes } from './admin-deploy'
+export { adminSitesRoutes } from './admin-sites'
 export { adminSyncRoutes } from './admin-sync'
 export { adminAuditLogRoutes } from './admin-audit-log'
 export { adminAnalyticsRoutes } from './admin-analytics'
@@ -76,6 +77,7 @@ export const ROUTES_INFO = {
     'adminPreviewRoutes',
     'adminSchemaMigrationsRoutes',
     'adminDeployRoutes',
+    'adminSitesRoutes',
     'adminAnalyticsRoutes',
     'apiAnalyticsRoutes',
     'workflowRoutes',

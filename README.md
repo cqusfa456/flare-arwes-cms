@@ -87,21 +87,23 @@ cd apps/docs && npm run dev   # http://localhost:9002
 
 配置所需 secrets（向导第 3 步已自动设置）：
 
-| Secret                                                           | 说明                          |
-| ---------------------------------------------------------------- | ----------------------------- |
-| `CF_API_TOKEN` / `CF_ACCOUNT_ID`                                 | Cloudflare 凭据               |
-| `CF_D1_DATABASE_ID` / `CF_R2_BUCKET_NAME` / `CF_KV_NAMESPACE_ID` | Cloudflare 资源               |
-| `JWT_SECRET`                                                     | CMS 认证密钥                  |
-| `FLARE_API_URL` / `FLARE_API_TOKEN`                              | 部署后的 CMS 地址与只读 Token |
-| `STORAGE_BACKEND` / `B2_*`                                       | （可选）Backblaze B2 存储     |
+| Secret                                                           | 说明                                |
+| ---------------------------------------------------------------- | ----------------------------------- |
+| `CF_API_TOKEN` / `CF_ACCOUNT_ID`                                 | Cloudflare 凭据                     |
+| `CF_D1_DATABASE_ID` / `CF_R2_BUCKET_NAME` / `CF_KV_NAMESPACE_ID` | Cloudflare 资源                     |
+| `JWT_SECRET`                                                     | CMS 认证密钥                        |
+| `FLARE_API_URL` / `FLARE_API_TOKEN`                              | 部署后的 CMS 地址与只读 Token       |
+| `STORAGE_BACKEND`                                                | 存储后端：`r2`（默认）/ `b2` / `s3` |
+| `B2_*` / `S3_*`                                                  | （可选）S3 兼容后端凭据             |
 
 ## 功能亮点
 
 - **ARWES** — 科幻风格 UI 框架：动画、音效、帧边框、动态背景
-- **Flare CMS** — 自建 headless CMS：Admin UI、内容工作流、D1 数据库、R2/B2 媒体存储
+- **Flare CMS** — 自建 headless CMS：Admin UI、内容工作流、D1 数据库、R2/B2/S3 媒体存储
 - **Astro 7** — 静态优先 + React islands + `@flare-cms/astro` 构建时内容加载
-- **Backblaze B2 可选** — 用私有 B2 桶替代 R2（S3 兼容 + SigV4 签名）
-- **GitHub Actions** — 每次推送自动部署到 Cloudflare Workers + Pages
+- **多 provider 存储** — `STORAGE_BACKEND` 一键切换 R2 / Backblaze B2 / 任意 S3 兼容后端（SigV4 签名），Admin 后台只读展示当前后端并支持连通性自检
+- **站点控制面** — CMS 统一管理所有站点：Deploy Hook 触发构建（Worker 或 Pages）、按 provider 调用 Cloudflare API 管理域名绑定、`content.site_id` 按站点隔离内容；`deploy.yml` 只部署 CMS 自身
+- **Worker 静态托管** — `apps/docs` 以 Worker + Static Assets 方式部署（`apps/docs/wrangler.jsonc`），一个 Worker 可挂多个自定义域名；多站点时用 `SITE_ROUTES` 按 host 路由到同一 bundle 的子目录
 - **OpenTUI 向导** — `npm run setup` 一键完成全部账号与资源初始化
 
 ## 常用命令

@@ -33,6 +33,7 @@ import {
   adminTestimonialsRoutes,
   adminCodeExamplesRoutes,
   adminDeployRoutes,
+  adminSitesRoutes,
   adminSyncRoutes,
   adminAuditLogRoutes,
   adminAnalyticsRoutes,
@@ -136,9 +137,11 @@ export interface FlareConfig {
   }>
 
   // Custom middleware
+  // Returning a Response short-circuits the request (used by guard middleware
+  // such as binding/JWT validation), so the return type is Response | undefined.
   middleware?: {
-    beforeAuth?: Array<(c: Context, next: () => Promise<void>) => Promise<void>>
-    afterAuth?: Array<(c: Context, next: () => Promise<void>) => Promise<void>>
+    beforeAuth?: Array<(c: Context, next: () => Promise<void>) => Promise<Response | undefined>>
+    afterAuth?: Array<(c: Context, next: () => Promise<void>) => Promise<Response | undefined>>
   }
 
   // App metadata
@@ -301,6 +304,7 @@ export function createFlareApp(config: FlareConfig = {}): FlareApp {
   app.route('/admin/preview', adminPreviewRoutes)
   app.route('/admin/schema-migrations', adminSchemaMigrationsRoutes)
   app.route('/admin/deploy', adminDeployRoutes)
+  app.route('/admin/sites', adminSitesRoutes)
   app.route('/admin/sync', adminSyncRoutes)
   app.route('/admin/audit-log', adminAuditLogRoutes)
   app.route('/admin/analytics', adminAnalyticsRoutes)

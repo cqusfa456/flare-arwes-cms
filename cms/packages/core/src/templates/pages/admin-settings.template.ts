@@ -1,5 +1,8 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
+import { STORAGE_PROVIDERS } from '../../storage'
+import type { StorageInfo, StorageProviderOption } from '../../storage'
+import { escapeHtml } from '../../utils/sanitize'
 
 export interface SettingsPageData {
   user?: {
@@ -16,6 +19,14 @@ export interface SettingsPageData {
     migrations?: MigrationSettings
     databaseTools?: DatabaseToolsSettings
   }
+  /**
+   * Runtime description of the active storage backend. Resolved from the Worker
+   * environment, never from saved settings — the provider cannot be changed
+   * from the admin UI.
+   */
+  storageRuntime?: StorageInfo
+  /** Providers the CMS supports, for the read-only comparison grid. */
+  storageProviders?: StorageProviderOption[]
   activeTab?: string
   version?: string
 }
@@ -62,10 +73,16 @@ export interface NotificationSettings {
   emailFrequency: 'immediate' | 'daily' | 'weekly'
 }
 
+/**
+ * Storage limits and backup preferences.
+ *
+ * The storage *provider* is deliberately not here: it is resolved from the
+ * Worker environment at runtime (see `storage/resolve-storage.ts`) and shown
+ * read-only, so this form can never disagree with the deployed bucket.
+ */
 export interface StorageSettings {
   maxFileSize: number
   allowedFileTypes: string[]
-  storageProvider: 'local' | 'cloudflare' | 's3'
   backupFrequency: 'daily' | 'weekly' | 'monthly'
   retentionPeriod: number
 }
@@ -128,7 +145,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
       <!-- Settings Content -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
         <div id="settings-content" class="p-8">
-          ${renderTabContent(activeTab, data.settings)}
+          ${renderTabContent(activeTab, data)}
         </div>
       </div>
     </div>
@@ -262,6 +279,51 @@ export function renderSettingsPage(data: SettingsPageData): string {
         } finally {
           saveBtn.textContent = originalText;
           saveBtn.disabled = false;
+        }
+      }
+
+      // Storage provider is chosen by environment configuration only, so the
+      // only action the UI offers is an authenticated connectivity self-check.
+      async function testStorageConnection() {
+        var btn = document.querySelector('button[onclick="testStorageConnection()"]');
+        var result = document.getElementById('storage-test-result');
+        var originalText = btn ? btn.textContent : '';
+
+        if (btn) {
+          btn.textContent = 'Testing...';
+          btn.disabled = true;
+        }
+        if (result) {
+          result.className = 'mt-4 text-sm text-zinc-500 dark:text-zinc-400';
+          result.textContent = 'Contacting storage backend...';
+        }
+
+        try {
+          var response = await fetch('/admin/settings/storage/test', { method: 'POST' });
+          var data = await response.json();
+
+          if (!result) return;
+
+          if (data.ok) {
+            result.className = 'mt-4 text-sm text-emerald-600 dark:text-emerald-400';
+            result.textContent = 'Connected to ' + data.providerLabel +
+              (data.bucketName ? ' bucket "' + data.bucketName + '"' : '') +
+              ' in ' + data.latencyMs + ' ms.';
+          } else {
+            result.className = 'mt-4 text-sm text-red-600 dark:text-red-400';
+            result.textContent = 'Connection failed: ' + (data.error || 'unknown error');
+          }
+        } catch (error) {
+          console.error('Error testing storage connection:', error);
+          if (result) {
+            result.className = 'mt-4 text-sm text-red-600 dark:text-red-400';
+            result.textContent = 'Connection test failed. Please try again.';
+          }
+        } finally {
+          if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
         }
       }
 
@@ -592,7 +654,9 @@ function renderTabButton(tabId: string, label: string, iconPath: string, activeT
   `
 }
 
-function renderTabContent(activeTab: string, settings?: SettingsPageData['settings']): string {
+function renderTabContent(activeTab: string, data: SettingsPageData = {}): string {
+  const settings = data.settings
+
   switch (activeTab) {
     case 'general':
       return renderGeneralSettings(settings?.general)
@@ -603,7 +667,11 @@ function renderTabContent(activeTab: string, settings?: SettingsPageData['settin
     case 'notifications':
       return renderNotificationSettings(settings?.notifications)
     case 'storage':
-      return renderStorageSettings(settings?.storage)
+      return renderStorageSettings(
+        settings?.storage,
+        data.storageRuntime,
+        data.storageProviders
+      )
     case 'migrations':
       return renderMigrationSettings(settings?.migrations)
     case 'database-tools':
@@ -1136,33 +1204,143 @@ function renderNotificationSettings(settings?: NotificationSettings): string {
   `
 }
 
-function renderStorageSettings(settings?: StorageSettings): string {
+function renderStorageSettings(
+  settings?: StorageSettings,
+  runtime?: StorageInfo,
+  providers?: StorageProviderOption[]
+): string {
   const inputClass = 'w-full rounded-lg border border-zinc-950/10 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-500'
   const selectClass = 'w-full rounded-lg border border-zinc-950/10 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
+
+  const providerList = providers && providers.length > 0 ? providers : STORAGE_PROVIDERS
+  const activeId = runtime?.provider ?? null
+
+  const statusBadge = !runtime
+    ? `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">Unknown</span>`
+    : runtime.configured
+      ? `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">Configured</span>`
+      : `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">Not configured</span>`
+
+  // Only fields that exist in the runtime description are shown — no secrets.
+  const detailRows: Array<[string, string]> = []
+  if (runtime) {
+    detailRows.push(['Selected by', runtime.requestedBackend
+      ? `STORAGE_BACKEND="${escapeHtml(runtime.requestedBackend)}"`
+      : 'STORAGE_BACKEND (unset → default)'])
+    detailRows.push(['Wiring', runtime.source === 'binding'
+      ? 'Cloudflare Workers binding'
+      : 'Environment variables'])
+    if (runtime.bucketName) detailRows.push(['Bucket', escapeHtml(runtime.bucketName)])
+    if (runtime.endpointHost) detailRows.push(['Endpoint', escapeHtml(runtime.endpointHost)])
+    if (runtime.region) detailRows.push(['Region', escapeHtml(runtime.region)])
+    if (runtime.requestStyle) {
+      detailRows.push(['Addressing', runtime.requestStyle === 'path'
+        ? 'Path style'
+        : 'Virtual-hosted style'])
+    }
+  }
+
+  const detailMarkup = detailRows.length > 0
+    ? detailRows.map(([label, value]) => `
+          <div class="flex items-start justify-between gap-6 py-2 border-b border-zinc-950/5 dark:border-white/5 last:border-0">
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">${label}</span>
+            <code class="text-right text-xs text-zinc-900 dark:text-zinc-100 break-all">${value}</code>
+          </div>`).join('')
+    : `<p class="py-2 text-sm text-zinc-500 dark:text-zinc-400">No storage backend has been resolved for this deployment.</p>`
+
+  const errorMarkup = runtime?.error
+    ? `<div class="mt-4 rounded-lg bg-red-50 dark:bg-red-500/10 p-4">
+          <p class="text-sm font-medium text-red-800 dark:text-red-300">Storage is misconfigured</p>
+          <p class="mt-1 text-sm text-red-700 dark:text-red-400">${escapeHtml(runtime.error)}</p>
+          ${runtime.missingVars.length > 0 ? `
+          <p class="mt-2 text-xs text-red-700 dark:text-red-400">Missing: ${runtime.missingVars.map((v) => `<code>${escapeHtml(v)}</code>`).join(', ')}</p>` : ''}
+        </div>`
+    : ''
+
+  const warningMarkup = runtime && runtime.warnings.length > 0
+    ? runtime.warnings.map((warning) => `
+        <div class="mt-4 rounded-lg bg-amber-50 dark:bg-amber-500/10 p-4">
+          <p class="text-sm text-amber-800 dark:text-amber-300">${escapeHtml(warning)}</p>
+        </div>`).join('')
+    : ''
+
+  const providerCards = providerList.map((provider) => {
+    const isActive = provider.id === activeId
+    const vars = [...provider.requiredVars, ...provider.optionalVars]
+    return `
+        <div class="relative rounded-xl border p-4 ${isActive
+          ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5'
+          : 'border-zinc-950/10 dark:border-white/10'}">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h4 class="text-sm font-semibold text-zinc-950 dark:text-white">${escapeHtml(provider.label)}</h4>
+              <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(provider.description)}</p>
+            </div>
+            ${isActive
+              ? `<span class="shrink-0 inline-flex items-center rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white">Active</span>`
+              : ''}
+          </div>
+          <div class="mt-3 flex flex-wrap gap-1">
+            ${vars.map((v) => `<code class="rounded bg-zinc-100 dark:bg-white/10 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300">${escapeHtml(v)}</code>`).join('')}
+          </div>
+          <p class="mt-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+            ${provider.wiring === 'workers-binding' ? 'Configured via a Workers binding in wrangler.toml' : 'Configured via environment variables / secrets'}
+            · <a href="${escapeHtml(provider.docsUrl)}" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-600 dark:hover:text-indigo-400">Provider docs</a>
+          </p>
+        </div>`
+  }).join('')
 
   return `
     <div class="space-y-8">
       <div>
         <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Storage Settings</h3>
-        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Configure file upload limits, allowed types, and backup preferences.</p>
+        <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Upload limits and backup preferences are editable here. The active storage backend is chosen by environment configuration and is shown read-only.</p>
       </div>
 
+      <!-- Active backend (read-only) -->
+      <div class="rounded-xl border border-zinc-950/10 dark:border-white/10 p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Active storage backend</p>
+            <h4 class="mt-1 text-base font-semibold text-zinc-950 dark:text-white">${escapeHtml(runtime?.providerLabel || 'Unresolved')}</h4>
+          </div>
+          ${statusBadge}
+        </div>
+
+        <div class="mt-4">${detailMarkup}</div>
+
+        ${errorMarkup}
+        ${warningMarkup}
+
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onclick="testStorageConnection()"
+            class="inline-flex items-center justify-center rounded-lg border border-zinc-950/10 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm font-medium text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors"
+          >
+            Test connection
+          </button>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400">Runs an authenticated request against the bucket. A missing probe key still counts as success.</span>
+        </div>
+        <div id="storage-test-result" class="hidden"></div>
+      </div>
+
+      <!-- Supported providers -->
+      <div>
+        <h4 class="text-sm font-semibold text-zinc-950 dark:text-white">Supported providers</h4>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Set <code>STORAGE_BACKEND</code> to <code>r2</code>, <code>b2</code>, or <code>s3</code> and redeploy to switch backends.</p>
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          ${providerCards}
+        </div>
+      </div>
+
+      <!-- Upload limits and backups (editable) -->
       <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         <!-- Max File Size -->
         <div>
           <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Max File Size (MB)</label>
           <input type="number" name="maxFileSize" value="${settings?.maxFileSize || 10}" min="1" max="100" class="${inputClass}" />
           <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Maximum upload size per file (1-100 MB)</p>
-        </div>
-
-        <!-- Storage Provider -->
-        <div>
-          <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Storage Provider</label>
-          <select name="storageProvider" class="${selectClass}">
-            <option value="cloudflare" ${settings?.storageProvider === 'cloudflare' ? 'selected' : ''}>Cloudflare R2</option>
-            <option value="s3" ${settings?.storageProvider === 's3' ? 'selected' : ''}>Amazon S3</option>
-            <option value="local" ${settings?.storageProvider === 'local' ? 'selected' : ''}>Local Storage</option>
-          </select>
         </div>
 
         <!-- Backup Frequency -->

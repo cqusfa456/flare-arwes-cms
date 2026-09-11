@@ -24,9 +24,14 @@ case "$1" in
     npx wrangler deploy --env production
     ;;
   migrate)
-    echo "▶ 运行数据库迁移 (远程)"
+    # 注意：这条命令操作的是 **本地** 数据库（wrangler 需要显式 --remote 才会连远端），
+    # 所以它只是本地演练。生产库的 schema 由 CMS 自己在运行时迁移：
+    # Worker 打包了全部 migrations/*.sql，bootstrapMiddleware 会在第一个请求时
+    # 调用 MigrationService(c.env.DB).runPendingMigrations() 并记录到自己的
+    # migrations 表（对 "already exists" / "duplicate column name" 幂等）。
+    echo "▶ 在本地数据库上演练迁移（生产库由 CMS 运行时自动迁移）"
     cd packages/cms
-    npx wrangler d1 migrations apply DB --env production
+    npx wrangler d1 migrations apply DB --local
     ;;
   migrate:local)
     echo "▶ 运行数据库迁移 (本地)"

@@ -66,10 +66,18 @@ export const NOTIFICATION_DEFAULTS: NotificationSettings = {
   emailFrequency: 'immediate'
 }
 
+/**
+ * Storage limits and backup preferences.
+ *
+ * Note: the storage *provider* is intentionally absent. Which backend the CMS
+ * reads and writes is decided by environment configuration only (see
+ * `storage/resolve-storage.ts`), so a database row can never silently disagree
+ * with the deployed bucket. A legacy `storageProvider` key may still exist in
+ * D1 from older installs and is ignored.
+ */
 export interface StorageSettings {
   maxFileSize: number
   allowedFileTypes: string[]
-  storageProvider: 'local' | 'cloudflare' | 's3'
   backupFrequency: 'daily' | 'weekly' | 'monthly'
   retentionPeriod: number
 }
@@ -77,7 +85,6 @@ export interface StorageSettings {
 export const STORAGE_DEFAULTS: StorageSettings = {
   maxFileSize: 10,
   allowedFileTypes: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'docx'],
-  storageProvider: 'cloudflare',
   backupFrequency: 'daily',
   retentionPeriod: 30
 }
@@ -353,7 +360,6 @@ export class SettingsService {
     return {
       maxFileSize: settings.maxFileSize ?? STORAGE_DEFAULTS.maxFileSize,
       allowedFileTypes: settings.allowedFileTypes ?? STORAGE_DEFAULTS.allowedFileTypes,
-      storageProvider: settings.storageProvider ?? STORAGE_DEFAULTS.storageProvider,
       backupFrequency: settings.backupFrequency ?? STORAGE_DEFAULTS.backupFrequency,
       retentionPeriod: settings.retentionPeriod ?? STORAGE_DEFAULTS.retentionPeriod
     }
@@ -367,7 +373,6 @@ export class SettingsService {
 
     if (settings.maxFileSize !== undefined) settingsToSave.maxFileSize = settings.maxFileSize
     if (settings.allowedFileTypes !== undefined) settingsToSave.allowedFileTypes = settings.allowedFileTypes
-    if (settings.storageProvider !== undefined) settingsToSave.storageProvider = settings.storageProvider
     if (settings.backupFrequency !== undefined) settingsToSave.backupFrequency = settings.backupFrequency
     if (settings.retentionPeriod !== undefined) settingsToSave.retentionPeriod = settings.retentionPeriod
 

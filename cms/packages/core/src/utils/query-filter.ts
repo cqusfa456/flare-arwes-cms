@@ -40,6 +40,17 @@ export interface QueryFilter {
     field: string
     order: 'asc' | 'desc'
   }[]
+  /**
+   * Server-controlled AND conditions appended after `where`.
+   *
+   * These are NOT reachable from client input (`parseFromQuery` never produces
+   * them) and exist so a route can enforce a scope the caller cannot widen —
+   * for example site isolation: `site_id = ? OR site_id IS NULL`.
+   *
+   * Each fragment must be parameterised; its params are bound in order, after
+   * the `where` params and before LIMIT/OFFSET.
+   */
+  internalAnd?: Array<{ sql: string; params?: any[] }>
 }
 
 export interface QueryResult {
@@ -65,12 +76,27 @@ export class QueryFilterBuilder {
 
     let sql = `SELECT * FROM ${baseTable}`
 
-    // Build WHERE clause
+    // Collect WHERE fragments in SQL parameter order.
+    const whereClauses: string[] = []
+
+    // Build WHERE clause from client-supplied filter
     if (filter.where) {
       const whereClause = this.buildWhereClause(filter.where)
       if (whereClause) {
-        sql += ` WHERE ${whereClause}`
+        whereClauses.push(whereClause)
       }
+    }
+
+    // Server-controlled conditions (never sourced from client input)
+    if (filter.internalAnd && filter.internalAnd.length > 0) {
+      for (const condition of filter.internalAnd) {
+        this.params.push(...(condition.params ?? []))
+        whereClauses.push(`(${condition.sql})`)
+      }
+    }
+
+    if (whereClauses.length > 0) {
+      sql += ` WHERE ${whereClauses.join(' AND ')}`
     }
 
     // Build ORDER BY clause
