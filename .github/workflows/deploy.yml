@@ -157,10 +157,12 @@ jobs:
           pnpm --filter @flare-cms/astro build
 
       # 构建 ARWES packages（apps/docs 通过 workspace 链接引用其 build 产物）
+      # 注意：不要用 turbo 全量 build（会连带构建 apps/docs，而 flare-loader
+      # 此时拿不到 PUBLIC_FLARE_API_URL，导致 docs 构建失败）。
       - name: Install and build ARWES packages
         run: |
           npm install --engine-strict=false
-          npm run build
+          npx turbo build --filter='./packages/*'
         env:
           HUSKY: 0
 
