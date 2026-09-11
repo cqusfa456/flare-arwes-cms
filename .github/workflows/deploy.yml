@@ -45,7 +45,7 @@ jobs:
 
       - name: Install CMS dependencies
         working-directory: cms
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build core
         working-directory: cms
@@ -144,7 +144,7 @@ jobs:
       - name: Build astro integration
         working-directory: cms
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --ignore-scripts
           pnpm build
           pnpm --filter @flare-cms/astro build
 
