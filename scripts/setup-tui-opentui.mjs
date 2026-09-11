@@ -23,6 +23,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { ProxyAgent, setGlobalDispatcher } from 'undici'
+
 import {
   BoxRenderable,
   TextRenderable,
@@ -32,6 +34,40 @@ import {
   SelectRenderableEvents,
   createCliRenderer
 } from '@opentui/core'
+
+// ===========================================================================
+// 代理初始化：自动读取 git 代理配置，让 fetch 能访问 GitHub 等
+// ===========================================================================
+
+const getGitProxy = () => {
+  try {
+    const out = execSync('git config --get http.proxy', {
+      stdio: 'pipe',
+      encoding: 'utf-8'
+    }).trim()
+    return out || null
+  } catch {
+    return null
+  }
+}
+
+const proxyUrl = getGitProxy()
+if (proxyUrl) {
+  try {
+    setGlobalDispatcher(new ProxyAgent(proxyUrl))
+    console.error(`[proxy] 使用 git 代理: ${proxyUrl}`)
+  } catch {
+    // 代理不可用则直连
+  }
+} else if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+  try {
+    const envProxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY
+    setGlobalDispatcher(new ProxyAgent(envProxy))
+    console.error(`[proxy] 使用环境代理: ${envProxy}`)
+  } catch {
+    // 忽略
+  }
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
