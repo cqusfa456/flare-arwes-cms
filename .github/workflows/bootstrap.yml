@@ -140,24 +140,32 @@ jobs:
           PY
 
           echo "== runtime migrations =="
-          cd cms/packages/cms
-          npx wrangler d1 execute sci-fi-cms-db --remote --json \
-            --command "SELECT COUNT(*) AS applied FROM migrations;" > /tmp/migrations.json
+          # Through the D1 API, not `wrangler d1 execute <name>`: wrangler
+          # resolves a name against the local wrangler.toml, whose
+          # database_id is still the placeholder (7400 Invalid uuid).
+          D1_ID=$(curl -s --max-time 30 -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database" \
+            | python3 -c "import json,sys; ns=json.load(sys.stdin).get('result') or []; print(next((d['uuid'] for d in ns if d['name']=='sci-fi-cms-db'), ''))" )
+          if [ -z "$D1_ID" ]; then
+            echo "::error::D1 database sci-fi-cms-db was not found in this account"
+            exit 1
+          fi
+          curl -s --max-time 30 -X POST -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -d '{"sql":"SELECT COUNT(*) AS applied FROM migrations;"}' \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${D1_ID}/query" > /tmp/migrations.json
           cat /tmp/migrations.json
           echo
           python3 - <<'PY'
           import json, sys
-          raw = open('/tmp/migrations.json').read()
-          start = raw.find('[')
-          data = json.loads(raw[start:]) if start >= 0 else []
-          rows = data[0].get('results', []) if data else []
+          data = json.load(open('/tmp/migrations.json'))
+          rows = ((data.get('result') or [{}])[0].get('results')) or []
           applied = rows[0].get('applied') if rows else 0
           if not applied:
-              print('::error::no migrations recorded — the Worker never applied its runtime migrations')
+              print('::error::no migrations recorded - the Worker never applied its runtime migrations')
               sys.exit(1)
           print(f"runtime migrations applied: {applied}")
           PY
-
           echo "== admin login =="
           login=$(curl -s --max-time 30 -X POST "$SITE_URL/auth/login" \
             -H 'Content-Type: application/json' \
