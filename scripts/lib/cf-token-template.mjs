@@ -61,7 +61,8 @@ export const TOKEN_TEMPLATES = {
       '需在**账户级**页面创建（Manage Account → Account API Tokens），要求 Super Administrator',
       'API 令牌：「编辑」（账户级，英文名 “API Tokens Write”）—— 键名 account_api_tokens',
       '值形如 cfat_…（账户级 token 的可扫描前缀），创建后只显示一次',
-      '⚠ 该键能否在表单里预填尚未实测：若名称为空或权限行没出现，请手动选「帐户 → 权限 → API 令牌 → 编辑」'
+      '链接会同时预填**名称与权限**（用户实测确认）：账户页 UI 与“用户令牌”页差别很大，权限渲染在「权限策略 / 编辑策略」区块里，确认后在页面最下方点「审核令牌」→「创建令牌」',
+      '⚠ 不要用“有没有 permissionGroupKeys 隐藏 input”判断预填成功：账户页是新 UI 没有这些 input，看不到并不代表没填上（我曾据此误判）'
     ]
   },
   ci: {
