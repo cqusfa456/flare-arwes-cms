@@ -351,11 +351,12 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 
 #### Worker 托管配置
 
-- `src/worker.ts` — 静态资源 Worker；`wrangler.jsonc` — `main` + `assets.directory = ./build` + `ASSETS` 绑定
-- `assets.html_handling = "none"` + `run_worker_first = true`：Astro 用 `build.format: 'directory'`（页面在 `about/index.html`），若交给 Cloudflare 默认的 `auto-trailing-slash`，`/about` 会被 307 重定向到 `/about/`。因此由 Worker **显式**解析候选路径（原路径 → `<path>/index.html` → `<path>.html`），URL 稳定且单站点/多站点行为一致
-- 只处理 `GET`/`HEAD`，其他方法 405；未命中时优先返回站点的 `404.html`
-- `scripts/build-worker.sh` — Workers Builds 的构建链：先建 cms 工作区（core + `@flare-cms/astro`），再建 ARWES packages，最后 `astro build`（顺序与原 `deploy-docs` job 一致）
-- **一个 Worker 服务多个站点**：`SITE_ROUTES`（JSON，主机名 → 资源前缀）把不同域名映射到同一份 bundle 下的不同子目录，`DEFAULT_SITE_PREFIX` 作为兜底；不配置即单站点布局（资源在根目录），此时任意数量的自定义域名都可指向它
+- `src/worker.ts` — 兜底 Worker（宿主路由 + 候选路径解析）；`wrangler.jsonc` — `main` + `assets.directory = ./build` + `ASSETS` 绑定
+- **计费优先的默认配置：不设 `run_worker_first`**。静态资源请求免费且无限，只有**调用 Worker 脚本**的请求计费；`run_worker_first` 会让匹配的每个请求都调用脚本（免费额度用尽后还会 429 而不是回落到资源）。配合 compatibility date ≥ 2025-04-01 的 `assets_navigation_prefers_asset_serving`，命中已有文件的**导航请求也不调用 Worker**，因此正常页面与子资源流量全部免费，Worker 只在"没有匹配到任何文件"时兜底
+- `assets.html_handling = "drop-trailing-slash"`：Astro 用 `build.format: 'directory'`（页面在 `about/index.html`），该策略让 `/about` **直接**提供该文件（只有 `/about/` 才重定向），URL 稳定且**不需要 Worker 参与**。默认的 `auto-trailing-slash` 会把 `/about` 307 到 `/about/`；`"none"` 则要求 Worker 解析每个页面（每请求计费）
+- `assets.not_found_handling = "404-page"`：未命中时由资源层返回最近的 `404.html`（404 状态），同样不调用 Worker
+- 只处理 `GET`/`HEAD`，其他方法 405；`SITE_ROUTES`/`DEFAULT_SITE_PREFIX` 仍保留在 `src/worker.ts`——**但"一个 Worker 服务多个站点"必须开启 `run_worker_first`，从而每个请求都计费**，因此单站点默认走免费路径；要一 Worker 多站点就显式开回 `run_worker_first` 并接受计费，或者干脆每站点一个 Worker（CMS 的 `sites.cfProjectName` 正是这个模型）
+- `scripts/build-worker.sh` — 构建链：先建 cms 工作区（core + `@flare-cms/astro`），再建 ARWES packages，最后 `astro build`。**Cloudflare 无法在 Worker 里跑这条链**（Workers Builds 是 Git 集成，Worker 无构建工具链），不连 Git 时用 `npm run worker:deploy`（Direct Upload）本地/CI 构建后直传
 
 组件库（`src/ui/`）：`Header`（导航栏+设置+音效开关）、`Nav`（侧边栏菜单）、`Button`、`Card`、`CodeBlock`（prism 高亮）、`Table`、`Modal`、`Breadcrumbs`、`FrameAlert` 等
 
