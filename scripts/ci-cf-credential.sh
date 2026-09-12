@@ -3,16 +3,23 @@
 # Resolve ONE Cloudflare credential for a workflow run and export it.
 #
 # Called by every workflow that talks to Cloudflare (deploy, deploy-site,
-# bootstrap). Two kinds of credential can drive them:
+# bootstrap). Credentials are tried in this order:
 #
-#   CF_REFRESH_TOKEN — the OAuth refresh token from `node scripts/oauth-login.mjs`
-#                      (stored as a repository secret). It is exchanged for a
-#                      fresh one-hour access token on every run, so unlike
-#                      storing an access token there is no hourly expiry. It
-#                      carries workers/d1/kv/pages write and zone read, which is
-#                      everything the deploys need, but it can NOT mint API
-#                      tokens or touch R2.
-#   CF_API_TOKEN     — a long-lived API token (`node scripts/set-cf-token.mjs ci`).
+#   CF_BOOTSTRAP_TOKEN — PREFERRED. A user-scoped token whose only permission is
+#                        "API Tokens: Write" (`node scripts/set-cf-token.mjs
+#                        bootstrap`). Each run uses it to mint a short-lived
+#                        deploy token with exactly the permissions the deploy
+#                        needs — including Pages, which the dashboard's
+#                        pre-filled form cannot express. Nothing else has to be
+#                        created or rotated by hand, and the minted token dies
+#                        with its TTL (CI_TOKEN_TTL_DAYS, default 1).
+#   CF_REFRESH_TOKEN   — the OAuth refresh token from `node scripts/oauth-login.mjs`.
+#                        Only usable ONCE (Cloudflare rotates it on exchange and a
+#                        run cannot store the replacement), so it is a one-off
+#                        fallback for a single deploy, not a mechanism.
+#   CF_API_TOKEN       — a long-lived API token (`node scripts/set-cf-token.mjs ci`).
+#                        Still supported: a token created that way, or minted from
+#                        the bootstrap token once and kept, works for every run.
 #
 # The OAuth path wins when CF_REFRESH_TOKEN is set; delete that secret to go back
 # to CF_API_TOKEN. The value is masked and exported as CF_CREDENTIAL (with
@@ -49,8 +56,27 @@ fi
 CREDENTIAL=""
 SOURCE="none"
 OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID:-54d11594-84e4-41aa-b438-e81b8fa78ee7}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -n "${CF_REFRESH_TOKEN:-}" ]; then
+# 1) Preferred: mint a short-lived deploy token on demand from the bootstrap
+#    token — a user-scoped token whose ONLY permission is "API Tokens: Write".
+#    Minting through the API (rather than the dashboard form) also covers the
+#    permissions Cloudflare publishes no template key for, Pages in particular,
+#    so nothing has to be added by hand. The minted token is scoped to the
+#    deploy's own permissions and disappears with its TTL.
+if [ -n "${CF_BOOTSTRAP_TOKEN:-}" ]; then
+  echo "Minting an on-demand deploy token from CF_BOOTSTRAP_TOKEN"
+  CREDENTIAL="$(CF_BOOTSTRAP_TOKEN="${CF_BOOTSTRAP_TOKEN}" CF_ACCOUNT_ID="${CF_ACCOUNT_ID:-}" \
+    node "${SCRIPT_DIR}/create-cf-token.mjs" ci --print-token --ttl-days "${CI_TOKEN_TTL_DAYS:-1}" 2>/dev/null \
+    | sed -n 's/^__TOKEN__//p' | tail -1)"
+  if [ -n "${CREDENTIAL}" ]; then
+    SOURCE="bootstrap mint"
+  else
+    echo "::warning::CF_BOOTSTRAP_TOKEN could not mint a deploy token (revoked? no API Tokens: Write?); falling back."
+  fi
+fi
+
+if [ -z "${CREDENTIAL}" ] && [ -n "${CF_REFRESH_TOKEN:-}" ]; then
   echo "Exchanging CF_REFRESH_TOKEN for a fresh OAuth access token"
   CREDENTIAL="$(curl -s --max-time 60 -X POST https://dash.cloudflare.com/oauth2/token \
     -H 'Content-Type: application/x-www-form-urlencoded' \

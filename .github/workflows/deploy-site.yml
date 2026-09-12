@@ -103,6 +103,8 @@ jobs:
       # scripts/ci-cf-credential.sh).
       - name: Resolve the Cloudflare credential
         env:
+          CF_BOOTSTRAP_TOKEN: ${{ secrets.CF_BOOTSTRAP_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: bash scripts/ci-cf-credential.sh

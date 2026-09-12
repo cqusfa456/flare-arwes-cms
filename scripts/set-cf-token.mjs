@@ -82,7 +82,11 @@ const TEMPLATE_ID = (process.argv[2] || 'ci').trim()
 if (!TOKEN_TEMPLATES[TEMPLATE_ID]) {
   fail(`未知的 token 模板 "${TEMPLATE_ID}"。可用：${Object.keys(TOKEN_TEMPLATES).join(', ')}`)
 }
-const SECRET_BY_TEMPLATE = { ci: 'CF_API_TOKEN', runtime: 'CF_SITES_API_TOKEN' }
+const SECRET_BY_TEMPLATE = {
+  ci: 'CF_API_TOKEN',
+  runtime: 'CF_SITES_API_TOKEN',
+  bootstrap: 'CF_BOOTSTRAP_TOKEN'
+}
 const SECRET_NAME = SECRET_BY_TEMPLATE[TEMPLATE_ID] || 'CF_API_TOKEN'
 const template = TOKEN_TEMPLATES[TEMPLATE_ID]
 
@@ -177,23 +181,28 @@ if (!resolvedAccountId && accountLookup.ok && accountLookup.accounts.length === 
 // Cloudflare 不为 "Workers CI" 与 "Pages" 公布 permission key，未知 key 会被页面
 // 静默丢弃，所以从模板 URL 建出来的 token 仍可能缺 Pages 权限。这里直接拿 token 去
 // 打这些 API，把"缺什么"在写入之前说清楚。
-console.log('[2.5/3] 探测实际权限（打真实 API）...')
-const capabilities = await probeTokenCapabilities(token, resolvedAccountId)
-for (const cap of capabilities) {
-  const mark = cap.ok === true ? '✓' : cap.ok === null ? '–' : '✗'
-  console.log(`  ${mark} ${cap.label}`)
-  if (cap.ok === false) {
-    const detail = (cap.errors ?? []).map((e) => e.message || `code ${e.code}`).join('; ')
-    console.log(`      HTTP ${cap.httpStatus}${detail ? `: ${detail}` : ''}`)
+// A bootstrap token is *supposed* to have only "API Tokens: Write" — it mints
+// the tokens that carry the real permissions — so probing Workers/Pages/Zones
+// against it would only report misleading "missing capabilities".
+if (TEMPLATE_ID !== 'bootstrap') {
+  console.log('[2.5/3] 探测实际权限（打真实 API）...')
+  const capabilities = await probeTokenCapabilities(token, resolvedAccountId)
+  for (const cap of capabilities) {
+    const mark = cap.ok === true ? '✓' : cap.ok === null ? '–' : '✗'
+    console.log(`  ${mark} ${cap.label}`)
+    if (cap.ok === false) {
+      const detail = (cap.errors ?? []).map((e) => e.message || `code ${e.code}`).join('; ')
+      console.log(`      HTTP ${cap.httpStatus}${detail ? `: ${detail}` : ''}`)
+    }
   }
-}
-const missing = capabilities.filter((cap) => cap.ok === false)
-if (missing.length > 0) {
-  console.log('\n⚠ 这个 token 缺少以下能力，相关功能会在 CI/后台里失败：')
-  for (const cap of missing) console.log(`    · ${cap.permission}  →  ${cap.label}`)
-  console.log('  修法：在 API 令牌页面编辑该 token，用 “Add more” 手动补上这些权限后保存')
-  console.log('  （官方未公布这些 permission key，所以模板 URL 不会预填它们）。')
-  console.log('  令牌值不变的话无需重新写入 secret。\n')
+  const missing = capabilities.filter((cap) => cap.ok === false)
+  if (missing.length > 0) {
+    console.log('\n⚠ 这个 token 缺少以下能力，相关功能会在 CI/后台里失败：')
+    for (const cap of missing) console.log(`    · ${cap.permission}  →  ${cap.label}`)
+    console.log('  修法：在 API 令牌页面编辑该 token，用 “Add more” 手动补上这些权限后保存')
+    console.log('  （官方未公布这些 permission key，所以模板 URL 不会预填它们）。')
+    console.log('  令牌值不变的话无需重新写入 secret。\n')
+  }
 }
 
 // ---- 3) 写入 GitHub secrets（libsodium sealed box，与 configure-secrets.mjs 同机制）----
