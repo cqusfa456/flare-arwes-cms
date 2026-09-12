@@ -38,10 +38,26 @@ pnpm build:astro    # 构建 @sci-fi-cms/astro
 cd packages/cms
 echo "JWT_SECRET=local-dev-secret" > .dev.vars
 npx wrangler d1 migrations apply DB --local
-npx tsx scripts/seed-admin.ts   # 或通过 /auth/register 注册第一个用户
+npx tsx scripts/seed-admin.ts   # 本地种子脚本（仅本地 D1）
 
 # 启动 CMS (http://localhost:8787, Admin: /admin)
 npx wrangler dev --local --port 8787
+```
+
+创建**已部署环境**的管理员（旧库删除、新库为空时用这个；`scripts/setup-tui.mjs`
+初始化流程也会调用它）：
+
+```bash
+node scripts/create-admin.mjs --email you@example.com --username admin
+# 密码交互输入（不回显），也可以用 SCIFI_ADMIN_PASSWORD 环境变量
+```
+
+`POST /auth/seed-admin` 已默认关闭：它用硬编码密码建号并会重置已有管理员密码，
+生产环境等于后门。仅在不可公开访问的环境里临时把它打开：
+
+```bash
+# cms/packages/cms，一次性引导用，用完请删除该变量
+npx wrangler secret put ALLOW_SEED_ADMIN --env production   # 输入 true
 ```
 
 或使用根目录脚本：

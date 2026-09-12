@@ -49,3 +49,7 @@ oauth-state.json
 # pnpm may materialise its content-addressable store inside the project
 # (store-dir resolution); never commit it.
 .pnpm-store/
+
+# Python bytecode
+__pycache__/
+*.pyc

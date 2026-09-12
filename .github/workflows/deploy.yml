@@ -170,9 +170,13 @@ jobs:
       # The Worker resolves credentials environment-first
       # (CF_API_TOKEN / CF_ACCOUNT_ID) and only then falls back to D1 settings,
       # so this is the same mechanism as Admin → Sites → Save credentials —
-      # just automated. A dedicated CF_SITES_API_TOKEN is preferred because the
-      # runtime token only needs the Sites permissions; the CI token is broader
-      # than the CMS requires.
+      # just automated.
+      #
+      # The runtime token is scoped much more narrowly than the CI token, so it
+      # is minted here from the CI token (CF_API_TOKEN carries API Tokens: Write)
+      # with scripts/create-cf-token.mjs. CF_SITES_API_TOKEN remains an override
+      # for when the operator wants to supply the runtime token themselves; the
+      # broad CI token is only ever handed to the Worker if minting fails.
       - name: Set Cloudflare API worker secrets
         working-directory: cms/packages/cms
         env:
@@ -184,14 +188,28 @@ jobs:
           SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
           ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          RUNTIME_TOKEN="${SITES_API_TOKEN:-$CI_API_TOKEN}"
+          set -euo pipefail
+
+          RUNTIME_TOKEN="${SITES_API_TOKEN}"
           if [ -z "$RUNTIME_TOKEN" ]; then
-            echo "::warning::No Cloudflare API token available; skipping CMS runtime credentials."
-            exit 0
+            echo "::group::Minting a scoped runtime token from the CI token"
+            # --print-token makes the value the only __TOKEN__ line, so nothing
+            # else in the log can be captured by mistake.
+            RUNTIME_TOKEN=$(CF_BOOTSTRAP_TOKEN="$CI_API_TOKEN" \
+              node "${{ github.workspace }}/scripts/create-cf-token.mjs" runtime --print-token --ttl-days 365 \
+              | sed -n 's/^__TOKEN__//p' | tail -1) || RUNTIME_TOKEN=""
+            echo "::endgroup::"
           fi
-          if [ -z "$SITES_API_TOKEN" ]; then
-            echo "::warning::CF_SITES_API_TOKEN is not set - using the CI token for the CMS runtime. Create a scoped token (node scripts/set-cf-token.mjs runtime) and store it as CF_SITES_API_TOKEN."
+
+          if [ -z "$RUNTIME_TOKEN" ]; then
+            if [ -z "$CI_API_TOKEN" ]; then
+              echo "::warning::No Cloudflare API token available; skipping CMS runtime credentials."
+              exit 0
+            fi
+            echo "::warning::Could not mint a runtime token (the CI token needs API Tokens: Write, or CF_SITES_API_TOKEN must be set). Falling back to the CI token — the CMS then holds a broader token than it needs."
+            RUNTIME_TOKEN="$CI_API_TOKEN"
           fi
+
           printf '%s' "$RUNTIME_TOKEN" | npx wrangler secret put CF_API_TOKEN --env production
           if [ -n "$ACCOUNT_ID" ]; then
             printf '%s' "$ACCOUNT_ID" | npx wrangler secret put CF_ACCOUNT_ID --env production

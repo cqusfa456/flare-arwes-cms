@@ -421,7 +421,8 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 
 **`scripts/configure-secrets.mjs`** — 从 OAuth 状态创建/更新部署 secrets：
 
-- `CF_API_TOKEN` / `CF_ACCOUNT_ID` / `CF_D1_DATABASE_ID` / `CF_R2_BUCKET_NAME` / `CF_KV_NAMESPACE_ID` / `JWT_SECRET` / `SCIFI_API_URL` / `PAGES_PROJECT_NAME`
+- `CF_API_TOKEN` / `CF_ACCOUNT_ID` / `JWT_SECRET` / `SCIFI_API_URL` / `PAGES_PROJECT_NAME`
+- D1/KV/R2 的 ID 不再写入 secrets：部署工作流按名字查找并按需创建（`scripts/cf-resources.py`）
 
 **`scripts/set-b2-secrets.mjs`** — B2 凭据写入工具。
 

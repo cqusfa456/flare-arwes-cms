@@ -83,7 +83,12 @@ export const TOKEN_TEMPLATES = {
       // environment, trigger a build, or deploy a Pages project.
       //
       // Workers Builds ("Workers 构建配置" / "Workers CI Write", account scope).
-      { key: 'workers_ci', type: 'edit', inferred: true }
+      { key: 'workers_ci', type: 'edit', inferred: true },
+      // API Tokens (user scope). The deploy workflow uses this CI token as the
+      // bootstrap for scripts/create-cf-token.mjs, so it can mint the scoped
+      // runtime token the CMS is given — no second hand-made token, and the
+      // Worker never holds the broad CI token.
+      { key: 'api_tokens', type: 'edit' }
       // "Cloudflare Pages" ("Pages Write", account scope, id
       // 8d28297797f24fb8a0c332fe0866ec89) is deliberately NOT listed: it cannot
       // be pre-filled through this URL. Verified against the rendered form, one
@@ -102,6 +107,7 @@ export const TOKEN_TEMPLATES = {
       'Zone: Read（按主机名解析所属 zone）',
       'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）',
       'Workers 构建配置：「编辑」（= Workers CI Write，**账户级**；链接已预填）',
+      'API Tokens：「编辑」（= API Tokens Write，**用户级**）—— 部署时用它换取 CMS 运行时 token，无需再手工建第二只 token',
       '⚠ Cloudflare Pages：「编辑」（= Pages Write，**账户级**）—— **这一行无法通过链接预填，必须手动加**：点「添加更多」→ 资源选「帐户」→ 权限选「Cloudflare Pages」→ 级别选「编辑」。不做 Pages 部署可跳过'
     ]
   },

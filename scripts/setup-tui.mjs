@@ -12,7 +12,7 @@
  *
  * 用法: node scripts/setup-tui.mjs
  */
-import { execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -210,7 +210,8 @@ async function stepMigrationsAndAdmin() {
   )
 
   const createAdmin = await confirm({
-    message: '创建 CMS 管理员账号？',
+    message:
+      '在已部署的 D1 中创建 CMS 管理员账号？\n（需要先成功部署过一次；管理员直接写入远端数据库，不依赖公开的 seed 接口）',
     initialValue: true
   })
   if (isCancel(createAdmin)) process.exit(0)
@@ -218,31 +219,47 @@ async function stepMigrationsAndAdmin() {
   if (createAdmin) {
     const email = await text({ message: '管理员邮箱:', initialValue: 'admin@arwes.dev' })
     if (isCancel(email)) process.exit(0)
+    const username = await text({ message: '管理员用户名:', initialValue: 'admin' })
+    if (isCancel(username)) process.exit(0)
     const password = await text({
       message: '管理员密码（至少 8 位）:',
-      initialValue: 'ArwesAdmin2026!',
-      validate: (v) => (v.length >= 8 ? undefined : '密码至少 8 位')
+      validate: (v) => (v && v.length >= 8 ? undefined : '密码至少 8 位')
     })
     if (isCancel(password)) process.exit(0)
 
-    s.start('创建管理员账号...')
-    // 通过注册 API 创建（第一个用户自动允许）
-    // 需要 CMS 正在运行 (sh ./scripts/cms.sh dev)
-    const cmsUp = run(
-      'curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8787/'
-    ).includes('302')
-    if (!cmsUp) {
-      s.stop('CMS 未运行，跳过账号创建。请先启动: sh ./scripts/cms.sh dev')
-      log.info('启动后访问 http://localhost:8787/auth/register 手动注册第一个用户')
-    } else {
-      const regOut = run(
-        `curl -s -X POST http://localhost:8787/auth/register -H "Content-Type: application/json" -d '{"email":"${email}","password":"${password}","username":"admin"}'`
+    s.start('在远端 D1 创建管理员...')
+    try {
+      // The password travels through the environment, not argv: it stays out of
+      // the process list, and create-admin.mjs never echoes it.
+      const out = execFileSync(
+        process.execPath,
+        [
+          join(ROOT, 'scripts', 'create-admin.mjs'),
+          '--email',
+          email,
+          '--username',
+          username || 'admin'
+        ],
+        {
+          cwd: ROOT,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            SCIFI_ADMIN_PASSWORD: password,
+            ...(apiTokenGlobal ? { CLOUDFLARE_API_TOKEN: apiTokenGlobal } : {})
+          }
+        }
       )
-      if (regOut.includes('"token"')) {
-        s.stop('管理员账号已创建（角色: viewer，可在 Admin 中提升）')
-      } else {
-        s.stop('注册失败——请检查 CMS 日志或手动注册')
-      }
+      s.stop('管理员账号已创建（role: admin）')
+      log.info(out.trim().split('\n').slice(-2).join('\n'))
+    } catch (error) {
+      const detail = `${error.stdout || ''}${error.stderr || ''}`.trim()
+      s.stop('创建失败')
+      log.warn(detail.split('\n').slice(0, 8).join('\n'))
+      log.info(
+        '若还没部署过：先在 GitHub Actions 跑一次 Deploy to Cloudflare，或在 cms/packages/cms 执行 npx wrangler deploy --env production，然后重跑本步骤'
+      )
     }
   }
 }
@@ -445,16 +462,13 @@ async function stepGitHubSecrets() {
   log.info('GitHub Actions 自动注入 GITHUB_TOKEN，无需配置')
 
   log.info('以下信息将被加密写入 GitHub Actions secrets:')
-  log.info('  CF_API_TOKEN / CF_ACCOUNT_ID / CF_D1_DATABASE_ID')
-  log.info('  CF_R2_BUCKET_NAME / CF_KV_NAMESPACE_ID / SCIFI_API_URL')
+  log.info('  CF_API_TOKEN / CF_ACCOUNT_ID / SCIFI_API_URL')
   log.info('  JWT_SECRET / B2_*（如启用 B2）')
+  log.info('  D1/KV/R2 不再需要写 ID：部署时按名字查找并自动创建')
 
   const askValue = async (name, label, initial) => {
     const existing = {
-      CF_API_TOKEN: apiTokenGlobal,
-      CF_D1_DATABASE_ID: resourcesGlobal?.d1Id,
-      CF_R2_BUCKET_NAME: resourcesGlobal?.r2Name,
-      CF_KV_NAMESPACE_ID: resourcesGlobal?.kvId
+      CF_API_TOKEN: apiTokenGlobal
     }
     if (existing[name]) {
       secrets[name] = existing[name]
@@ -466,11 +480,12 @@ async function stepGitHubSecrets() {
     if (value) secrets[name] = value
   }
 
+  // The D1/KV/R2 ids used to be collected here and stored as secrets. The
+  // deploy workflow resolves those resources by name now (scripts/cf-resources.py)
+  // and creates them when missing, so a stale id cannot break a deploy any more
+  // — and there is nothing left to paste.
   await askValue('CF_API_TOKEN', 'Cloudflare API Token:')
   await askValue('CF_ACCOUNT_ID', 'Cloudflare 账号 ID:')
-  await askValue('CF_D1_DATABASE_ID', 'D1 数据库 ID:')
-  await askValue('CF_R2_BUCKET_NAME', 'R2 桶名:')
-  await askValue('CF_KV_NAMESPACE_ID', 'KV namespace ID:')
   await askValue('SCIFI_API_URL', 'CMS Worker URL（如 https://sci-fi-cms.xxx.workers.dev）:')
   await askValue('SCIFI_API_TOKEN', 'CMS 只读 API Token（可选，留空跳过）:')
 

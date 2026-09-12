@@ -80,7 +80,7 @@ const argv = process.argv.slice(2)
 const templateId = (argv.find((a) => !a.startsWith('-')) || '').trim()
 if (!TOKEN_SPECS[templateId]) {
   fail(
-    `用法：node scripts/create-cf-token.mjs <${Object.keys(TOKEN_SPECS).join('|')}> [--ttl-days N] [--no-expiry] [--no-secret] [--dry-run]`
+    `用法：node scripts/create-cf-token.mjs <${Object.keys(TOKEN_SPECS).join('|')}> [--ttl-days N] [--no-expiry] [--no-secret] [--print-token] [--dry-run]`
   )
 }
 const spec = TOKEN_SPECS[templateId]
@@ -91,7 +91,8 @@ const value = (name, fallback) => {
 }
 const ttlDays = Number(value('ttl-days', '365'))
 const dryRun = flag('dry-run')
-const writeSecret = !flag('no-secret')
+const printToken = flag('print-token')
+const writeSecret = !flag('no-secret') && !printToken
 const bootstrap = (process.env.CF_BOOTSTRAP_TOKEN || '').trim()
 
 if (!bootstrap) {
@@ -219,6 +220,15 @@ try {
 }
 const tokenValue = created?.value
 if (!tokenValue) fail('Cloudflare 未返回 token 值（响应缺少 value 字段）')
+
+// Machine-readable hand-off for CI. The workflow greps the `__TOKEN__` line, so
+// the progress output above cannot be mistaken for the value; nothing is written
+// to GitHub secrets in this mode (the runner has no .oauth-state.json anyway).
+if (printToken) {
+  console.log(`__TOKEN__${tokenValue}`)
+  process.exit(0)
+}
+
 console.log(`[4/4] 已创建: id=${created.id}  前缀=${String(tokenValue).slice(0, 8)}…`)
 
 // ------------------------------------------------------- 4) write the secret --

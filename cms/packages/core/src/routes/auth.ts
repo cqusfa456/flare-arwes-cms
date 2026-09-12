@@ -667,11 +667,22 @@ authRoutes.post('/login/form',
   }
 })
 
-// Test seeding endpoint (only for development/testing)
+// Bootstrap seeding endpoint — DISABLED unless ALLOW_SEED_ADMIN="true".
+//
+// It creates an admin with a hard-coded password and, worse, resets an existing
+// admin's password, so while it was reachable anyone who knew the URL could take
+// over a production CMS. Prefer `node scripts/create-admin.mjs` (also wired into
+// `node scripts/setup-tui.mjs`), which writes the account straight into D1 with a
+// password of your choosing. Set the variable only for a one-off bootstrap on an
+// environment that is not publicly reachable, then remove it again.
 authRoutes.post('/seed-admin',
   rateLimit({ max: 2, windowMs: 60 * 1000, keyPrefix: 'seed-admin' }),
   async (c) => {
   try {
+    const allowSeed = String((c.env as unknown as Record<string, unknown>).ALLOW_SEED_ADMIN ?? '')
+    if (allowSeed.toLowerCase() !== 'true') {
+      return c.json({ error: 'Not found' }, 404)
+    }
     const db = c.env.DB
     
     // First ensure the users table exists
