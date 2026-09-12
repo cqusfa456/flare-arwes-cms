@@ -58,6 +58,59 @@ jobs:
           cache: pnpm
           cache-dependency-path: cms/pnpm-lock.yaml
 
+      # Resolve ONE credential for every wrangler call below.
+      #
+      # Two kinds of credential can drive this workflow:
+      #   * CF_API_TOKEN      — a long-lived API token (preferred).
+      #   * CF_REFRESH_TOKEN  — the OAuth refresh token from
+      #     `node scripts/oauth-login.mjs`. It is exchanged for a fresh
+      #     one-hour access token on every run, so unlike storing an access
+      #     token there is no hourly expiry. It carries workers/d1/kv/pages
+      #     write, which is everything the deploy needs; it can NOT mint API
+      #     tokens, so the CMS runtime credential falls back to being unset.
+      #
+      # The OAuth path is used when CF_REFRESH_TOKEN is present; delete that
+      # secret to go back to CF_API_TOKEN.
+      - name: Resolve the Cloudflare credential
+        env:
+          CI_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
+          OAUTH_CLIENT_ID: 54d11594-84e4-41aa-b438-e81b8fa78ee7
+        run: |
+          set -uo pipefail
+          credential=""
+          source="none"
+
+          if [ -n "${REFRESH_TOKEN}" ]; then
+            echo "Exchanging CF_REFRESH_TOKEN for a fresh OAuth access token"
+            credential=$(curl -s --max-time 60 -X POST https://dash.cloudflare.com/oauth2/token \
+              -H 'Content-Type: application/x-www-form-urlencoded' \
+              --data-urlencode grant_type=refresh_token \
+              --data-urlencode "refresh_token=${REFRESH_TOKEN}" \
+              --data-urlencode "client_id=${OAUTH_CLIENT_ID}" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))' 2>/dev/null || true)
+            if [ -n "${credential}" ]; then
+              source="oauth refresh"
+            else
+              echo "::warning::CF_REFRESH_TOKEN could not be exchanged (revoked?); falling back to CF_API_TOKEN."
+            fi
+          fi
+
+          if [ -z "${credential}" ] && [ -n "${CI_API_TOKEN}" ]; then
+            credential="${CI_API_TOKEN}"
+            source="CF_API_TOKEN"
+          fi
+
+          if [ -z "${credential}" ]; then
+            echo "::error::No usable Cloudflare credential. Set CF_API_TOKEN (node scripts/set-cf-token.mjs ci) or CF_REFRESH_TOKEN (node scripts/oauth-login.mjs)."
+            exit 1
+          fi
+
+          echo "::add-mask::${credential}"
+          echo "CF_CREDENTIAL=${credential}" >> "$GITHUB_ENV"
+          echo "CF_CREDENTIAL_SOURCE=${source}" >> "$GITHUB_ENV"
+          echo "Using the ${source} credential"
+
       - name: Install CMS dependencies
         working-directory: cms
         run: pnpm install --frozen-lockfile --ignore-scripts
@@ -101,7 +154,7 @@ jobs:
           S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
           # wrangler authenticates with these; cf-resources.py creates the
           # resources with them too.
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           D1_NAME: sci-fi-cms-db
           KV_NAME: sci-fi-cms-cache
@@ -140,14 +193,14 @@ jobs:
         working-directory: cms/packages/cms
         run: npx wrangler d1 migrations apply DB --env production
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Deploy CMS to Cloudflare Workers
         working-directory: cms/packages/cms
         run: npx wrangler deploy --env production
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       # Set the JWT_SECRET as an encrypted Worker secret (never in repo).
@@ -158,7 +211,7 @@ jobs:
             echo "${{ secrets.JWT_SECRET }}" | npx wrangler secret put JWT_SECRET --env production
           fi
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       # Hand the deployed CMS the credentials it needs to drive Cloudflare at
@@ -172,27 +225,32 @@ jobs:
       # so this is the same mechanism as Admin → Sites → Save credentials —
       # just automated.
       #
-      # The runtime token is scoped much more narrowly than the CI token, so it
-      # is minted here from the CI token (CF_API_TOKEN carries API Tokens: Write)
-      # with scripts/create-cf-token.mjs. CF_SITES_API_TOKEN remains an override
-      # for when the operator wants to supply the runtime token themselves; the
-      # broad CI token is only ever handed to the Worker if minting fails.
+      # The runtime token is scoped much more narrowly than the CI credential, so
+      # it is minted here with scripts/create-cf-token.mjs (which needs API
+      # Tokens: Write). CF_SITES_API_TOKEN remains an override for when the
+      # operator supplies the runtime token themselves.
+      #
+      # An OAuth access token can never be installed on the Worker: it expires in
+      # an hour. On that path either a scoped token is minted or the Worker is
+      # left without one (and any credential from an earlier run is removed),
+      # because a credential that dies in an hour is worse than none.
       - name: Set Cloudflare API worker secrets
         working-directory: cms/packages/cms
         env:
           # wrangler authenticates with these two; the step below is the one
           # that writes the *value* of CF_API_TOKEN onto the Worker.
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CI_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CREDENTIAL_SOURCE: ${{ env.CF_CREDENTIAL_SOURCE }}
+          CI_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
           ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           set -euo pipefail
 
           RUNTIME_TOKEN="${SITES_API_TOKEN}"
-          if [ -z "$RUNTIME_TOKEN" ]; then
-            echo "::group::Minting a scoped runtime token from the CI token"
+          if [ -z "$RUNTIME_TOKEN" ] && [ -n "$CI_API_TOKEN" ]; then
+            echo "::group::Minting a scoped runtime token"
             # --print-token makes the value the only __TOKEN__ line, so nothing
             # else in the log can be captured by mistake.
             RUNTIME_TOKEN=$(CF_BOOTSTRAP_TOKEN="$CI_API_TOKEN" \
@@ -201,16 +259,20 @@ jobs:
             echo "::endgroup::"
           fi
 
-          if [ -z "$RUNTIME_TOKEN" ]; then
-            if [ -z "$CI_API_TOKEN" ]; then
-              echo "::warning::No Cloudflare API token available; skipping CMS runtime credentials."
-              exit 0
-            fi
-            echo "::warning::Could not mint a runtime token (the CI token needs API Tokens: Write, or CF_SITES_API_TOKEN must be set). Falling back to the CI token — the CMS then holds a broader token than it needs."
+          if [ -z "$RUNTIME_TOKEN" ] && [ "$CREDENTIAL_SOURCE" = "CF_API_TOKEN" ]; then
+            echo "::warning::Could not mint a runtime token; using the long-lived CI token for the CMS runtime, which is broader than the CMS needs."
             RUNTIME_TOKEN="$CI_API_TOKEN"
           fi
 
-          printf '%s' "$RUNTIME_TOKEN" | npx wrangler secret put CF_API_TOKEN --env production
+          if [ -n "$RUNTIME_TOKEN" ]; then
+            printf '%s' "$RUNTIME_TOKEN" | npx wrangler secret put CF_API_TOKEN --env production
+          else
+            echo "::warning::No Cloudflare runtime credential installed: the CMS cannot manage domains or builds until one exists. Fix by giving CF_API_TOKEN 'API Tokens: Write' so this step can mint a scoped token, or set CF_SITES_API_TOKEN (node scripts/set-cf-token.mjs runtime)."
+            # Do not leave a stale/expiring credential behind.
+            npx wrangler secret delete CF_API_TOKEN --env production \
+              || echo "  (no CF_API_TOKEN secret present on the Worker)"
+          fi
+
           if [ -n "$ACCOUNT_ID" ]; then
             printf '%s' "$ACCOUNT_ID" | npx wrangler secret put CF_ACCOUNT_ID --env production
           else
