@@ -91,6 +91,9 @@ const SECRET_NAME = SECRET_BY_TEMPLATE[TEMPLATE_ID] || 'CF_API_TOKEN'
 const template = TOKEN_TEMPLATES[TEMPLATE_ID]
 
 let token = (process.env.CF_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN || '').trim()
+// Account id collected from the operator during bootstrap initialisation.
+//
+let promptedAccountId = ''
 const accountId = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
 
 // ---- 0) 没有 token 时，打开预填权限的 Cloudflare 页面，粘贴回来即可 ----
@@ -121,6 +124,22 @@ if (!token) {
 
   const { createInterface } = await import('node:readline/promises')
   const rl = createInterface({ input: process.stdin, output: process.stdout })
+
+  // Bootstrap initialisation asks for the account id FIRST, then the token: the
+  // dashboard shows both on the same page (the token page displays the Account ID
+  // next to the value), so the operator copies them in one go. Nothing is probed,
+  // and no account is guessed — the pasted id is what gets verified and stored.
+  if (
+    TEMPLATE_ID === 'bootstrap' &&
+    !process.env.CF_ACCOUNT_ID &&
+    !process.env.CLOUDFLARE_ACCOUNT_ID
+  ) {
+    console.log(
+      '  Account ID 与 token 显示在同一页面（创建 token 的页面上），请先复制 Account ID。'
+    )
+    promptedAccountId = (await rl.question('粘贴 Account ID（直接回车取消）: ')).trim()
+    if (!promptedAccountId) fail('未提供 Account ID，已取消')
+  }
   const answer = (await rl.question('粘贴 token（直接回车取消）: ')).trim()
   rl.close()
 
@@ -152,7 +171,12 @@ const verified =
         // temporal-dead-zone ReferenceError. Read the environment instead; when the id
         // is unknown we skip verification rather than crash, and CI supplies
         // CF_ACCOUNT_ID from its secret anyway.
-        const acct = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
+        const acct = (
+          promptedAccountId ||
+          process.env.CF_ACCOUNT_ID ||
+          process.env.CLOUDFLARE_ACCOUNT_ID ||
+          ''
+        ).trim()
         if (!acct) {
           // Refuse to write an unverified bootstrap token: skipping verification
           // here is how a placeholder value once reached the secret and made CI
@@ -215,7 +239,7 @@ if (!accountLookup.ok) {
   for (const a of accountLookup.accounts) console.log(`    - ${a.name}  ${a.id}`)
 }
 
-let resolvedAccountId = accountId
+let resolvedAccountId = promptedAccountId || accountId
 if (!resolvedAccountId && accountLookup.ok && accountLookup.accounts.length === 1) {
   resolvedAccountId = accountLookup.accounts[0].id
   console.log(`  (只有一个账号，将同时写入 CF_ACCOUNT_ID = ${resolvedAccountId})`)
