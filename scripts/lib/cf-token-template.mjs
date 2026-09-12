@@ -157,7 +157,12 @@ export function buildTokenTemplateUrl(templateId, options = {}) {
     name: options.tokenName?.trim() || template.tokenName
   })
 
-  return `${USER_TOKEN_PAGE}?${params.toString()}`
+  // URLSearchParams encodes a space as "+", but the dashboard decodes the name
+  // with a plain percent-decoder, so "Sci-Fi+CMS+Bootstrap" was not recognised
+  // as the token name and the field came up empty. The documented examples use
+  // %20 (name=Custom%20Token), so re-encode spaces instead. A literal plus in a
+  // value would already be %2B, so this cannot corrupt anything.
+  return `${USER_TOKEN_PAGE}?${params.toString().replace(/\+/g, '%20')}`
 }
 
 /**
