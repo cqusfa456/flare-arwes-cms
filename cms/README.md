@@ -292,9 +292,12 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
    - Worker：`cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy`
    - Pages：`wrangler pages deploy apps/docs/build --project-name="$PAGES_PROJECT" --branch="$DEPLOY_BRANCH"`
      （Direct Upload，同样不需要 Cloudflare 连 Git；**Pages 项目不需要手动预建**——工作流会用
-     `wrangler pages project create ... || true` 幂等创建，`$PAGES_PROJECT`/`$DEPLOY_BRANCH`
-     由工作流注入；Pages 自定义域名/子域名绑定不需要 zone。注意 `$DEPLOY_BRANCH` 必须与项目的
-     production branch 一致，否则 Pages 会记成 preview 部署）
+     `wrangler pages project create` 幂等创建，只容忍 "already exists"，鉴权失败会立刻报错并给出提示；
+     `$PAGES_PROJECT`/`$DEPLOY_BRANCH` 由工作流注入；Pages 自定义域名/子域名绑定不需要 zone。
+     **前提：`CF_API_TOKEN` 必须有 `Pages: Edit`（account 级）**——只有 Workers 权限的 token 会在 Pages API 上返回
+     `Authentication error [code: 10000]`（实测：同一个 token 部署 Worker 成功、部署 Pages 失败）。
+     `node scripts/set-cf-token.mjs` 生成的 token 已包含该权限，重新生成并更新 secret 即可。
+     另注意 `$DEPLOY_BRANCH` 必须与项目的 production branch 一致，否则 Pages 会记成 preview 部署）
 
 构建期内容：工作流注入 `PUBLIC_FLARE_API_URL`（来自 GitHub secret `FLARE_API_URL`）+ `PUBLIC_FLARE_SITE`（站点 slug）。
 **内容 API 对已发布内容是公开的**（按 `X-Site` 隔离），所以不需要额外的 CMS API token；若提供 token 则必须有效（无效会被 401 拒绝）。

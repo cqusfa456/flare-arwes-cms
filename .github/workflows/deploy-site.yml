@@ -116,9 +116,13 @@ jobs:
         run: ${{ inputs.build_command }}
 
       # A Pages project does not have to be created by hand first: `wrangler
-      # pages deploy` needs the project to exist, so create it here (idempotent —
-      # an existing project just errors and is ignored) and let the deploy
-      # command reference it through $PAGES_PROJECT.
+      # pages deploy` needs the project to exist, so create it here and let the
+      # deploy command reference it through $PAGES_PROJECT.
+      #
+      # Only "already exists" is tolerated. A blanket `|| true` would swallow an
+      # authentication/permission failure and push the confusing error into the
+      # deploy step, which is exactly what happened the first time this ran with
+      # a token that had no Pages permission.
       - name: Ensure the Pages project exists
         if: inputs.provider == 'cloudflare-pages' && inputs.pages_project != ''
         working-directory: ${{ inputs.root_directory }}
@@ -129,8 +133,19 @@ jobs:
           DEPLOY_BRANCH: ${{ inputs.ref }}
         run: |
           echo "Ensuring Pages project \"$PAGES_PROJECT\" exists (production branch: $DEPLOY_BRANCH)"
-          cms/packages/cms/node_modules/.bin/wrangler pages project create "$PAGES_PROJECT" \
-            --production-branch "$DEPLOY_BRANCH" || true
+          out=$(cms/packages/cms/node_modules/.bin/wrangler pages project create "$PAGES_PROJECT" \
+            --production-branch "$DEPLOY_BRANCH" 2>&1) && status=0 || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "Created Pages project \"$PAGES_PROJECT\"."
+            exit 0
+          fi
+          echo "$out"
+          if printf '%s' "$out" | grep -qiE 'already exists|already been taken|duplicate'; then
+            echo "Project already exists — continuing."
+            exit 0
+          fi
+          echo "::error::Could not ensure the Pages project. If the output above is an authentication error (code 10000), the API token is missing the Pages permission: it needs 'Pages: Edit' at account scope. Create a token that includes it with: node scripts/set-cf-token.mjs  (then update the CF_API_TOKEN secret)."
+          exit 1
 
       # Direct upload: no Cloudflare-side Git connection, no Deploy Hook.
       - name: Deploy
@@ -145,7 +160,16 @@ jobs:
           PAGES_PROJECT: ${{ inputs.pages_project }}
           DEPLOY_BRANCH: ${{ inputs.ref }}
           SITE_SLUG: ${{ inputs.site }}
-        run: ${{ inputs.deploy_command }}
+          DEPLOY_COMMAND: ${{ inputs.deploy_command }}
+          SITE_PROVIDER: ${{ inputs.provider }}
+        run: |
+          set +e
+          eval "$DEPLOY_COMMAND"
+          status=$?
+          if [ "$status" -ne 0 ] && [ "$SITE_PROVIDER" = "cloudflare-pages" ]; then
+            echo "::error::The Pages upload failed. A Cloudflare API 'Authentication error [code: 10000]' here means the API token lacks 'Pages: Edit' (account scope) — create one with 'node scripts/set-cf-token.mjs' and update the CF_API_TOKEN secret. If it instead says the project is missing, check \$PAGES_PROJECT ($PAGES_PROJECT)."
+          fi
+          exit $status
 
       - name: Result
         if: success()
