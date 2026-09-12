@@ -330,9 +330,7 @@ apiMediaRoutes.post('/upload-multiple', async (c) => {
           continue
         }
 
-        // Generate public URL using environment variable for bucket name
-        const mediaDomain = c.env.MEDIA_DOMAIN || 'images.flarecms.dev'
-        const publicUrl = `https://${mediaDomain}/${r2Key}`
+        const publicUrl = publicMediaUrl(c, r2Key)
 
         // Extract image dimensions if it's an image (arrayBufferBulk is populated for images)
         let width: number | undefined
@@ -683,8 +681,7 @@ apiMediaRoutes.post('/bulk-move', async (c) => {
         }
 
         // Update database with new folder and R2 key
-        const mediaDomain = c.env.MEDIA_DOMAIN || 'images.flarecms.dev'
-        const newPublicUrl = `https://${mediaDomain}/${newR2Key}`
+        const newPublicUrl = publicMediaUrl(c, newR2Key)
 
         const updateStmt = c.env.DB.prepare(`
           UPDATE media
