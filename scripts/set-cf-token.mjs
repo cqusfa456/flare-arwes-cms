@@ -154,7 +154,20 @@ const verified =
         // CF_ACCOUNT_ID from its secret anyway.
         const acct = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
         if (!acct) {
-          return { ok: true, status: 'unknown', httpStatus: 0, errors: [] }
+          // Refuse to write an unverified bootstrap token: skipping verification
+          // here is how a placeholder value once reached the secret and made CI
+          // fail later with an unrelated-looking error.
+          return {
+            ok: false,
+            status: null,
+            httpStatus: 0,
+            errors: [
+              {
+                message:
+                  '账户 id 未知，无法校验账户级 token（拒绝把未校验的值写进 secrets）。请设置 CF_ACCOUNT_ID，或先运行 npx wrangler whoami 取 Account ID 后重跑。'
+              }
+            ]
+          }
         }
         try {
           const res = await fetch(
