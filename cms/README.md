@@ -290,7 +290,11 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
    （仓库始终是唯一真源，工作流本身与站点无关）
 4. 工作流在 runner 上跑 `build_command`，再跑 `deploy_command` 直传：
    - Worker：`cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy`
-   - Pages：`wrangler pages deploy apps/docs/build --project-name=<project> --branch=main`（Direct Upload，同样不需要 Cloudflare 连 Git；Pages 自定义域名/子域名绑定不需要 zone）
+   - Pages：`wrangler pages deploy apps/docs/build --project-name="$PAGES_PROJECT" --branch="$DEPLOY_BRANCH"`
+     （Direct Upload，同样不需要 Cloudflare 连 Git；**Pages 项目不需要手动预建**——工作流会用
+     `wrangler pages project create ... || true` 幂等创建，`$PAGES_PROJECT`/`$DEPLOY_BRANCH`
+     由工作流注入；Pages 自定义域名/子域名绑定不需要 zone。注意 `$DEPLOY_BRANCH` 必须与项目的
+     production branch 一致，否则 Pages 会记成 preview 部署）
 
 构建期内容：工作流注入 `PUBLIC_FLARE_API_URL`（来自 GitHub secret `FLARE_API_URL`）+ `PUBLIC_FLARE_SITE`（站点 slug）。
 **内容 API 对已发布内容是公开的**（按 `X-Site` 隔离），所以不需要额外的 CMS API token；若提供 token 则必须有效（无效会被 401 拒绝）。

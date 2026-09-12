@@ -1459,6 +1459,11 @@ export class SitesService {
       deploy_command: deployCommand,
       root_directory: normalizeRootDirectory(site.rootDir),
       ref: target.ref,
+      // Pages needs the project name so the workflow can create it when missing;
+      // a Worker is created by the deploy command itself.
+      ...(site.provider === 'cloudflare-pages' && site.cfProjectName
+        ? { pages_project: site.cfProjectName }
+        : {}),
       ...(site.nodeVersion ? { node_version: site.nodeVersion } : {})
     })
 

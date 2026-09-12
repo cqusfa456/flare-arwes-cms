@@ -47,6 +47,11 @@ on:
         required: false
         default: "."
         type: string
+      pages_project:
+        description: Pages project name — created automatically if missing (cloudflare-pages only)
+        required: false
+        default: ""
+        type: string
       ref:
         description: Git ref to build
         required: false
@@ -110,6 +115,23 @@ jobs:
           PUBLIC_FLARE_SITE: ${{ inputs.site }}
         run: ${{ inputs.build_command }}
 
+      # A Pages project does not have to be created by hand first: `wrangler
+      # pages deploy` needs the project to exist, so create it here (idempotent —
+      # an existing project just errors and is ignored) and let the deploy
+      # command reference it through $PAGES_PROJECT.
+      - name: Ensure the Pages project exists
+        if: inputs.provider == 'cloudflare-pages' && inputs.pages_project != ''
+        working-directory: ${{ inputs.root_directory }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          PAGES_PROJECT: ${{ inputs.pages_project }}
+          DEPLOY_BRANCH: ${{ inputs.ref }}
+        run: |
+          echo "Ensuring Pages project \"$PAGES_PROJECT\" exists (production branch: $DEPLOY_BRANCH)"
+          cms/packages/cms/node_modules/.bin/wrangler pages project create "$PAGES_PROJECT" \
+            --production-branch "$DEPLOY_BRANCH" || true
+
       # Direct upload: no Cloudflare-side Git connection, no Deploy Hook.
       - name: Deploy
         working-directory: ${{ inputs.root_directory }}
@@ -118,6 +140,11 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
           PUBLIC_FLARE_SITE: ${{ inputs.site }}
+          # Available to the deploy command so it stays site-agnostic:
+          #   wrangler pages deploy ./build --project-name="$PAGES_PROJECT" --branch="$DEPLOY_BRANCH"
+          PAGES_PROJECT: ${{ inputs.pages_project }}
+          DEPLOY_BRANCH: ${{ inputs.ref }}
+          SITE_SLUG: ${{ inputs.site }}
         run: ${{ inputs.deploy_command }}
 
       - name: Result

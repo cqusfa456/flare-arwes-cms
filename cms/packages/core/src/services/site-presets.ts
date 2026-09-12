@@ -83,14 +83,14 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     gitBranch: 'main',
     buildCommand: 'sh ./apps/docs/scripts/build-worker.sh',
     deployCommand:
-      'cms/packages/cms/node_modules/.bin/wrangler pages deploy apps/docs/build --project-name=arwes-docs --branch=main',
+      'cms/packages/cms/node_modules/.bin/wrangler pages deploy apps/docs/build --project-name="$PAGES_PROJECT" --branch="$DEPLOY_BRANCH"',
     rootDir: '/',
     outputDir: 'apps/docs/build',
     app: 'apps/docs',
     notes: [
-      'Create the Pages project first (or reuse the existing arwes-docs one); Direct Upload projects cannot be rebuilt by a Deploy Hook, which is exactly why this preset dispatches GitHub Actions instead.',
-      'The Pages project must expose the right production branch name (--branch=main above) for its production deployment to advance.',
-      'Bind domains from this page: Pages custom domains do not need a zone id, unlike Worker custom domains.'
+      'No Pages setup needed: the workflow creates the project on first deploy (idempotent) and then uploads with `wrangler pages deploy` — Direct Upload, so Cloudflare still needs no Git connection.',
+      'The deploy branch is the dispatch ref. It has to match the project’s production branch for the deployment to go live; otherwise Pages records it as a preview. Set the site’s Git branch (or the project’s production branch) so they agree.',
+      'Bind domains from this page: Pages custom domains — subdomains included — do not need a zone id, unlike Worker custom domains.'
     ]
   },
   {
