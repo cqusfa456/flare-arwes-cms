@@ -493,7 +493,10 @@ export class SitesService {
     const list = triggers ?? []
     if (list.length === 0) {
       throw new SitesConfigError(
-        `Worker "${site.cfProjectName}" has no Workers Builds trigger yet. Connect it to a Git repository in Cloudflare (Worker → Settings → Builds) and create a trigger.`
+        `Worker "${site.cfProjectName}" has no Workers Builds trigger, so the CMS cannot start a build for it. ` +
+          `Two ways forward: connect the Worker to a Git repository in Cloudflare (Worker → Settings → Builds) and create a trigger, ` +
+          `or skip Git entirely — build locally and deploy the output with the direct-upload API${this.directUploadHint(site)}, ` +
+          `which is what "wrangler deploy" already does. Direct upload needs no trigger; the CMS keeps owning this site's domains and content either way.`
       )
     }
 
@@ -513,6 +516,19 @@ export class SitesService {
       .run()
 
     return uuid
+  }
+
+  /**
+   * The local, no-Git deploy command for a site, derived from its deploy command.
+   *
+   * Cloudflare cannot build this project inside a Worker: Workers Builds is a Git
+   * integration, and a Worker has no toolchain or writable filesystem for
+   * `astro build`. Without a Git connection the site is built locally and pushed
+   * with the Workers direct-upload API — the same flow `wrangler deploy` runs.
+   */
+  private directUploadHint(site: Site): string {
+    const command = (site.deployCommand || '').trim()
+    return command ? ` (for example: ${command})` : ''
   }
 
   /**

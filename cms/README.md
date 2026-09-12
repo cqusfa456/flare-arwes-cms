@@ -271,6 +271,23 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
    CMS 不下发
 3. 创建 **Deploy Hook** 填入站点，再 **Bind domain**
 
+**不想连 Git？（Direct Upload）**
+
+Cloudflare **不能在 Worker 里构建你的站点**：Workers Builds 本身就是 Git 集成（GitHub/GitLab），而
+Worker 运行时没有 Node 工具链、没有可写文件系统，跑不了 `astro build`。所以"不用 GitHub"的正确形态是
+**Direct Upload** —— 在本地（或任意 CI/容器）构建，再把产物直接推成新版本。`wrangler deploy` 内部走的
+就是这套 API（提交 manifest → 上传文件 → 带 `assets.jwt` 部署三步），Cloudflare 侧不需要任何 Git 连接：
+
+```sh
+cd apps/docs && npm run worker:build && npm run worker:deploy
+```
+
+这种模式下 CMS 负责**域名、内容与登记**：站点照常注册为 `cloudflare-worker`，域名绑定/内容隔离都能用；
+构建按钮会明确告诉你"没有 trigger 就本地 direct upload"，而不是把你往 Git 上逼。
+
+> 真正"让 Cloudflare 自己构建、且不连 Git"只有一条路：**Containers**（`@cloudflare/sandbox`，
+> 在容器里跑构建，由 Worker 驱动），需要付费计划，属于另一个量级的工作。
+
 > 以上构建/域名动作需要 `CF_API_TOKEN` / `CF_ACCOUNT_ID`。未配置时注册站点、内容归属与
 > 域名记录仍可用，但构建触发与域名绑定会明确报错而不是静默失败。Builds API 要求
 > **user-scoped** token 并带 `Workers Builds Configuration: Edit`。

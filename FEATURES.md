@@ -305,6 +305,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **Worker 可以不配 Deploy Hook**：CMS 优先用 Builds API 触发（要显式给分支），只有在没有 trigger 或 API 失败时才回落到 Deploy Hook；两者都不可用时给出可执行的报错
 - **构建环境变量**：`PUBLIC_FLARE_*` 由 CMS 计算并下发到 trigger。缺了它们，Astro 构建会静默回落到 `http://localhost:8787`，构建「成功」但内容为空——这正是把它们并入构建配置下发的原因
 - **构建 token 钉站点**：自动签发的 token 带 `api_tokens.site_id`，服务端在解析内容作用域时**优先于** `X-Site`，因此一个站点的构建 token 改 `X-Site` 也读不到别的站点内容；轮换是显式动作（`rotateToken`）
+- **Worker 不能自己构建**：Workers Builds 是 **Git 集成**（GitHub/GitLab），Worker 运行时没有构建工具链与可写文件系统，跑不了 `astro build`。不连 Git 的形态是 **Direct Upload**（本地构建 → `wrangler deploy` / assets-upload 三步 API 直接推版本），此时 CMS 负责域名与内容；要让 Cloudflare 自己构建且不连 Git 只能用 **Containers**（付费计划）。CMS 在没有 trigger 时会同时给出"连 Git"和"本地 direct upload"两条路，而不是只报错
 
 **凭据**：Pages 站点需要 `Pages:Edit` + `Zone:Read`；Worker 站点额外需要 `Workers Scripts:Read`（解析 tag）与 `Workers Builds Configuration:Edit`，且 Builds API **只接受 user-scoped token**（account-scoped 会报 "Invalid token"，CMS 会在报错里补上这条提示）。
 

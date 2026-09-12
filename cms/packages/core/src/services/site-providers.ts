@@ -88,7 +88,7 @@ export const SITE_PROVIDERS: SiteProviderInfo[] = [
       listDeployments: true
     },
     setup:
-      'Connect the Worker to a Git repository in Cloudflare (Worker → Settings → Builds) so a trigger exists. The CMS fills the trigger’s build command, deploy command, root directory and build environment variables; Worker name (not the tag) is what you register here.'
+      'Connect the Worker to a Git repository in Cloudflare (Worker → Settings → Builds) so a trigger exists, and the CMS will fill that trigger’s build command, deploy command, root directory and build environment. No Git? Cloudflare cannot build the site inside a Worker (Workers Builds is Git-only and a Worker has no build toolchain), so build locally instead and deploy the output with the direct-upload API — `wrangler deploy` already does that. The CMS still owns the site’s domains and content either way.'
   },
   {
     id: 'cloudflare-pages',
