@@ -243,11 +243,11 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         <section id="overview" class="doc-section active">
           <div class="doc-header">
             <h2>📚 Overview</h2>
-            <p>Complete reference for Flare CMS Forms powered by Form.io</p>
+            <p>Complete reference for Sci-Fi CMS Forms powered by Form.io</p>
           </div>
           
           <div class="info-box">
-            <strong>💡 New to Flare CMS Forms?</strong> Start with "Getting Started" in the sidebar, then explore the field types you need.
+            <strong>💡 New to Sci-Fi CMS Forms?</strong> Start with "Getting Started" in the sidebar, then explore the field types you need.
           </div>
           
           <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1f2937;">Key Features</h3>

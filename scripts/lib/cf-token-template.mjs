@@ -48,7 +48,7 @@ export const TOKEN_TEMPLATES = {
     label: 'Cloudflare 引导 token（用来按需生成其他 token）',
     purpose:
       '调用 POST /user/tokens 生成 CI / runtime token；这是唯一必须手动创建的 token，之后一切都可脚本化',
-    tokenName: 'Flare CMS Bootstrap (token minting)',
+    tokenName: 'Sci-Fi CMS Bootstrap (token minting)',
     permissions: [{ key: 'api_tokens', type: 'edit' }],
     checklist: [
       'API Tokens：「编辑」（**用户级**，英文名 “API Tokens Write”）—— 已实测可预填',
@@ -60,7 +60,7 @@ export const TOKEN_TEMPLATES = {
     label: 'Cloudflare CI / 部署 token',
     purpose:
       'wrangler deploy、d1 migrations apply、secret put，以及绑定自定义域名（GitHub secret CF_API_TOKEN）',
-    tokenName: 'Flare CMS Deploy (CI)',
+    tokenName: 'Sci-Fi CMS Deploy (CI)',
     permissions: [
       // Account-scoped: what wrangler needs to deploy and manage resources.
       { key: 'workers_scripts', type: 'edit' },
@@ -109,7 +109,7 @@ export const TOKEN_TEMPLATES = {
     label: 'Cloudflare Runtime token（CMS 管理域名/构建）',
     purpose:
       'CMS Worker 管理自定义域名、Workers Builds 与构建环境变量（必须 user-scoped；存为 GitHub secret CF_SITES_API_TOKEN 或直接填进 Admin → Sites）',
-    tokenName: 'Flare CMS Runtime (sites)',
+    tokenName: 'Sci-Fi CMS Runtime (sites)',
     permissions: [
       { key: 'workers_scripts', type: 'read' },
       { key: 'zone', type: 'read' },
@@ -256,7 +256,7 @@ export async function probeTokenCapabilities(token, accountId) {
     }
     try {
       const res = await fetch(`https://api.cloudflare.com/client/v4${probe.path(accountId)}`, {
-        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'flare-cms-token-check' }
+        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'sci-fi-cms-token-check' }
       })
       const json = await res.json().catch(() => ({}))
       results.push({

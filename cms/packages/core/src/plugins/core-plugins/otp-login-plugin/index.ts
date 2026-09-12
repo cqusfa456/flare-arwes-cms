@@ -9,7 +9,7 @@ import { Hono } from 'hono'
 import { setCookie } from 'hono/cookie'
 import { z } from 'zod'
 import { PluginBuilder } from '../../sdk/plugin-builder'
-import type { Plugin } from '@flare-cms/core'
+import type { Plugin } from '@sci-fi-cms/core'
 import { OTPService, type OTPSettings } from './otp-service'
 import { renderOTPEmail } from './email-templates'
 import { AuthManager } from '../../../middleware'
@@ -43,7 +43,7 @@ export function createOTPLoginPlugin(): Plugin {
 
   builder.metadata({
     author: {
-      name: 'Flare CMS Team',
+      name: 'Sci-Fi CMS Team',
       email: 'team@arwes.dev'
     },
     license: 'MIT',

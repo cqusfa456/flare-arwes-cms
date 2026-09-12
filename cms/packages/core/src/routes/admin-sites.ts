@@ -95,16 +95,20 @@ const envString = (c: SitesContext, key: string): string => {
 }
 
 /**
- * Base URL the CMS advertises to builds (`PUBLIC_FLARE_API_URL`).
+ * Base URL the CMS advertises to builds (`PUBLIC_SCIFI_API_URL`).
  *
- * A site may pin it in its own build env; otherwise a deployed `FLARE_API_URL`
+ * A site may pin it in its own build env; otherwise a deployed `SCIFI_API_URL`
  * is used, and as a last resort the origin the admin happens to be using (which
  * is correct for a single-domain deployment).
  */
 const apiBaseUrlFor = (c: SitesContext, site?: Site): string | null => {
-  const pinned = site?.buildEnv?.PUBLIC_FLARE_API_URL?.value
+  // PUBLIC_FLARE_API_URL / FLARE_API_URL are the pre-rename spellings: a site
+  // pinned before the rename — or a Worker var not yet renamed — still resolves,
+  // and its value is carried forward onto the PUBLIC_SCIFI_* key.
+  const pinned =
+    site?.buildEnv?.PUBLIC_SCIFI_API_URL?.value ?? site?.buildEnv?.PUBLIC_FLARE_API_URL?.value
   if (pinned) return pinned
-  const fromEnv = envString(c, 'FLARE_API_URL')
+  const fromEnv = envString(c, 'SCIFI_API_URL') || envString(c, 'FLARE_API_URL')
   if (fromEnv) return fromEnv.replace(/\/+$/, '')
   try {
     return new URL(c.req.url).origin
@@ -115,9 +119,9 @@ const apiBaseUrlFor = (c: SitesContext, site?: Site): string | null => {
 
 /** Keys the CMS owns on the trigger; everything else is operator-defined. */
 const MANAGED_BUILD_ENV_KEYS = [
-  'PUBLIC_FLARE_API_URL',
-  'PUBLIC_FLARE_SITE',
-  'PUBLIC_FLARE_API_TOKEN'
+  'PUBLIC_SCIFI_API_URL',
+  'PUBLIC_SCIFI_SITE',
+  'PUBLIC_SCIFI_API_TOKEN'
 ]
 
 /** Deploy-mode options for the admin forms (value + label). */
@@ -318,7 +322,7 @@ adminSitesRoutes.post('/api/sites/:id/sync-build-config', async (c) => {
 })
 
 /**
- * Push only the build environment (the PUBLIC_FLARE_* values plus the site's own
+ * Push only the build environment (the PUBLIC_SCIFI_* values plus the site's own
  * variables). Split from the build-settings sync so an operator can re-issue the
  * content token without touching the trigger's commands.
  */

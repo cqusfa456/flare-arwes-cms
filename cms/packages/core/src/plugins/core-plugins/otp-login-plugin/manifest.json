@@ -3,7 +3,7 @@
   "name": "OTP Login",
   "version": "1.0.0-beta.1",
   "description": "Passwordless authentication via email one-time codes",
-  "author": "Flare CMS Team",
+  "author": "Sci-Fi CMS Team",
   "homepage": "https://flarecms.dev/plugins/otp-login",
   "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",

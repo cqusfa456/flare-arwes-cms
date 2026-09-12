@@ -10,7 +10,7 @@ import { basename, dirname, resolve } from 'path'
  *
  * Usage:
  *   npx tsx scripts/seed-docs.ts http://localhost:8787          # API mode (local)
- *   npx tsx scripts/seed-docs.ts https://flare-cms.your-subdomain.workers.dev  # Production
+ *   npx tsx scripts/seed-docs.ts https://sci-fi-cms.your-subdomain.workers.dev  # Production
  *   npx tsx scripts/seed-docs.ts --direct                       # Direct D1 mode
  */
 
@@ -37,8 +37,8 @@ function logStep(msg: string) {
 // ---------------------------------------------------------------------------
 
 async function authenticate(baseUrl: string): Promise<string> {
-  const email = process.env.FLARE_ADMIN_EMAIL ?? 'admin@arwes.dev'
-  const password = process.env.FLARE_ADMIN_PASSWORD ?? ''
+  const email = process.env.SCIFI_ADMIN_EMAIL ?? 'admin@arwes.dev'
+  const password = process.env.SCIFI_ADMIN_PASSWORD ?? ''
 
   logStep(`Authenticating as ${email}...`)
 
@@ -287,7 +287,7 @@ async function createPagesApi(
 }
 
 async function runApiMode(baseUrl: string) {
-  console.log(`\nFlare CMS Docs Seeder (API mode)`)
+  console.log(`\nSci-Fi CMS Docs Seeder (API mode)`)
   console.log(`Target: ${baseUrl}`)
 
   const jwt = await authenticate(baseUrl)
@@ -309,11 +309,11 @@ async function runApiMode(baseUrl: string) {
 // ---------------------------------------------------------------------------
 
 async function runDirectMode() {
-  console.log(`\nFlare CMS Docs Seeder (Direct D1 mode)`)
+  console.log(`\nSci-Fi CMS Docs Seeder (Direct D1 mode)`)
 
   // Dynamic imports for D1 mode only
   const { getPlatformProxy } = await import('wrangler')
-  const { createDb, content, collections } = await import('@flare-cms/core')
+  const { createDb, content, collections } = await import('@sci-fi-cms/core')
   const { eq } = await import('drizzle-orm')
 
   const { env, dispose } = await getPlatformProxy()
@@ -339,7 +339,7 @@ async function runDirectMode() {
     log(`docs-sections collection: ${sectionsCollection.id}`)
 
     // Find admin user for authorId
-    const { users } = await import('@flare-cms/core')
+    const { users } = await import('@sci-fi-cms/core')
     const adminUser = await db
       .select()
       .from(users)
@@ -546,7 +546,7 @@ if (args.includes('--direct')) {
   console.error('')
   console.error('Examples:')
   console.error('  npx tsx scripts/seed-docs.ts http://localhost:8787')
-  console.error('  npx tsx scripts/seed-docs.ts https://flare-cms.your-subdomain.workers.dev')
+  console.error('  npx tsx scripts/seed-docs.ts https://sci-fi-cms.your-subdomain.workers.dev')
   process.exit(1)
 } else {
   const baseUrl = args[0].replace(/\/+$/, '') // Strip trailing slashes

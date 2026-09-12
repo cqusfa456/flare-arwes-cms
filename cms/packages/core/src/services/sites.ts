@@ -405,24 +405,40 @@ const mapCloudflareDomainStatus = (payload: Record<string, unknown>): SiteDomain
  * The build-time environment for a site.
  *
  * Pure, and exported so the admin UI can render exactly what a sync would push
- * without constructing a service. The three `PUBLIC_FLARE_*` values are what the
- * Astro loader in `@flare-cms/astro` reads (`apps/docs/src/content.config.ts`);
+ * without constructing a service. The three `PUBLIC_SCIFI_*` values are what the
+ * Astro loader in `@sci-fi-cms/astro` reads (`apps/docs/src/content.config.ts`);
  * they are the difference between a build that talks to the production CMS for
  * the right site and one that silently falls back to `http://localhost:8787`.
  * Operator-defined variables on the site win, so any of them can be overridden.
  */
+/**
+ * Pre-rename build env spellings (`PUBLIC_FLARE_*`). Still read where a value may
+ * have been pinned before the rename; never written.
+ */
+export const LEGACY_BUILD_ENV_KEYS = [
+  'PUBLIC_FLARE_API_URL',
+  'PUBLIC_FLARE_SITE',
+  'PUBLIC_FLARE_API_TOKEN'
+]
+
 export const buildSiteEnvironment = (
   site: Site,
   options: { apiBaseUrl?: string | null; contentToken?: string | null } = {}
 ): Record<string, SiteBuildEnvVar> => {
   const computed: Record<string, SiteBuildEnvVar> = {}
   if (options.apiBaseUrl) {
-    computed.PUBLIC_FLARE_API_URL = { value: options.apiBaseUrl, secret: false }
+    computed.PUBLIC_SCIFI_API_URL = { value: options.apiBaseUrl, secret: false }
   }
-  computed.PUBLIC_FLARE_SITE = { value: site.slug, secret: false }
+  computed.PUBLIC_SCIFI_SITE = { value: site.slug, secret: false }
   const token = options.contentToken ?? site.contentToken
-  if (token) computed.PUBLIC_FLARE_API_TOKEN = { value: token, secret: true }
-  return { ...computed, ...site.buildEnv }
+  if (token) computed.PUBLIC_SCIFI_API_TOKEN = { value: token, secret: true }
+  // Legacy PUBLIC_FLARE_* pins are dropped instead of being carried onto the
+  // trigger, where they would advertise the old variable names. The value is not
+  // lost: apiBaseUrlFor() reads a legacy API-URL pin forward into the new key.
+  const extras = Object.fromEntries(
+    Object.entries(site.buildEnv ?? {}).filter(([key]) => !LEGACY_BUILD_ENV_KEYS.includes(key))
+  )
+  return { ...computed, ...extras }
 }
 
 export class SitesService {
@@ -1308,8 +1324,8 @@ export class SitesService {
   /**
    * The build-time environment for a site.
    *
-   * The three `PUBLIC_FLARE_*` values are what the Astro loader in
-   * `@flare-cms/astro` reads (`apps/docs/src/content.config.ts`), and they are
+   * The three `PUBLIC_SCIFI_*` values are what the Astro loader in
+   * `@sci-fi-cms/astro` reads (`apps/docs/src/content.config.ts`), and they are
    * the difference between a build that talks to the production CMS for the
    * right site and one that silently falls back to `http://localhost:8787`.
    * Operator-defined variables on the site win, so a site can still override
@@ -1357,7 +1373,7 @@ export class SitesService {
   /**
    * Push a site's build environment to its Workers Builds trigger.
    *
-   * Only the `PUBLIC_FLARE_*` keys (plus operator extras) are sent: the API
+   * Only the `PUBLIC_SCIFI_*` keys (plus operator extras) are sent: the API
    * patches the keys it is given, so variables the operator added in the
    * dashboard are left alone.
    */

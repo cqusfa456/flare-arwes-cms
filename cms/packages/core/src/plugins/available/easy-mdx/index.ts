@@ -17,7 +17,7 @@ const builder = PluginBuilder.create({
 
 builder.metadata({
   author: {
-    name: 'Flare CMS Team',
+    name: 'Sci-Fi CMS Team',
     email: 'team@arwes.dev'
   },
   license: 'MIT',

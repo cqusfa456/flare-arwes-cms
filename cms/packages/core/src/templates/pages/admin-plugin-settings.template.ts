@@ -657,7 +657,7 @@ const pluginSettingsComponents: Record<string, PluginSettingsRenderer> = {
  * OTP Login plugin settings content
  */
 function renderOTPLoginSettingsContent(plugin: any, settings: PluginSettings): string {
-  const siteName = settings.siteName || 'Flare CMS'
+  const siteName = settings.siteName || 'Sci-Fi CMS'
   const emailConfigured = settings._emailConfigured || false
   const codeLength = settings.codeLength || 6
   const codeExpiryMinutes = settings.codeExpiryMinutes || 10

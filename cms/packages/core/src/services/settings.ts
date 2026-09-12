@@ -216,7 +216,7 @@ export class SettingsService {
     const settings = await this.getCategorySettings('general')
 
     return {
-      siteName: settings.siteName || 'Flare CMS',
+      siteName: settings.siteName || 'Sci-Fi CMS',
       siteDescription: settings.siteDescription || 'Edge-native headless CMS for Cloudflare Workers. Built on D1, R2, and Hono.',
       adminEmail: settings.adminEmail || userEmail || 'admin@example.com',
       timezone: settings.timezone || 'UTC',

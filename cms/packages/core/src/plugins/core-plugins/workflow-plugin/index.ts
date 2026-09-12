@@ -1,5 +1,5 @@
 // import { Hono } from 'hono'
-import { Plugin } from '@flare-cms/core'
+import { Plugin } from '@sci-fi-cms/core'
 import { PluginBuilder } from '../../sdk/plugin-builder'
 import { workflowMigration } from './migrations'
 // import { createWorkflowRoutes } from './routes'
@@ -23,7 +23,7 @@ export function createWorkflowPlugin(): Plugin {
 
   builder.metadata({
     author: {
-      name: 'Flare CMS',
+      name: 'Sci-Fi CMS',
       email: 'info@arwes.dev'
     },
     license: 'MIT',

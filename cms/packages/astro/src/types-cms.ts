@@ -1,7 +1,7 @@
 /**
- * Internal type definitions for Flare CMS schemas.
+ * Internal type definitions for Sci-Fi CMS schemas.
  *
- * Inlined from `@flare-cms/core` so this package can build its own
+ * Inlined from `@sci-fi-cms/core` so this package can build its own
  * declarations without depending on the core package's type graph
  * (which requires workspace resolution that fails in strict pnpm
  * installs). The shapes mirror `packages/core/src/types/collection-config.ts`.

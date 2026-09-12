@@ -1,5 +1,5 @@
 /**
- * Lucide Icon Module for Flare CMS Admin
+ * Lucide Icon Module for Sci-Fi CMS Admin
  *
  * Provides SVG icon strings from lucide-static, sized for sidebar/UI use.
  */

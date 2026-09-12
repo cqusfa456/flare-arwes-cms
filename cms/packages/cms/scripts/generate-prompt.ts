@@ -81,11 +81,11 @@ function generateCollectionDocs(collection: Collection): string {
 function buildPrompt(collections: Collection[], baseUrl: string): string {
   const collectionDocs = collections.map(generateCollectionDocs).join('\n\n')
 
-  return `# Flare CMS - Content Generation Prompt
+  return `# Sci-Fi CMS - Content Generation Prompt
 
 ## System Context
 
-Flare CMS is a headless CMS built on Cloudflare Workers with D1 (SQLite), R2 (object storage), and KV (caching). It exposes a REST API for all content operations.
+Sci-Fi CMS is a headless CMS built on Cloudflare Workers with D1 (SQLite), R2 (object storage), and KV (caching). It exposes a REST API for all content operations.
 
 **Base URL:** \`${baseUrl}\`
 
@@ -167,7 +167,7 @@ curl -X POST ${baseUrl}/api/content \\
 
 ## Instructions for Content Generation
 
-When generating content for Flare CMS:
+When generating content for Sci-Fi CMS:
 
 1. **Create sections first** — pages reference sections by UUID
 2. **Use the \`data\` field** — collection-specific fields go inside the \`data\` JSON object

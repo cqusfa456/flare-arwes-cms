@@ -1,4 +1,4 @@
-import { createDb, users } from '@flare-cms/core'
+import { createDb, users } from '@sci-fi-cms/core'
 import { eq } from 'drizzle-orm'
 import * as crypto from 'crypto'
 import { getPlatformProxy } from 'wrangler'
@@ -11,9 +11,9 @@ import { getPlatformProxy } from 'wrangler'
  * npm run seed
  *
  * Admin credentials come from environment variables:
- *   FLARE_ADMIN_EMAIL     — admin email (default: admin@arwes.dev)
- *   FLARE_ADMIN_PASSWORD  — admin password (required, min 8 chars)
- *   FLARE_ADMIN_USERNAME  — admin username (default: admin)
+ *   SCIFI_ADMIN_EMAIL     — admin email (default: admin@arwes.dev)
+ *   SCIFI_ADMIN_PASSWORD  — admin password (required, min 8 chars)
+ *   SCIFI_ADMIN_USERNAME  — admin username (default: admin)
  */
 
 async function seed() {
@@ -33,13 +33,13 @@ async function seed() {
 
   const db = createDb(env.DB)
 
-  const email = process.env.FLARE_ADMIN_EMAIL || 'admin@arwes.dev'
-  const username = process.env.FLARE_ADMIN_USERNAME || 'admin'
-  const password = process.env.FLARE_ADMIN_PASSWORD
+  const email = process.env.SCIFI_ADMIN_EMAIL || 'admin@arwes.dev'
+  const username = process.env.SCIFI_ADMIN_USERNAME || 'admin'
+  const password = process.env.SCIFI_ADMIN_PASSWORD
 
   if (!password || password.length < 8) {
-    console.error('❌ Error: FLARE_ADMIN_PASSWORD environment variable is required (min 8 chars)')
-    console.error('  Example: FLARE_ADMIN_PASSWORD=my-secure-password npm run seed')
+    console.error('❌ Error: SCIFI_ADMIN_PASSWORD environment variable is required (min 8 chars)')
+    console.error('  Example: SCIFI_ADMIN_PASSWORD=my-secure-password npm run seed')
     process.exit(1)
   }
 
@@ -58,7 +58,7 @@ async function seed() {
       return
     }
 
-    // Hash password using SHA-256 (same as Flare CMS auth system)
+    // Hash password using SHA-256 (same as Sci-Fi CMS auth system)
     const salt = crypto.randomBytes(16).toString('hex')
     const data = password + salt
     const passwordHash = crypto.createHash('sha256').update(data).digest('hex')

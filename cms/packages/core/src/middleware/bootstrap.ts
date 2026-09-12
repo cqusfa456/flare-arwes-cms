@@ -2,7 +2,7 @@ import { Context, Hono, Next, Env } from "hono";
 import { syncCollections } from "../services/collection-sync";
 import { MigrationService } from "../services/migrations";
 import { PluginBootstrapService } from "../services/plugin-bootstrap";
-import type { FlareConfig } from "../app";
+import type { SciFiConfig } from "../app";
 
 type Bindings = {
   DB: D1Database;
@@ -21,7 +21,7 @@ let bootstrapComplete = false;
 const BOOTSTRAP_MARKER_KEY = "system:bootstrap:completed";
 const BOOTSTRAP_MARKER_TTL_SECONDS = 300;
 
-// Module-level app reference — set by createFlareApp() so PluginManager
+// Module-level app reference — set by createSciFiApp() so PluginManager
 // can include it in PluginContext during initialize()
 // Typed as Hono<any> to accept any Hono app regardless of env generics
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +44,7 @@ export function getAppReference(): Hono<any> | undefined {
  * previous isolate already completed.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function bootstrapMiddleware(config: FlareConfig = {}, app?: Hono<any>) {
+export function bootstrapMiddleware(config: SciFiConfig = {}, app?: Hono<any>) {
   // Store app reference at module level so PluginManager can access it
   if (app) {
     appReference = app;

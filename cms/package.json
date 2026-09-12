@@ -1,19 +1,19 @@
 {
-  "name": "flarecms",
+  "name": "sci-fi-cms",
   "version": "2.0.0",
   "private": true,
-  "description": "Flare CMS - Edge-first headless CMS built for Cloudflare Workers",
+  "description": "Sci-Fi CMS - Edge-first headless CMS built for Cloudflare Workers",
   "author": "Jaime Aleman",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm --filter @flare-cms/core build",
-    "build:astro": "pnpm --filter @flare-cms/astro build",
-    "dev": "pnpm --filter @flare-cms/cms dev",
-    "deploy": "pnpm --filter @flare-cms/cms deploy",
-    "db:migrate": "pnpm --filter @flare-cms/cms db:migrate",
-    "db:migrate:local": "pnpm --filter @flare-cms/cms db:migrate:local",
-    "seed": "pnpm --filter @flare-cms/cms seed",
-    "test": "pnpm --filter @flare-cms/core test"
+    "build": "pnpm --filter @sci-fi-cms/core build",
+    "build:astro": "pnpm --filter @sci-fi-cms/astro build",
+    "dev": "pnpm --filter @sci-fi-cms/cms dev",
+    "deploy": "pnpm --filter @sci-fi-cms/cms deploy",
+    "db:migrate": "pnpm --filter @sci-fi-cms/cms db:migrate",
+    "db:migrate:local": "pnpm --filter @sci-fi-cms/cms db:migrate:local",
+    "seed": "pnpm --filter @sci-fi-cms/cms seed",
+    "test": "pnpm --filter @sci-fi-cms/core test"
   },
   "engines": {
     "node": ">=18.0.0"

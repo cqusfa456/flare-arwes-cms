@@ -1,13 +1,13 @@
 {
-  "name": "@flare-cms/core",
+  "name": "@sci-fi-cms/core",
   "version": "1.0.0",
-  "description": "Flare CMS - Edge-first, TypeScript-native headless CMS built for Cloudflare Workers",
+  "description": "Sci-Fi CMS - Edge-first, TypeScript-native headless CMS built for Cloudflare Workers",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "flare-db-reset": "./bin/db-reset.js"
+    "sci-fi-db-reset": "./bin/db-reset.js"
   },
   "exports": {
     ".": {
@@ -82,7 +82,7 @@
     "hono",
     "content-management",
     "api",
-    "flarecms"
+    "sci-fi-cms"
   ],
   "author": "Jaime Aleman",
   "license": "MIT",

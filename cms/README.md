@@ -1,14 +1,14 @@
-# Flare CMS 集成
+# Sci-Fi CMS 集成
 
-本项目集成了 [Flare CMS](https://flare-site.pages.dev/) —— 一个运行在 Cloudflare Workers 上的 Astro-first headless CMS，用于管理网页内容。
+本项目集成了 [Sci-Fi CMS](https://sci-fi-cms.cqusfa.workers.dev/) —— 一个运行在 Cloudflare Workers 上的 Astro-first headless CMS，用于管理网页内容。
 
 ## 架构
 
 ```
-cms/                    Flare CMS 后端 (Cloudflare Worker)
-  packages/core/        @flare-cms/core — 引擎 (schema, services, routes)
-  packages/cms/         @flare-cms/cms — Cloudflare Worker 应用
-  packages/astro/       @flare-cms/astro — Astro Content Layer loader
+cms/                    Sci-Fi CMS 后端 (Cloudflare Worker)
+  packages/core/        @sci-fi-cms/core — 引擎 (schema, services, routes)
+  packages/cms/         @sci-fi-cms/cms — Cloudflare Worker 应用
+  packages/astro/       @sci-fi-cms/astro — Astro Content Layer loader
 
 apps/docs/              Astro 前端
   src/content.config.ts 定义 pages 集合，构建时从 CMS 拉取内容
@@ -18,21 +18,21 @@ apps/docs/              Astro 前端
 
 ## 工作流程
 
-1. **内容管理**：在 Flare CMS Admin (`http://localhost:8787/admin`) 中创建/编辑页面
-2. **构建**：`astro build` 时 `flareLoader` 从 CMS API 拉取 `pages` 集合内容
+1. **内容管理**：在 Sci-Fi CMS Admin (`http://localhost:8787/admin`) 中创建/编辑页面
+2. **构建**：`astro build` 时 `sciFiLoader` 从 CMS API 拉取 `pages` 集合内容
 3. **渲染**：CMS 页面的 markdown 内容在构建时渲染为 HTML，生成静态页面
 4. **导航**：CMS 页面不在客户端路由表中，点击时整页跳转（内容仅 SSR 可用）
 
 ## 本地开发
 
-### 1. 启动 Flare CMS
+### 1. 启动 Sci-Fi CMS
 
 ```bash
 # 首次：安装依赖 + 构建
 cd cms
 pnpm install
-pnpm build          # 构建 @flare-cms/core
-pnpm build:astro    # 构建 @flare-cms/astro
+pnpm build          # 构建 @sci-fi-cms/core
+pnpm build:astro    # 构建 @sci-fi-cms/astro
 
 # 首次：本地数据库迁移 + 创建管理员
 cd packages/cms
@@ -57,7 +57,7 @@ cd apps/docs
 npm run dev   # http://localhost:9002
 ```
 
-构建时 `flareLoader` 会从 `http://localhost:8787` 拉取内容（可通过 `PUBLIC_FLARE_API_URL` 环境变量覆盖）。
+构建时 `sciFiLoader` 会从 `http://localhost:8787` 拉取内容（可通过 `PUBLIC_SCIFI_API_URL` 环境变量覆盖）。
 
 ## 内容管理
 
@@ -74,7 +74,7 @@ npm run dev   # http://localhost:9002
 
 ### 发布流程
 
-- 内容默认状态为 `draft`，只有 `published` 的内容会被 `flareLoader` 拉取
+- 内容默认状态为 `draft`，只有 `published` 的内容会被 `sciFiLoader` 拉取
 - 修改内容后重新构建前端即可生效
 
 ## 部署
@@ -95,8 +95,8 @@ npx wrangler deploy --env production
 ### 2. 前端构建时连接远程 CMS
 
 ```bash
-PUBLIC_FLARE_API_URL=https://your-worker.workers.dev \
-PUBLIC_FLARE_API_TOKEN=st_xxx \
+PUBLIC_SCIFI_API_URL=https://your-worker.workers.dev \
+PUBLIC_SCIFI_API_TOKEN=st_xxx \
 npm run build
 ```
 
@@ -261,8 +261,8 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
    - `deploy_command`：`cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy`
    - `root_directory`：`/`
 3. 点 **Push build config + env**：CMS 下发上述构建设置，并把构建期环境变量写入该 trigger：
-   `PUBLIC_FLARE_API_URL`（CMS 自身地址）、`PUBLIC_FLARE_SITE`（站点 slug）、
-   `PUBLIC_FLARE_API_TOKEN`（CMS 自动签发的**只读、限定该站点**的 token）。
+   `PUBLIC_SCIFI_API_URL`（CMS 自身地址）、`PUBLIC_SCIFI_SITE`（站点 slug）、
+   `PUBLIC_SCIFI_API_TOKEN`（CMS 自动签发的**只读、限定该站点**的 token）。
    站点可在 Site settings 里用同名变量覆盖任意一个
 4. 点 **Build now**：Worker 站点直接走 Workers Builds API
    （`POST /accounts/{id}/builds/triggers/{uuid}/builds`），**不再需要 Deploy Hook**；
@@ -304,7 +304,7 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
      `node scripts/set-cf-token.mjs` 生成的 token 已包含该权限，重新生成并更新 secret 即可。
      另注意 `$DEPLOY_BRANCH` 必须与项目的 production branch 一致，否则 Pages 会记成 preview 部署）
 
-构建期内容：工作流注入 `PUBLIC_FLARE_API_URL`（来自 GitHub secret `FLARE_API_URL`）+ `PUBLIC_FLARE_SITE`（站点 slug）。
+构建期内容：工作流注入 `PUBLIC_SCIFI_API_URL`（来自 GitHub secret `SCIFI_API_URL`）+ `PUBLIC_SCIFI_SITE`（站点 slug）。
 **内容 API 对已发布内容是公开的**（按 `X-Site` 隔离），所以不需要额外的 CMS API token；若提供 token 则必须有效（无效会被 401 拒绝）。
 
 **不想连 Git？（Direct Upload）**
@@ -357,31 +357,31 @@ cd apps/docs && npm run worker:build && npm run worker:deploy
 - **不会误清空**：更新路径只在表单确实提交了 `site_id` 时改写归属，所以没有渲染该字段的表单（例如校验失败回显）不会把归属静默清空
 - 响应 `meta.siteScope` 回显 `{ mode, siteSlug, identifiedBy, reason }`，便于排查空构建
 
-**构建端接入**（`@flare-cms/astro`）：
+**构建端接入**（`@sci-fi-cms/astro`）：
 
 ```ts
-flareLoader({
+sciFiLoader({
   apiUrl: API_URL,
-  site: import.meta.env.PUBLIC_FLARE_SITE,  // 站点 slug，发送 X-Site
+  site: import.meta.env.PUBLIC_SCIFI_SITE,  // 站点 slug，发送 X-Site
   collection: 'pages',
 })
 ```
 
 未设置 `site` 且部署中已注册站点时，loader 会打印告警并按「仅共享内容」处理。
-`apps/docs` 已接入 `PUBLIC_FLARE_SITE` 环境变量。
+`apps/docs` 已接入 `PUBLIC_SCIFI_SITE` 环境变量。
 
 ## 环境变量
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `PUBLIC_FLARE_API_URL` | CMS API 地址（Worker 站点由 CMS 下发到 trigger，可被站点覆盖） | `http://localhost:8787` |
-| `PUBLIC_FLARE_API_TOKEN` | 只读 API token（Worker 站点由 CMS 自动签发并下发） | 无 |
-| `PUBLIC_FLARE_SITE` | 站点 slug，按站点隔离内容时必填（Worker 站点由 CMS 下发） | 无 |
-| `FLARE_API_URL` | （可选，Worker 变量）站点未固定 `PUBLIC_FLARE_API_URL` 时，CMS 用它作为下发的地址 | 请求来源 origin |
+| `PUBLIC_SCIFI_API_URL` | CMS API 地址（Worker 站点由 CMS 下发到 trigger，可被站点覆盖） | `http://localhost:8787` |
+| `PUBLIC_SCIFI_API_TOKEN` | 只读 API token（Worker 站点由 CMS 自动签发并下发） | 无 |
+| `PUBLIC_SCIFI_SITE` | 站点 slug，按站点隔离内容时必填（Worker 站点由 CMS 下发） | 无 |
+| `SCIFI_API_URL` | （可选，Worker 变量）站点未固定 `PUBLIC_SCIFI_API_URL` 时，CMS 用它作为下发的地址 | 请求来源 origin |
 | `CF_API_TOKEN` / `CF_ACCOUNT_ID` | （Worker secret，可选）站点域名管理所需的 Cloudflare API 凭据 | 无 |
 
 ## 注意事项
 
-- `@flare-cms/astro` 通过 `file:` 协议从 `cms/packages/astro` 安装，修改源码后需重新构建（`pnpm build:astro`）
-- Flare CMS 的 API token 是只读的，写操作需通过 Admin UI 或用户 JWT
+- `@sci-fi-cms/astro` 通过 `file:` 协议从 `cms/packages/astro` 安装，修改源码后需重新构建（`pnpm build:astro`）
+- Sci-Fi CMS 的 API token 是只读的，写操作需通过 Admin UI 或用户 JWT
 - 本地 wrangler 的 KV 缓存可能导致内容更新后 API 返回旧数据，重启 wrangler 或清除 `.wrangler/state` 可解决

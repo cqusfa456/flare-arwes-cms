@@ -161,7 +161,7 @@ export async function dispatchWorkflow(
           Authorization: `Bearer ${target.token}`,
           Accept: 'application/vnd.github+json',
           'Content-Type': 'application/json',
-          'User-Agent': 'FlareCMS-Admin'
+          'User-Agent': 'SciFiCMS-Admin'
         },
         body: JSON.stringify({ ref: target.ref, inputs })
       }

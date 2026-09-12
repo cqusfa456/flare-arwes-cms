@@ -11,7 +11,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Register - Flare CMS</title>
+      <title>Register - Sci-Fi CMS</title>
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
       <script src="https://unpkg.com/htmx.org@2.0.3"></script>
       <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
           theme: {
             extend: {
               colors: {
-                flare: {
+                scifi: {
                   400: '#fb923c',
                   500: '#f6821f',
                   600: '#ea680c'
@@ -63,16 +63,16 @@ export function renderRegisterPage(data: RegisterPageData): string {
             </svg>
           </div>
           <h2 class="mt-6 text-xl font-medium text-white">Create Your Account</h2>
-          <p class="mt-2 text-sm text-zinc-400">Get started with Flare CMS</p>
+          <p class="mt-2 text-sm text-zinc-400">Get started with Sci-Fi CMS</p>
         </div>
 
         <!-- Form Container -->
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div class="relative">
             <!-- Glow effect behind card -->
-            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-b from-flare-500/20 via-transparent to-cyan-500/10 blur-xl"></div>
+            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-b from-scifi-500/20 via-transparent to-cyan-500/10 blur-xl"></div>
 
-            <div class="register-card relative rounded-xl border border-white/10 px-6 py-8 sm:px-10 shadow-2xl shadow-flare-500/5">
+            <div class="register-card relative rounded-xl border border-white/10 px-6 py-8 sm:px-10 shadow-2xl shadow-scifi-500/5">
               <!-- Alerts -->
               ${data.error ? `<div class="mb-6">${renderAlert({ type: 'error', message: data.error })}</div>` : ''}
 
@@ -95,7 +95,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                       name="firstName"
                       type="text"
                       required
-                      class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                      class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                       placeholder="First name"
                     >
                   </div>
@@ -108,7 +108,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                       name="lastName"
                       type="text"
                       required
-                      class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                      class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                       placeholder="Last name"
                     >
                   </div>
@@ -124,7 +124,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     name="username"
                     type="text"
                     required
-                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                     placeholder="Choose a username"
                   >
                 </div>
@@ -140,7 +140,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     type="email"
                     autocomplete="email"
                     required
-                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                     placeholder="Enter your email"
                   >
                 </div>
@@ -157,7 +157,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     autocomplete="new-password"
                     required
                     minlength="8"
-                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                     placeholder="Create a password (min. 8 characters)"
                   >
                 </div>
@@ -165,7 +165,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                 <!-- Submit Button -->
                 <button
                   type="submit"
-                  class="w-full rounded-lg bg-gradient-to-r from-flare-500 to-flare-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-flare-600 hover:to-flare-500 focus:outline-none focus:ring-2 focus:ring-flare-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-flare-500/25"
+                  class="w-full rounded-lg bg-gradient-to-r from-scifi-500 to-scifi-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-scifi-600 hover:to-scifi-500 focus:outline-none focus:ring-2 focus:ring-scifi-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-scifi-500/25"
                 >
                   Create Account
                 </button>
@@ -175,7 +175,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
               <div class="mt-6 text-center">
                 <p class="text-sm text-zinc-400">
                   Already have an account?
-                  <a href="/auth/login" class="font-semibold text-flare-400 hover:text-flare-300 transition-colors">Sign in here</a>
+                  <a href="/auth/login" class="font-semibold text-scifi-400 hover:text-scifi-300 transition-colors">Sign in here</a>
                 </p>
               </div>
 

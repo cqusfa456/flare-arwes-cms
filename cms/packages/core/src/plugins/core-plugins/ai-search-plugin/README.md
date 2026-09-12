@@ -1,4 +1,4 @@
-# AI Search Plugin for Flare CMS
+# AI Search Plugin for Sci-Fi CMS
 
 Advanced search capabilities using Cloudflare AI Search. Provides semantic search, full-text search, and advanced filtering across all content collections.
 
@@ -16,7 +16,7 @@ Advanced search capabilities using Cloudflare AI Search. Provides semantic searc
 
 ## Installation
 
-The AI Search plugin is a core plugin and is included by default in Flare CMS.
+The AI Search plugin is a core plugin and is included by default in Sci-Fi CMS.
 
 ### 1. Configure Cloudflare AI Search
 
@@ -60,7 +60,7 @@ The AI Search plugin is a core plugin and is included by default in Flare CMS.
 ### API Usage
 
 ```typescript
-import { AISearchService } from '@flare-cms/core/plugins'
+import { AISearchService } from '@sci-fi-cms/core/plugins'
 
 const service = new AISearchService(db, aiSearch)
 

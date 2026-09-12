@@ -93,7 +93,7 @@ adminDeployRoutes.post('/api/trigger', async (c) => {
         headers: {
           'Authorization': `Bearer ${ghToken}`,
           'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'FlareCMS-Admin',
+          'User-Agent': 'SciFiCMS-Admin',
         },
         body: JSON.stringify({ ref: 'main' }),
       }

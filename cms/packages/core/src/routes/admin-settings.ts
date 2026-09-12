@@ -43,7 +43,7 @@ adminSettingsRoutes.use('*', requireRole('admin'))
 function getMockSettings(user: any) {
   return {
     general: {
-      siteName: 'Flare CMS',
+      siteName: 'Sci-Fi CMS',
       siteDescription: 'Edge-native headless CMS for Cloudflare Workers. Built on D1, R2, and Hono.',
       adminEmail: user?.email || 'admin@example.com',
       timezone: 'UTC',

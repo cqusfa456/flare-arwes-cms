@@ -34,7 +34,7 @@ function toPascalCase(str: string): string {
   return camel.charAt(0).toUpperCase() + camel.slice(1)
 }
 
-/** Map Flare field types to TypeScript types for comments */
+/** Map Sci-Fi field types to TypeScript types for comments */
 function tsType(fieldType: string): string {
   switch (fieldType) {
     case 'string':
@@ -66,14 +66,14 @@ function tsType(fieldType: string): string {
 
 function generateContentConfigSnippet(data: SnippetData): string {
   const camelName = toCamelCase(data.collectionName)
-  const url = data.cmsUrl || 'https://your-flare-cms.workers.dev'
+  const url = data.cmsUrl || 'https://your-sci-fi-cms.workers.dev'
 
   return `// content.config.ts
 import { defineCollection } from 'astro:content'
-import { flareLoader } from '@flare-cms/astro'
+import { sciFiLoader } from '@sci-fi-cms/astro'
 
 const ${camelName} = defineCollection({
-  loader: flareLoader({
+  loader: sciFiLoader({
     apiUrl: '${url}',
     collection: '${data.collectionName}',
     filter: { status: 'published' },
@@ -119,9 +119,9 @@ ${fieldLines}
 }
 
 function generateFetchSnippet(data: SnippetData): string {
-  const url = data.cmsUrl || 'https://your-flare-cms.workers.dev'
+  const url = data.cmsUrl || 'https://your-sci-fi-cms.workers.dev'
 
-  return `// Direct API fetch (without @flare-cms/astro)
+  return `// Direct API fetch (without @sci-fi-cms/astro)
 const res = await fetch(
   '${url}/api/collections/${data.collectionName}/content?status=published'
 )

@@ -821,7 +821,7 @@ authRoutes.get('/accept-invitation', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Accept Invitation - Flare CMS</title>
+        <title>Accept Invitation - Sci-Fi CMS</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {
@@ -1154,7 +1154,7 @@ authRoutes.get('/reset-password', async (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reset Password - Flare CMS</title>
+        <title>Reset Password - Sci-Fi CMS</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
           body {

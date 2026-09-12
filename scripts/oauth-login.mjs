@@ -146,7 +146,7 @@ const REQUIRED_SECRETS = [
   'CF_R2_BUCKET_NAME',
   'CF_KV_NAMESPACE_ID',
   'JWT_SECRET',
-  'FLARE_API_URL'
+  'SCIFI_API_URL'
 ]
 
 const listSecrets = async (gh) => {

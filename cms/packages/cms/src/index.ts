@@ -1,16 +1,16 @@
 /**
- * Flare CMS Application
+ * Sci-Fi CMS Application
  *
- * Entry point for your Flare CMS headless application
+ * Entry point for your Sci-Fi CMS headless application
  */
 
 import {
-  createFlareApp,
+  createSciFiApp,
   registerCollections,
   resolveStorage,
   SchedulerService
-} from '@flare-cms/core'
-import type { FlareConfig } from '@flare-cms/core'
+} from '@sci-fi-cms/core'
+import type { SciFiConfig } from '@sci-fi-cms/core'
 import { validateBindingsMiddleware } from './middleware/validate-bindings'
 
 // Import your collection configurations
@@ -28,7 +28,7 @@ registerCollections([
 ])
 
 // Application configuration
-const config: FlareConfig = {
+const config: SciFiConfig = {
   collections: {
     autoSync: true
   },
@@ -42,13 +42,13 @@ const config: FlareConfig = {
 }
 
 // Create the application
-const app = createFlareApp(config)
+const app = createSciFiApp(config)
 
 /**
  * Resolve the media storage backend from environment configuration.
  *
  * Which backend is active is decided entirely by `STORAGE_BACKEND` plus the
- * matching provider variables/secrets (see `resolveStorage` in @flare-cms/core):
+ * matching provider variables/secrets (see `resolveStorage` in @sci-fi-cms/core):
  *
  *   - unset / `r2`  → Cloudflare R2 `MEDIA_BUCKET` binding (default)
  *   - `b2`          → Backblaze B2 over the S3-compatible API

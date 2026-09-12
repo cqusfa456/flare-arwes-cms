@@ -53,7 +53,7 @@ const fail = (message) => {
 const TOKEN_SPECS = {
   ci: {
     secretName: 'CF_API_TOKEN',
-    tokenName: 'Flare CMS Deploy (CI)',
+    tokenName: 'Sci-Fi CMS Deploy (CI)',
     purpose: 'wrangler deploy、D1 迁移、secret put、直传部署、绑定自定义域名',
     account: [
       'Workers Scripts Write',
@@ -68,7 +68,7 @@ const TOKEN_SPECS = {
   },
   runtime: {
     secretName: 'CF_SITES_API_TOKEN',
-    tokenName: 'Flare CMS Runtime (sites)',
+    tokenName: 'Sci-Fi CMS Runtime (sites)',
     purpose: 'CMS Worker 管理自定义域名、触发构建、下发构建环境变量',
     account: ['Workers Scripts Read', 'Workers CI Write', 'Pages Write'],
     zone: ['Workers Routes Write', 'Zone Read']
@@ -121,7 +121,7 @@ const cf = async (path, init = {}) => {
     headers: {
       Authorization: `Bearer ${bootstrap}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'flare-cms-token-mint'
+      'User-Agent': 'sci-fi-cms-token-mint'
     },
     ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) })
   })

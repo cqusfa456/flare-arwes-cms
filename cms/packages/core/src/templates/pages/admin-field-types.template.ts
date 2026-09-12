@@ -718,7 +718,7 @@ export function renderFieldTypesPage(data: FieldTypesPageData): string {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'flarecms-field-types-reference.json';
+        a.download = 'sci-fi-cms-field-types-reference.json';
         a.click();
         URL.revokeObjectURL(url);
       }

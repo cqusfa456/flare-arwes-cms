@@ -27,7 +27,7 @@ import type { Bindings, Variables } from '../app'
 
 const adminSyncRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
-const CONTENT_VERSION_KEY = 'flare:content_version'
+const CONTENT_VERSION_KEY = 'sci-fi:content_version'
 
 /**
  * Get the current content version from KV.

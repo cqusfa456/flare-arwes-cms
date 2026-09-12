@@ -1370,8 +1370,8 @@ adminContentRoutes.put('/:id', async (c) => {
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate(`content:list:${existingContent.collection_id}:*`)
     if (c.env.CACHE_KV) {
-      const cv = await c.env.CACHE_KV.get('flare:content_version')
-      await c.env.CACHE_KV.put('flare:content_version', String((cv ? parseInt(cv, 10) : 0) + 1))
+      const cv = await c.env.CACHE_KV.get('sci-fi:content_version')
+      await c.env.CACHE_KV.put('sci-fi:content_version', String((cv ? parseInt(cv, 10) : 0) + 1))
     }
 
     // Create new version if content changed

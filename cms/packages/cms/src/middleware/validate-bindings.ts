@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
-import type { Bindings } from '@flare-cms/core'
-import { getStorageInfo } from '@flare-cms/core'
+import type { Bindings } from '@sci-fi-cms/core'
+import { getStorageInfo } from '@sci-fi-cms/core'
 
 const JWT_SECRET_HARDCODED_DEFAULT = 'your-super-secret-jwt-key-change-in-production'
 

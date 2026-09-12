@@ -16,7 +16,7 @@
  *   * it generates a NEW random `JWT_SECRET` every run (invalidating all admin
  *     sessions),
  *   * it writes hardcoded D1 / KV / R2 identifiers,
- *   * it overwrites `FLARE_API_URL` and `PAGES_PROJECT_NAME`.
+ *   * it overwrites `SCIFI_API_URL` and `PAGES_PROJECT_NAME`.
  *
  * This script touches exactly one or two secrets and refuses to write a token
  * that Cloudflare does not accept.
@@ -241,7 +241,7 @@ for (const [name, value] of Object.entries(toWrite)) {
 }
 
 console.log('\n✅ 完成。只改动了:', Object.keys(toWrite).join(', '))
-console.log('   未触碰 JWT_SECRET / D1 / KV / R2 / FLARE_API_URL / PAGES_PROJECT_NAME。')
+console.log('   未触碰 JWT_SECRET / D1 / KV / R2 / SCIFI_API_URL / PAGES_PROJECT_NAME。')
 console.log('\n下一步：')
 if (TEMPLATE_ID === 'runtime') {
   console.log('   这个 token 由部署 workflow 装到 Worker 上（作为 CF_API_TOKEN），下次 push 生效；')

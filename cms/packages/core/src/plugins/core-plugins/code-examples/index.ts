@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { Plugin } from '@flare-cms/core'
+import { Plugin } from '@sci-fi-cms/core'
 import { PluginBuilder } from '../../sdk/plugin-builder'
 
 const codeExampleSchema = z.object({
@@ -283,7 +283,7 @@ export function createCodeExamplesPlugin(): Plugin {
 
   builder.metadata({
     author: {
-      name: 'Flare CMS',
+      name: 'Sci-Fi CMS',
       email: 'info@arwes.dev'
     },
     license: 'MIT',

@@ -12,7 +12,7 @@ export async function getStaticPaths() {
   // Markdown renderer for CMS page content.
   const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
 
-  // Fetch all pages managed by the Flare CMS admin.
+  // Fetch all pages managed by the Sci-Fi CMS admin.
   const cmsPages = await getCollection('pages')
 
   const appPaths = routes.map((route) => ({

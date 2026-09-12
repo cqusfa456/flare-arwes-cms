@@ -10,8 +10,8 @@
     "moduleResolution": "bundler",
     "baseUrl": "./",
     "paths": {
-      "@flare-cms/templates": ["../templates/src/index.ts"],
-      "@flare-cms/templates/*": ["../templates/src/*"]
+      "@sci-fi-cms/templates": ["../templates/src/index.ts"],
+      "@sci-fi-cms/templates/*": ["../templates/src/*"]
     },
     "resolveJsonModule": true,
     "types": ["@cloudflare/workers-types", "node"],

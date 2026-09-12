@@ -52,7 +52,7 @@ export function renderDashboardPage(data: DashboardPageData): string {
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your Flare CMS admin dashboard</p>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your Sci-Fi CMS admin dashboard</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
         <a href="https://flarecms.dev" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
@@ -148,7 +148,7 @@ export function renderDashboardPageWithDynamicMenu(
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your Flare CMS admin dashboard</p>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your Sci-Fi CMS admin dashboard</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
         <a href="/admin/api-reference" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">

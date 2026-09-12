@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ARWES + Flare CMS 初始化向导 (TUI)
+ * ARWES + Sci-Fi CMS 初始化向导 (TUI)
  *
  * 交互式设置开发/部署所需的账号与资源：
  *   - Cloudflare 登录 (wrangler login 或 API token)
@@ -446,7 +446,7 @@ async function stepGitHubSecrets() {
 
   log.info('以下信息将被加密写入 GitHub Actions secrets:')
   log.info('  CF_API_TOKEN / CF_ACCOUNT_ID / CF_D1_DATABASE_ID')
-  log.info('  CF_R2_BUCKET_NAME / CF_KV_NAMESPACE_ID / FLARE_API_URL')
+  log.info('  CF_R2_BUCKET_NAME / CF_KV_NAMESPACE_ID / SCIFI_API_URL')
   log.info('  JWT_SECRET / B2_*（如启用 B2）')
 
   const askValue = async (name, label, initial) => {
@@ -471,8 +471,8 @@ async function stepGitHubSecrets() {
   await askValue('CF_D1_DATABASE_ID', 'D1 数据库 ID:')
   await askValue('CF_R2_BUCKET_NAME', 'R2 桶名:')
   await askValue('CF_KV_NAMESPACE_ID', 'KV namespace ID:')
-  await askValue('FLARE_API_URL', 'CMS Worker URL（如 https://flare-cms.xxx.workers.dev）:')
-  await askValue('FLARE_API_TOKEN', 'CMS 只读 API Token（可选，留空跳过）:')
+  await askValue('SCIFI_API_URL', 'CMS Worker URL（如 https://sci-fi-cms.xxx.workers.dev）:')
+  await askValue('SCIFI_API_TOKEN', 'CMS 只读 API Token（可选，留空跳过）:')
 
   // JWT_SECRET（本地开发与生产共用一份，写入 secrets 供 CI 使用）
   const jwtSecret = await text({
@@ -551,7 +551,7 @@ async function stepEnvFile() {
   if (isCancel(apiUrl)) process.exit(0)
 
   const envPath = join(DOCS_DIR, '.env')
-  const content = `PUBLIC_FLARE_API_URL=${apiUrl}\n`
+  const content = `PUBLIC_SCIFI_API_URL=${apiUrl}\n`
   writeFileSync(envPath, content)
   log.success(`已写入 ${envPath}`)
 }
@@ -563,7 +563,7 @@ async function stepEnvFile() {
 let apiTokenGlobal = null
 let resourcesGlobal = null
 
-intro('🚀 ARWES + Flare CMS 初始化向导')
+intro('🚀 ARWES + Sci-Fi CMS 初始化向导')
 
 const proceed = await confirm({
   message: '开始初始化？将检查/配置 Cloudflare、GitHub 等账号与资源',

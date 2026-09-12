@@ -1,7 +1,7 @@
 /**
  * Types Module Exports
  *
- * TypeScript type definitions for Flare CMS
+ * TypeScript type definitions for Sci-Fi CMS
  */
 
 // Collection Configuration Types

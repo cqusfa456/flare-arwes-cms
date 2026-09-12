@@ -141,7 +141,7 @@ export function renderWorkflowDashboard(data: WorkflowDashboardData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Workflow Dashboard - Flare CMS',
+    title: 'Workflow Dashboard - Sci-Fi CMS',
     pageTitle: 'Workflow Dashboard',
     currentPath: 'workflow',
     user: data.user ? {

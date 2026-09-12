@@ -1,5 +1,5 @@
 /**
- * Flare CMS Plugin System Types
+ * Sci-Fi CMS Plugin System Types
  *
  * Defines the core interfaces and types for the plugin system
  */
@@ -24,7 +24,7 @@ export interface Plugin {
   }
   /** Plugin dependencies (other plugins required) */
   dependencies?: string[]
-  /** Flare CMS version compatibility */
+  /** Sci-Fi CMS version compatibility */
   compatibility?: string
   /** Plugin license */
   license?: string
@@ -47,7 +47,7 @@ export interface Plugin {
   configure?: (config: PluginConfig) => Promise<void>
 }
 
-// Plugin context provides access to Flare CMS APIs
+// Plugin context provides access to Sci-Fi CMS APIs
 export interface PluginContext {
   /** Database instance */
   db: D1Database
@@ -57,7 +57,7 @@ export interface PluginContext {
   r2?: R2Bucket
   /** Plugin configuration */
   config: PluginConfig
-  /** Core Flare CMS services */
+  /** Core Sci-Fi CMS services */
   services: {
     auth: AuthService
     content: ContentService

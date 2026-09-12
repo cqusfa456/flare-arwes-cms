@@ -166,7 +166,7 @@ describe('renderAdminLayoutCatalyst', () => {
   it('should render page title', () => {
     const html = renderAdminLayoutCatalyst(baseData);
 
-    expect(html).toContain('<title>Test Page - Flare CMS Admin</title>');
+    expect(html).toContain('<title>Test Page - Sci-Fi CMS Admin</title>');
   });
 
   it('should render content', () => {
@@ -508,14 +508,14 @@ describe('renderAdminLayoutCatalyst', () => {
     it('should render logo in desktop sidebar', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('Flare CMS');
+      expect(html).toContain('Sci-Fi CMS');
     });
 
     it('should render logo in mobile header', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
       // Mobile header should have logo - check both desktop and mobile sections
-      expect(html).toContain('Flare CMS');
+      expect(html).toContain('Sci-Fi CMS');
     });
   });
 

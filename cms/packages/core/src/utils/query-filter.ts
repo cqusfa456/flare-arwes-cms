@@ -1,5 +1,5 @@
 /**
- * Query Filter Builder for Flare CMS
+ * Query Filter Builder for Sci-Fi CMS
  * Supports comprehensive filtering with AND/OR logic
  * Compatible with D1 Database (SQLite)
  */

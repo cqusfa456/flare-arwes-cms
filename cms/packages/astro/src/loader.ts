@@ -1,26 +1,26 @@
 /**
- * Build-time Astro Content Layer Loader for Flare CMS.
+ * Build-time Astro Content Layer Loader for Sci-Fi CMS.
  *
  * Fetches content from the CMS API at build time and stores it
  * in Astro's content store for type-safe `getCollection()` queries.
  */
 import type { Loader } from 'astro/loaders'
-import type { FlareLoaderOptions } from './types'
-import { FlareClient } from './client'
-import { flareSchemaToZod } from './schema'
+import type { SciFiLoaderOptions } from './types'
+import { SciFiClient } from './client'
+import { sciFiSchemaToZod } from './schema'
 
 /**
- * Create an Astro Content Layer loader for a Flare CMS collection.
+ * Create an Astro Content Layer loader for a Sci-Fi CMS collection.
  *
  * @example
  * ```ts
  * // content.config.ts
  * import { defineCollection } from 'astro:content'
- * import { flareLoader } from '@flare-cms/astro'
+ * import { sciFiLoader } from '@sci-fi-cms/astro'
  *
  * export const collections = {
  *   posts: defineCollection({
- *     loader: flareLoader({
+ *     loader: sciFiLoader({
  *       apiUrl: 'http://localhost:8787',
  *       collection: 'blog-posts',
  *       filter: { status: 'published' },
@@ -29,12 +29,12 @@ import { flareSchemaToZod } from './schema'
  * }
  * ```
  */
-export function flareLoader(options: FlareLoaderOptions): Loader {
+export function sciFiLoader(options: SciFiLoaderOptions): Loader {
   return {
-    name: 'flare-loader',
+    name: 'sci-fi-loader',
 
     load: async ({ store, meta, logger, parseData, generateDigest }) => {
-      const client = new FlareClient({
+      const client = new SciFiClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
         site: options.site,
@@ -42,7 +42,7 @@ export function flareLoader(options: FlareLoaderOptions): Loader {
 
       logger.info(`Fetching "${options.collection}" from ${options.apiUrl}`)
 
-      // FlareClient returns empty array on network/API errors
+      // SciFiClient returns empty array on network/API errors
       // (it logs errors internally). We treat an empty response
       // differently from a fetch failure — check meta for staleness.
       let items
@@ -117,7 +117,7 @@ export function flareLoader(options: FlareLoaderOptions): Loader {
       }
 
       // Otherwise, dynamically fetch from CMS and convert
-      const client = new FlareClient({
+      const client = new SciFiClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
         site: options.site,
@@ -126,7 +126,7 @@ export function flareLoader(options: FlareLoaderOptions): Loader {
       try {
         const collectionSchema = await client.fetchCollectionSchema(options.collection)
         if (collectionSchema) {
-          return flareSchemaToZod(collectionSchema)
+          return sciFiSchemaToZod(collectionSchema)
         }
       } catch {
         // Schema fetch failed — fall through to permissive schema

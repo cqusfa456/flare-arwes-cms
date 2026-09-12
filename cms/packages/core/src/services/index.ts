@@ -1,7 +1,7 @@
 /**
  * Services Module Exports
  *
- * Core business logic services for Flare CMS
+ * Core business logic services for Sci-Fi CMS
  */
 
 // Collection Management

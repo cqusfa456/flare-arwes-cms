@@ -45,7 +45,7 @@ describe.skip('API Routes - Final Working Tests', () => {
       
       expect(res.status).toBe(200)
       expect(data.openapi).toBe('3.0.0')
-      expect(data.info.title).toBe('Flare CMS API')
+      expect(data.info.title).toBe('Sci-Fi CMS API')
     })
 
     it('should return health status', async () => {

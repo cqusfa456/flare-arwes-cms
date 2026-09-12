@@ -10,7 +10,7 @@ type CmsPageProps = {
   metaDescription?: string
 }
 
-// Renders a page managed by the Flare CMS admin. The markdown content
+// Renders a page managed by the Sci-Fi CMS admin. The markdown content
 // is rendered to HTML at build time by the Astro page and passed here
 // as a prop. The ARWES animators provide the sci-fi enter effects.
 const CmsPage = (props: CmsPageProps): JSX.Element => {

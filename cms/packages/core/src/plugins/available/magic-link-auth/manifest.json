@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Passwordless authentication via email magic links. Users receive a secure one-time link to sign in without entering a password.",
   "author": {
-    "name": "Flare CMS Team",
+    "name": "Sci-Fi CMS Team",
     "email": "team@arwes.dev"
   },
   "category": "security",

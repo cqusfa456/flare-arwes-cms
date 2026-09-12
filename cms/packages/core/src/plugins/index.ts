@@ -1,7 +1,7 @@
 /**
  * Plugins Module Exports
  *
- * Plugin system and SDK for Flare CMS
+ * Plugin system and SDK for Sci-Fi CMS
  */
 
 // Hook System

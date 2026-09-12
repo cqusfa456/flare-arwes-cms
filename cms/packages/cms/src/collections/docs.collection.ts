@@ -4,7 +4,7 @@
  * Documentation pages with markdown content, organized by section
  */
 
-import type { CollectionConfig } from '@flare-cms/core'
+import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'docs',

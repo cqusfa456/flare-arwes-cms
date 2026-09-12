@@ -1,25 +1,25 @@
 {
-  "name": "@flare-cms/cms",
+  "name": "@sci-fi-cms/cms",
   "version": "1.0.0",
   "private": true,
-  "description": "Flare CMS backend - Cloudflare Worker application",
+  "description": "Sci-Fi CMS backend - Cloudflare Worker application",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --env production",
     "db:migrate": "wrangler d1 migrations apply DB",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
-    "db:reset": "flare-db-reset",
+    "db:reset": "sci-fi-db-reset",
     "db:studio": "drizzle-kit studio",
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "update": "pnpm install @flare-cms/core@latest --save",
-    "update:beta": "pnpm install @flare-cms/core@beta --save",
+    "update": "pnpm install @sci-fi-cms/core@latest --save",
+    "update:beta": "pnpm install @sci-fi-cms/core@beta --save",
     "seed": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {
-    "@flare-cms/core": "workspace:*"
+    "@sci-fi-cms/core": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251202.0",

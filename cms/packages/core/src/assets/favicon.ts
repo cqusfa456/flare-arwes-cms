@@ -1,5 +1,5 @@
 /**
- * Flare CMS Favicon SVG
+ * Sci-Fi CMS Favicon SVG
  *
  * Embedded SVG favicon for the admin interface and auth pages.
  * Uses prefers-color-scheme to adapt to light/dark browser tabs.

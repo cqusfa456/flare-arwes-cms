@@ -1,7 +1,7 @@
 /**
  * Plugin Builder SDK
  *
- * Provides a fluent API for building Flare CMS plugins
+ * Provides a fluent API for building Sci-Fi CMS plugins
  *
  * @packageDocumentation
  */
@@ -11,13 +11,13 @@ import { z } from 'zod'
 import { Plugin, PluginBuilderOptions, PluginRoutes, PluginMiddleware, PluginModel, PluginService, PluginAdminPage, PluginComponent, PluginHook, PluginMenuItem } from '../types'
 
 /**
- * Fluent builder for creating Flare CMS plugins.
+ * Fluent builder for creating Sci-Fi CMS plugins.
  *
  * @beta This API is in beta and may change in future releases.
  *
  * @example
  * ```typescript
- * import { PluginBuilder } from '@flare-cms/core'
+ * import { PluginBuilder } from '@sci-fi-cms/core'
  *
  * const plugin = PluginBuilder.create({
  *   name: 'my-plugin',

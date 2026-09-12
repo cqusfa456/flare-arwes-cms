@@ -98,13 +98,13 @@ export const mockContent = {
   blog_post_1: {
     id: 'content-blog-1',
     collectionId: 'collection-blog-posts-1',
-    slug: 'welcome-to-flarecms',
-    title: 'Welcome to Flare CMS',
+    slug: 'welcome-to-sci-fi-cms',
+    title: 'Welcome to Sci-Fi CMS',
     data: {
-      title: 'Welcome to Flare CMS',
-      content: '<h1>Welcome to Flare CMS</h1><p>This is your first blog post.</p>',
-      excerpt: 'Welcome to Flare CMS, a modern headless CMS.',
-      tags: ['welcome', 'cms', 'flarecms'],
+      title: 'Welcome to Sci-Fi CMS',
+      content: '<h1>Welcome to Sci-Fi CMS</h1><p>This is your first blog post.</p>',
+      excerpt: 'Welcome to Sci-Fi CMS, a modern headless CMS.',
+      tags: ['welcome', 'cms', 'sci-fi-cms'],
       status: 'published'
     },
     status: 'published',

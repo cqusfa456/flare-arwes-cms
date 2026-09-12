@@ -110,13 +110,13 @@ console.log('\n[2/4] 资源确认...')
 const d1Id = process.env.CF_D1_DATABASE_ID || '9096c6ab-bb18-4f94-b836-c2673d3c8b19' // 已创建
 const kvId = process.env.CF_KV_NAMESPACE_ID || '50ff25b411a149cfbfdfeb615cd0acbd' // 已创建
 const r2Name = process.env.CF_R2_BUCKET_NAME || 'arwes-cms-media'
-const flareUrl = process.env.FLARE_API_URL || 'https://flare-cms.arwes.workers.dev'
+const sciFiUrl = process.env.SCIFI_API_URL || 'https://sci-fi-cms.cqusfa.workers.dev'
 const pagesName = process.env.PAGES_PROJECT_NAME || 'arwes-docs'
 
 console.log(`  D1: ${d1Id}`)
 console.log(`  KV: ${kvId}`)
 console.log(`  R2: ${r2Name}`)
-console.log(`  FLARE_URL: ${flareUrl}`)
+console.log(`  SCIFI_URL: ${sciFiUrl}`)
 console.log(`  PAGES: ${pagesName}`)
 
 // ---- 写入 secrets ----
@@ -160,7 +160,7 @@ const secrets = {
   CF_R2_BUCKET_NAME: r2Name,
   CF_KV_NAMESPACE_ID: kvId,
   JWT_SECRET: jwtSecret,
-  FLARE_API_URL: flareUrl,
+  SCIFI_API_URL: sciFiUrl,
   PAGES_PROJECT_NAME: pagesName
 }
 

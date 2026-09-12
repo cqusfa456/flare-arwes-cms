@@ -278,7 +278,7 @@ describe('SettingsService', () => {
       const result = await settingsService.getGeneralSettings()
 
       expect(result).toEqual({
-        siteName: 'Flare CMS',
+        siteName: 'Sci-Fi CMS',
         siteDescription: 'Edge-native headless CMS for Cloudflare Workers. Built on D1, R2, and Hono.',
         adminEmail: 'admin@example.com',
         timezone: 'UTC',

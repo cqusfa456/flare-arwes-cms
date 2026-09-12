@@ -1,7 +1,7 @@
 /**
- * @flare-cms/core - Main Entry Point
+ * @sci-fi-cms/core - Main Entry Point
  *
- * Core framework for Flare CMS (forked from SonicJS)
+ * Core framework for Sci-Fi CMS (forked from SonicJS)
  * Built for Cloudflare's edge platform with TypeScript
  *
  * Phase 2 Migration Status:
@@ -20,8 +20,8 @@
 // Main Application API (Phase 2 Week 1)
 // ============================================================================
 
-export { createFlareApp, setupCoreMiddleware, setupCoreRoutes } from './app'
-export type { FlareConfig, FlareApp, Bindings, Variables } from './app'
+export { createSciFiApp, setupCoreMiddleware, setupCoreRoutes } from './app'
+export type { SciFiConfig, SciFiApp, Bindings, Variables } from './app'
 
 // ============================================================================
 // Placeholders - To be populated in Phase 2
@@ -235,7 +235,7 @@ export {
   // Metrics
   metricsTracker,
   // Version
-  FLARE_VERSION,
+  SCIFI_VERSION,
   getCoreVersion,
 } from './utils'
 

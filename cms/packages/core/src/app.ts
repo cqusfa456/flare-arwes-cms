@@ -1,7 +1,7 @@
 /**
  * Main Application Factory
  *
- * Creates a configured Flare CMS application with all core functionality
+ * Creates a configured Sci-Fi CMS application with all core functionality
  */
 
 import { Hono } from 'hono'
@@ -116,7 +116,7 @@ export interface Variables {
   }>
 }
 
-export interface FlareConfig {
+export interface SciFiConfig {
   // Collections configuration
   collections?: {
     directory?: string
@@ -151,7 +151,7 @@ export interface FlareConfig {
   name?: string
 }
 
-export type FlareApp = Hono<{ Bindings: Bindings; Variables: Variables }>
+export type SciFiApp = Hono<{ Bindings: Bindings; Variables: Variables }>
 
 // ============================================================================
 // Application Factory
@@ -167,16 +167,16 @@ let kvInitialized = false
 let pluginsInstalled = false
 
 /**
- * Create a Flare CMS application with core functionality
+ * Create a Sci-Fi CMS application with core functionality
  *
  * @param config - Application configuration
  * @returns Configured Hono application
  *
  * @example
  * ```typescript
- * import { createFlareApp } from '@flare-cms/core'
+ * import { createSciFiApp } from '@sci-fi-cms/core'
  *
- * const app = createFlareApp({
+ * const app = createSciFiApp({
  *   collections: {
  *     directory: './src/collections',
  *     autoSync: true
@@ -190,12 +190,12 @@ let pluginsInstalled = false
  * export default app
  * ```
  */
-export function createFlareApp(config: FlareConfig = {}): FlareApp {
+export function createSciFiApp(config: SciFiConfig = {}): SciFiApp {
   const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
   // Set app metadata
   const appVersion = config.version || getVersionDisplay()
-  const appName = config.name || 'Flare CMS'
+  const appName = config.name || 'Sci-Fi CMS'
 
   // App version middleware
   app.use('*', async (c, next) => {
@@ -231,7 +231,7 @@ export function createFlareApp(config: FlareConfig = {}): FlareApp {
             warn: (...args: any[]) => console.warn(...args),
             error: (...args: any[]) => console.error(...args)
           },
-          // Cast required: FlareApp is Hono<{Bindings,Variables}> which is not
+          // Cast required: SciFiApp is Hono<{Bindings,Variables}> which is not
           // assignable to PluginContext.app type Hono<BlankEnv> — same pattern
           // used in bootstrap.ts for getAppReference() (decision [04-01])
           app: app as any
@@ -467,10 +467,10 @@ export function createFlareApp(config: FlareConfig = {}): FlareApp {
  * Setup core middleware (backward compatibility)
  *
  * @param _app - Hono application
- * @deprecated Use createFlareApp() instead
+ * @deprecated Use createSciFiApp() instead
  */
-export function setupCoreMiddleware(_app: FlareApp): void {
-  console.warn('setupCoreMiddleware is deprecated. Use createFlareApp() instead.')
+export function setupCoreMiddleware(_app: SciFiApp): void {
+  console.warn('setupCoreMiddleware is deprecated. Use createSciFiApp() instead.')
   // Backward compatibility implementation
 }
 
@@ -478,10 +478,10 @@ export function setupCoreMiddleware(_app: FlareApp): void {
  * Setup core routes (backward compatibility)
  *
  * @param _app - Hono application
- * @deprecated Use createFlareApp() instead
+ * @deprecated Use createSciFiApp() instead
  */
-export function setupCoreRoutes(_app: FlareApp): void {
-  console.warn('setupCoreRoutes is deprecated. Use createFlareApp() instead.')
+export function setupCoreRoutes(_app: SciFiApp): void {
+  console.warn('setupCoreRoutes is deprecated. Use createSciFiApp() instead.')
   // Backward compatibility implementation
 }
 

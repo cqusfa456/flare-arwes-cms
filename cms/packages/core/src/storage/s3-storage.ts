@@ -1,5 +1,5 @@
 /**
- * S3Storage — generic S3-compatible storage adapter for Flare CMS.
+ * S3Storage — generic S3-compatible storage adapter for Sci-Fi CMS.
  *
  * Implements the R2Bucket-compatible subset (head/get/put/delete) on top of the
  * S3 REST API signed with AWS Signature V4. Works against Backblaze B2, Amazon

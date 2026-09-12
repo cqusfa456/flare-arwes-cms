@@ -1,4 +1,4 @@
-name = "flare-cms-dev"
+name = "sci-fi-cms-dev"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -9,9 +9,9 @@ workers_dev = true
 # D1 Database
 [[d1_databases]]
 binding = "DB"
-database_name = "my-astro-cms-db"
+database_name = "sci-fi-cms-db"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
-migrations_dir = "./node_modules/@flare-cms/core/migrations"
+migrations_dir = "./node_modules/@sci-fi-cms/core/migrations"
 
 # ---------------------------------------------------------------------------
 # Media storage backend
@@ -32,7 +32,7 @@ migrations_dir = "./node_modules/@flare-cms/core/migrations"
 # does that automatically at deploy time.
 [[r2_buckets]]
 binding = "MEDIA_BUCKET"
-bucket_name = "my-astro-cms-media"
+bucket_name = "sci-fi-cms-media"
 
 # KV Namespace for rate limiting cache
 [[kv_namespaces]]
@@ -82,26 +82,30 @@ WEBHOOK_SECRET = ""
 
 # Production environment
 [env.production]
-name = "flare-cms"
-vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://flare-site.pages.dev", MEDIA_DOMAIN = "images.flarecms.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "", STORAGE_BACKEND = "", B2_ENDPOINT = "", B2_BUCKET = "", B2_ACCESS_KEY_ID = "", B2_SECRET_ACCESS_KEY = "", B2_REGION = "", S3_ENDPOINT = "", S3_BUCKET = "", S3_ACCESS_KEY_ID = "", S3_SECRET_ACCESS_KEY = "", S3_REGION = "", S3_FORCE_PATH_STYLE = "" }
+name = "sci-fi-cms"
+vars = { ENVIRONMENT = "production", CORS_ORIGINS = "https://arwes-docs.pages.dev", MEDIA_DOMAIN = "images.flarecms.dev", WEBHOOK_URLS = "", WEBHOOK_SECRET = "", STORAGE_BACKEND = "", B2_ENDPOINT = "", B2_BUCKET = "", B2_ACCESS_KEY_ID = "", B2_SECRET_ACCESS_KEY = "", B2_REGION = "", S3_ENDPOINT = "", S3_BUCKET = "", S3_ACCESS_KEY_ID = "", S3_SECRET_ACCESS_KEY = "", S3_REGION = "", S3_FORCE_PATH_STYLE = "" }
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "my-astro-cms-db"
+database_name = "sci-fi-cms-db"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
-migrations_dir = "./node_modules/@flare-cms/core/migrations"
+migrations_dir = "./node_modules/@sci-fi-cms/core/migrations"
 
 [[env.production.r2_buckets]]
 binding = "MEDIA_BUCKET"
-bucket_name = "my-astro-cms-media"
+bucket_name = "sci-fi-cms-media"
 
 [[env.production.kv_namespaces]]
 binding = "CACHE_KV"
 id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
-# Staging environment (migration testing)
+# Staging environment (migration testing).
+#
+# scripts/cf-resources.py fills every database_id / namespace id in this file
+# with the same resolved resources, so staging shares the production database
+# and cache unless it is pointed somewhere else by hand.
 [env.staging]
-name = "flare-cms-staging"
+name = "sci-fi-cms-staging"
 vars = { ENVIRONMENT = "staging", CORS_ORIGINS = "http://localhost:4321,http://localhost:8787" }
 
 [[env.staging.kv_namespaces]]
@@ -110,12 +114,12 @@ id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
 [[env.staging.d1_databases]]
 binding = "DB"
-database_name = "my-astro-cms-db-staging"
+database_name = "sci-fi-cms-db"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"
-bucket_name = "my-astro-cms-media"
+bucket_name = "sci-fi-cms-media"
 
 # Cron triggers for scheduled content publishing
 [triggers]

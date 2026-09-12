@@ -179,7 +179,7 @@ describe('API System Routes', () => {
       const json = await res.json()
 
       expect(res.status).toBe(200)
-      expect(json.name).toBe('Flare CMS')
+      expect(json.name).toBe('Sci-Fi CMS')
       expect(json.version).toBe('2.0.0')
       expect(json.description).toBeDefined()
       expect(json.endpoints).toBeDefined()

@@ -103,7 +103,7 @@ export function renderAdminPreviewPage(data: PreviewPageData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preview: ${escapeHtml(contentTitle)} | Flare CMS</title>
+  <title>Preview: ${escapeHtml(contentTitle)} | Sci-Fi CMS</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
   <!-- Tailwind CSS -->
@@ -127,7 +127,7 @@ export function renderAdminPreviewPage(data: PreviewPageData): string {
               900: '#18181b',
               950: '#09090b'
             },
-            flare: {
+            scifi: {
               500: '#f97316'
             }
           }

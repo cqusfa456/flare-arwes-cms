@@ -1,7 +1,7 @@
 {
-  "name": "@flare-cms/astro",
+  "name": "@sci-fi-cms/astro",
   "version": "1.0.0",
-  "description": "Astro Content Layer loader for Flare CMS",
+  "description": "Astro Content Layer loader for Sci-Fi CMS",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod'
-import { PluginConfig } from '@flare-cms/core'
+import { PluginConfig } from '@sci-fi-cms/core'
 
 // Configuration schema for plugin settings
 const PluginConfigSchema = z.object({

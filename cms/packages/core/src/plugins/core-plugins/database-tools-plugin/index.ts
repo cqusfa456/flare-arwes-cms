@@ -1,5 +1,5 @@
 import { PluginBuilder } from '../../sdk/plugin-builder'
-import { Plugin } from '@flare-cms/core'
+import { Plugin } from '@sci-fi-cms/core'
 // import { createDatabaseToolsAdminRoutes } from './admin-routes'
 import { DatabaseToolsService } from './services/database-service'
 
@@ -11,7 +11,7 @@ export function createDatabaseToolsPlugin(): Plugin {
   })
 
   builder.metadata({
-    author: { name: 'Flare CMS', email: 'admin@arwes.dev' },
+    author: { name: 'Sci-Fi CMS', email: 'admin@arwes.dev' },
     license: 'MIT',
     compatibility: '^1.0.0',
     dependencies: []

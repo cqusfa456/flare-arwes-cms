@@ -1,7 +1,7 @@
 /**
  * Utils Module Exports
  *
- * Utility functions for Flare CMS
+ * Utility functions for Sci-Fi CMS
  */
 
 // HTML Sanitization Utilities
@@ -28,7 +28,7 @@ export {
 export { metricsTracker } from './metrics'
 
 // Version Info
-export { FLARE_VERSION, getCoreVersion } from './version'
+export { SCIFI_VERSION, getCoreVersion } from './version'
 
 // Telemetry Utilities
 export {

@@ -141,11 +141,11 @@ apiRoutes.get('/', (c) => {
   return c.json({
     openapi: '3.0.0',
     info: {
-      title: 'Flare CMS API',
+      title: 'Sci-Fi CMS API',
       version: '0.1.0',
-      description: 'RESTful API for Flare CMS headless CMS - a modern, AI-powered content management system built on Cloudflare Workers',
+      description: 'RESTful API for Sci-Fi CMS headless CMS - a modern, AI-powered content management system built on Cloudflare Workers',
       contact: {
-        name: 'Flare CMS Support',
+        name: 'Sci-Fi CMS Support',
         url: `${serverUrl}/docs`,
         email: 'support@arwes.dev'
       },
@@ -164,7 +164,7 @@ apiRoutes.get('/', (c) => {
       '/api/': {
         get: {
           summary: 'API Information',
-          description: 'Returns OpenAPI specification for the Flare CMS API',
+          description: 'Returns OpenAPI specification for the Sci-Fi CMS API',
           operationId: 'getApiInfo',
           tags: ['System'],
           responses: {

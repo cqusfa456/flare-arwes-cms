@@ -14,7 +14,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Login - Flare CMS</title>
+      <title>Login - Sci-Fi CMS</title>
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
       <script src="https://unpkg.com/htmx.org@2.0.3"></script>
       <script src="https://cdn.tailwindcss.com"></script>
@@ -24,7 +24,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
           theme: {
             extend: {
               colors: {
-                flare: {
+                scifi: {
                   400: '#fb923c',
                   500: '#f6821f',
                   600: '#ea680c'
@@ -73,9 +73,9 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div class="relative">
             <!-- Glow effect behind card -->
-            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-b from-flare-500/20 via-transparent to-cyan-500/10 blur-xl"></div>
+            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-b from-scifi-500/20 via-transparent to-cyan-500/10 blur-xl"></div>
 
-            <div class="login-card relative rounded-xl border border-white/10 px-6 py-8 sm:px-10 shadow-2xl shadow-flare-500/5">
+            <div class="login-card relative rounded-xl border border-white/10 px-6 py-8 sm:px-10 shadow-2xl shadow-scifi-500/5">
               <!-- Alerts -->
               ${data.error ? `<div class="mb-6">${renderAlert({ type: 'error', message: data.error })}</div>` : ''}
               ${data.message ? `<div class="mb-6">${renderAlert({ type: 'success', message: data.message })}</div>` : ''}
@@ -103,7 +103,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                     autocomplete="email"
                     required
                     autofocus
-                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                     placeholder="Enter your email"
                   >
                 </div>
@@ -119,7 +119,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                     type="password"
                     autocomplete="current-password"
                     required
-                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-flare-500/50 focus:ring-1 focus:ring-flare-500/50 transition-all"
+                    class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
                     placeholder="Enter your password"
                   >
                 </div>
@@ -127,7 +127,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                 <!-- Submit Button -->
                 <button
                   type="submit"
-                  class="w-full rounded-lg bg-gradient-to-r from-flare-500 to-flare-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-flare-600 hover:to-flare-500 focus:outline-none focus:ring-2 focus:ring-flare-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-flare-500/25"
+                  class="w-full rounded-lg bg-gradient-to-r from-scifi-500 to-scifi-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-scifi-600 hover:to-scifi-500 focus:outline-none focus:ring-2 focus:ring-scifi-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-scifi-500/25"
                 >
                   Sign In
                 </button>
@@ -138,7 +138,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
               <div class="mt-6 text-center">
                 <p class="text-sm text-zinc-400">
                   Don't have an account?
-                  <a href="/auth/register" class="font-semibold text-flare-400 hover:text-flare-300 transition-colors">Create one here</a>
+                  <a href="/auth/register" class="font-semibold text-scifi-400 hover:text-scifi-300 transition-colors">Create one here</a>
                 </p>
               </div>
               ` : ''}
@@ -147,7 +147,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
 
           <!-- Version -->
           <div class="mt-6 text-center">
-            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-flare-500/10 text-flare-400 ring-1 ring-inset ring-flare-500/20">
+            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-scifi-500/10 text-scifi-400 ring-1 ring-inset ring-scifi-500/20">
               ${data.version || 'v0.1.0'}
             </span>
           </div>

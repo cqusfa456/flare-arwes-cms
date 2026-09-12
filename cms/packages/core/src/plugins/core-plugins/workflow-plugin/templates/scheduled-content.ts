@@ -399,7 +399,7 @@ export function renderScheduledContent(data: ScheduledContentData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Scheduled Content - Flare CMS',
+    title: 'Scheduled Content - Sci-Fi CMS',
     pageTitle: 'Scheduled Content',
     currentPath: 'workflow',
     user: data.user ? {

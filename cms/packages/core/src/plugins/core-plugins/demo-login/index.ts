@@ -1,5 +1,5 @@
 import { PluginBuilder } from '../../sdk/plugin-builder'
-import type { Plugin, PluginContext, HookHandler } from '@flare-cms/core'
+import type { Plugin, PluginContext, HookHandler } from '@sci-fi-cms/core'
 
 /**
  * Demo Login Plugin
@@ -71,7 +71,7 @@ const demoLoginPlugin = PluginBuilder.create({
   version: '1.0.0-beta.1',
   description: 'Prefills login form with demo credentials for easy site demonstration',
   author: {
-    name: 'Flare CMS'
+    name: 'Sci-Fi CMS'
   }
 })
   .addHook('template:render', loginPrefillHook)
@@ -79,7 +79,7 @@ const demoLoginPlugin = PluginBuilder.create({
   .metadata({
     description: 'Prefills login form with demo credentials (admin@arwes.dev/arwes-admin!) for easy site demonstration',
     author: {
-      name: 'Flare CMS'
+      name: 'Sci-Fi CMS'
     },
     dependencies: []
   })

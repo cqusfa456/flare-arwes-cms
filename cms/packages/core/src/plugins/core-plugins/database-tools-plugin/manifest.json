@@ -3,7 +3,7 @@
   "name": "Database Tools",
   "version": "1.0.0-beta.1",
   "description": "Database management and administration tools including migrations, backups, and query execution",
-  "author": "Flare CMS Team",
+  "author": "Sci-Fi CMS Team",
   "homepage": "https://flarecms.dev/plugins/database-tools",
   "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",

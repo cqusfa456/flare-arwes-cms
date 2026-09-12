@@ -295,7 +295,7 @@ export function renderWorkflowContentDetail(data: WorkflowContentDetailData): st
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: `${data.content.title} - Workflow - Flare CMS`,
+    title: `${data.content.title} - Workflow - Sci-Fi CMS`,
     pageTitle: `${data.content.title} - Workflow`,
     currentPath: 'workflow',
     user: data.user ? {

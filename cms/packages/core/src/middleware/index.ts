@@ -1,7 +1,7 @@
 /**
  * Middleware Module Exports
  *
- * Request processing middleware for Flare CMS
+ * Request processing middleware for Sci-Fi CMS
  *
  * Note: Most middleware is currently in the monolith and will be migrated later.
  * For now, we only export the bootstrap middleware which is used for system initialization.

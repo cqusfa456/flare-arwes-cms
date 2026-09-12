@@ -24,7 +24,7 @@ describe('telemetry-config', () => {
 
   describe('getDefaultTelemetryConfig', () => {
     it('should return default configuration with telemetry enabled', () => {
-      delete process.env.FLARE_TELEMETRY_ENDPOINT
+      delete process.env.SCIFI_TELEMETRY_ENDPOINT
       delete process.env.NODE_ENV
 
       const config = getDefaultTelemetryConfig()
@@ -35,7 +35,7 @@ describe('telemetry-config', () => {
     })
 
     it('should use custom endpoint from environment variable', () => {
-      process.env.FLARE_TELEMETRY_ENDPOINT = 'https://custom.endpoint.com'
+      process.env.SCIFI_TELEMETRY_ENDPOINT = 'https://custom.endpoint.com'
 
       const config = getDefaultTelemetryConfig()
 
@@ -61,7 +61,7 @@ describe('telemetry-config', () => {
 
   describe('isTelemetryEnabled', () => {
     it('should return true by default (opt-out model)', () => {
-      delete process.env.FLARE_TELEMETRY
+      delete process.env.SCIFI_TELEMETRY
       delete process.env.DO_NOT_TRACK
 
       const enabled = isTelemetryEnabled()
@@ -69,24 +69,24 @@ describe('telemetry-config', () => {
       expect(enabled).toBe(true)
     })
 
-    it('should return false when FLARE_TELEMETRY is "false"', () => {
-      process.env.FLARE_TELEMETRY = 'false'
+    it('should return false when SCIFI_TELEMETRY is "false"', () => {
+      process.env.SCIFI_TELEMETRY = 'false'
 
       const enabled = isTelemetryEnabled()
 
       expect(enabled).toBe(false)
     })
 
-    it('should return false when FLARE_TELEMETRY is "0"', () => {
-      process.env.FLARE_TELEMETRY = '0'
+    it('should return false when SCIFI_TELEMETRY is "0"', () => {
+      process.env.SCIFI_TELEMETRY = '0'
 
       const enabled = isTelemetryEnabled()
 
       expect(enabled).toBe(false)
     })
 
-    it('should return false when FLARE_TELEMETRY is "disabled"', () => {
-      process.env.FLARE_TELEMETRY = 'disabled'
+    it('should return false when SCIFI_TELEMETRY is "disabled"', () => {
+      process.env.SCIFI_TELEMETRY = 'disabled'
 
       const enabled = isTelemetryEnabled()
 
@@ -111,15 +111,15 @@ describe('telemetry-config', () => {
 
     it('should return true when DO_NOT_TRACK has other values', () => {
       process.env.DO_NOT_TRACK = '0'
-      delete process.env.FLARE_TELEMETRY
+      delete process.env.SCIFI_TELEMETRY
 
       const enabled = isTelemetryEnabled()
 
       expect(enabled).toBe(true)
     })
 
-    it('should return true when FLARE_TELEMETRY has other values like "true"', () => {
-      process.env.FLARE_TELEMETRY = 'true'
+    it('should return true when SCIFI_TELEMETRY has other values like "true"', () => {
+      process.env.SCIFI_TELEMETRY = 'true'
       delete process.env.DO_NOT_TRACK
 
       const enabled = isTelemetryEnabled()
@@ -130,7 +130,7 @@ describe('telemetry-config', () => {
 
   describe('getTelemetryConfig', () => {
     it('should merge default config with enabled state', () => {
-      delete process.env.FLARE_TELEMETRY
+      delete process.env.SCIFI_TELEMETRY
       delete process.env.DO_NOT_TRACK
 
       const config = getTelemetryConfig()
@@ -140,7 +140,7 @@ describe('telemetry-config', () => {
     })
 
     it('should reflect disabled telemetry in config', () => {
-      process.env.FLARE_TELEMETRY = 'false'
+      process.env.SCIFI_TELEMETRY = 'false'
 
       const config = getTelemetryConfig()
 

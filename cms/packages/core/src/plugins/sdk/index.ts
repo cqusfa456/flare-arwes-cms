@@ -1,7 +1,7 @@
 /**
  * Plugin SDK
  *
- * Exports the plugin builder and helper utilities for creating Flare CMS plugins.
+ * Exports the plugin builder and helper utilities for creating Sci-Fi CMS plugins.
  *
  * @packageDocumentation
  */

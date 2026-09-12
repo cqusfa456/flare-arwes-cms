@@ -17,14 +17,14 @@ name: Deploy site
 #
 # Content: the build reads the CMS API at build time. That API is public for
 # published content and scopes by `X-Site`, so no API token is required —
-# PUBLIC_FLARE_API_URL and PUBLIC_FLARE_SITE are enough. (Set FLARE_API_TOKEN to
+# PUBLIC_SCIFI_API_URL and PUBLIC_SCIFI_SITE are enough. (Set SCIFI_API_TOKEN to
 # send an X-API-Key anyway; an *invalid* one is rejected with 401.)
 
 on:
   workflow_dispatch:
     inputs:
       site:
-        description: Site slug registered in the CMS (sent as PUBLIC_FLARE_SITE / X-Site)
+        description: Site slug registered in the CMS (sent as PUBLIC_SCIFI_SITE / X-Site)
         required: true
         type: string
       provider:
@@ -101,8 +101,10 @@ jobs:
 
       - name: Check the CMS API URL is configured
         run: |
-          if [ -z "${{ secrets.FLARE_API_URL }}" ]; then
-            echo "::error::FLARE_API_URL secret is not set. Without it the build falls back to http://localhost:8787 and publishes empty content."
+          # SCIFI_API_URL is the current secret. FLARE_API_URL is the pre-rename
+          # name, still accepted until it is deleted from the repository.
+          if [ -z "${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}" ]; then
+            echo "::error::SCIFI_API_URL secret is not set. Without it the build falls back to http://localhost:8787 and publishes empty content."
             exit 1
           fi
 
@@ -110,9 +112,9 @@ jobs:
       - name: Build
         working-directory: ${{ inputs.root_directory }}
         env:
-          PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
-          PUBLIC_FLARE_API_TOKEN: ${{ secrets.FLARE_API_TOKEN }}
-          PUBLIC_FLARE_SITE: ${{ inputs.site }}
+          PUBLIC_SCIFI_API_URL: ${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}
+          PUBLIC_SCIFI_API_TOKEN: ${{ secrets.SCIFI_API_TOKEN || secrets.FLARE_API_TOKEN }}
+          PUBLIC_SCIFI_SITE: ${{ inputs.site }}
         run: ${{ inputs.build_command }}
 
       # A Pages project does not have to be created by hand first: `wrangler
@@ -153,8 +155,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
-          PUBLIC_FLARE_SITE: ${{ inputs.site }}
+          PUBLIC_SCIFI_API_URL: ${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}
+          PUBLIC_SCIFI_SITE: ${{ inputs.site }}
           # Available to the deploy command so it stays site-agnostic:
           #   wrangler pages deploy ./build --project-name="$PAGES_PROJECT" --branch="$DEPLOY_BRANCH"
           PAGES_PROJECT: ${{ inputs.pages_project }}

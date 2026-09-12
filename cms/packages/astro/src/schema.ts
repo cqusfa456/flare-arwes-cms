@@ -1,14 +1,14 @@
 /**
- * Flare CMS CollectionSchema to Astro Zod Schema Converter
+ * Sci-Fi CMS CollectionSchema to Astro Zod Schema Converter
  *
- * Converts Flare CMS collection schemas into Zod object schemas
+ * Converts Sci-Fi CMS collection schemas into Zod object schemas
  * compatible with Astro's Content Layer API.
  */
 import { z } from 'astro/zod'
 import type { CollectionSchema, FieldConfig } from './types-cms'
 
 /**
- * Map of Flare CMS field types to Zod schema constructors.
+ * Map of Sci-Fi CMS field types to Zod schema constructors.
  * Each entry returns a fresh Zod type instance.
  */
 /**
@@ -50,7 +50,7 @@ const FIELD_TYPE_MAP: Record<string, () => z.ZodTypeAny> = {
 }
 
 /**
- * Convert a Flare CMS field config to a Zod schema type.
+ * Convert a Sci-Fi CMS field config to a Zod schema type.
  * Handles select enum refinement.
  */
 function fieldToZod(field: FieldConfig): z.ZodTypeAny {
@@ -63,17 +63,17 @@ function fieldToZod(field: FieldConfig): z.ZodTypeAny {
 }
 
 /**
- * Convert a Flare CMS CollectionSchema into a Zod object schema
+ * Convert a Sci-Fi CMS CollectionSchema into a Zod object schema
  * compatible with Astro's Content Layer defineCollection().
  *
- * - Maps all Flare field types to appropriate Zod types
+ * - Maps all Sci-Fi field types to appropriate Zod types
  * - Respects the `required` array for optional/required marking
  * - Adds system fields (_status, _createdAt, _updatedAt)
  *
- * @param schema - A Flare CMS CollectionSchema
+ * @param schema - A Sci-Fi CMS CollectionSchema
  * @returns A Zod object schema
  */
-export function flareSchemaToZod(schema: CollectionSchema): z.ZodObject<any> {
+export function sciFiSchemaToZod(schema: CollectionSchema): z.ZodObject<any> {
   const shape: Record<string, z.ZodTypeAny> = {}
   const requiredFields = new Set(schema.required ?? [])
 

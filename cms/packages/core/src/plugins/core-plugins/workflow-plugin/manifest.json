@@ -3,7 +3,7 @@
   "name": "Workflow Engine",
   "version": "1.0.0-beta.1",
   "description": "Content workflow and approval system with customizable states, transitions, and review processes",
-  "author": "Flare CMS Team",
+  "author": "Sci-Fi CMS Team",
   "homepage": "https://flarecms.dev/plugins/workflow",
   "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",

@@ -4,7 +4,7 @@
  * Example collection configuration for blog posts
  */
 
-import type { CollectionConfig } from '@flare-cms/core'
+import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'blog-posts',

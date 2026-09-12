@@ -1,15 +1,15 @@
 /**
- * Astro Content Layer Loader Types for Flare CMS
+ * Astro Content Layer Loader Types for Sci-Fi CMS
  */
 
 /**
- * Configuration options for the Flare CMS Astro loader.
+ * Configuration options for the Sci-Fi CMS Astro loader.
  */
-export interface FlareLoaderOptions {
+export interface SciFiLoaderOptions {
   /** CMS API base URL (e.g., 'http://localhost:8787') */
   apiUrl: string
 
-  /** Collection name in Flare CMS (e.g., 'blog-posts') */
+  /** Collection name in Sci-Fi CMS (e.g., 'blog-posts') */
   collection: string
 
   /** Optional API token for authenticated access */
@@ -35,9 +35,9 @@ export interface FlareLoaderOptions {
 }
 
 /**
- * Shape of a content item returned by the Flare CMS API.
+ * Shape of a content item returned by the Sci-Fi CMS API.
  */
-export interface FlareContentItem {
+export interface SciFiContentItem {
   id: string
   title: string
   slug: string
@@ -50,9 +50,9 @@ export interface FlareContentItem {
 }
 
 /**
- * Shape of a paginated API response from Flare CMS.
+ * Shape of a paginated API response from Sci-Fi CMS.
  */
-export interface FlareApiResponse<T> {
+export interface SciFiApiResponse<T> {
   data: T[]
   meta: {
     count: number

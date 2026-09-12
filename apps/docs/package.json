@@ -14,7 +14,7 @@
     "prism-react-renderer": "^2.3.1",
     "react-use": "^17.5.1",
     "tailwindcss": "^3.4.9",
-    "@flare-cms/astro": "file:../../cms/packages/astro",
+    "@sci-fi-cms/astro": "file:../../cms/packages/astro",
     "markdown-it": "^14.1.0"
   },
   "scripts": {

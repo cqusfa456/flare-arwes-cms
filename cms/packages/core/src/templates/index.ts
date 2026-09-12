@@ -1,7 +1,7 @@
 /**
  * Templates Module Exports
  *
- * Reusable HTML template components for Flare CMS
+ * Reusable HTML template components for Sci-Fi CMS
  */
 
 // Form templates

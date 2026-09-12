@@ -33,7 +33,7 @@ export function renderLogo(data: LogoData = {}): string {
   const textColor = variant === 'white' ? 'currentColor' : variant === 'dark' ? '#1f2937' : 'currentColor'
   const sparkColor = '#f6821f'
 
-  // Flare CMS logo
+  // Sci-Fi CMS logo
   const logoSvg = `
     <svg class="${sizeClass} ${className}" viewBox="0 0 211.667 52.917" aria-hidden="true">
       <g>

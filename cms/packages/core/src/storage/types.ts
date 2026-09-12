@@ -1,5 +1,5 @@
 /**
- * Storage provider abstractions for Flare CMS.
+ * Storage provider abstractions for Sci-Fi CMS.
  *
  * The CMS talks to media storage through the minimal {@link StorageBucket}
  * surface (head/get/put/delete). Cloudflare's native `R2Bucket` satisfies it

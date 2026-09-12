@@ -1,7 +1,7 @@
 /**
  * Telemetry Types
  *
- * Privacy-first telemetry types for Flare CMS
+ * Privacy-first telemetry types for Sci-Fi CMS
  * No PII (Personally Identifiable Information) is collected
  */
 

@@ -1,10 +1,10 @@
-# @flare-cms/core
+# @sci-fi-cms/core
 
-> Core framework for Flare CMS - A modern, TypeScript-first headless CMS built for Cloudflare's edge platform.
+> Core framework for Sci-Fi CMS - A modern, TypeScript-first headless CMS built for Cloudflare's edge platform.
 
 ---
 
-## New to Flare CMS?
+## New to Sci-Fi CMS?
 
 **Visit [flarecms.dev](https://flarecms.dev) for full documentation and guides.**
 
@@ -26,7 +26,7 @@
 ## Installation
 
 ```bash
-pnpm install @flare-cms/core
+pnpm install @sci-fi-cms/core
 ```
 
 ### Required Peer Dependencies
@@ -41,10 +41,10 @@ pnpm install @cloudflare/workers-types hono drizzle-orm zod
 
 ```typescript
 // src/index.ts
-import { createFlareApp } from '@flare-cms/core'
-import type { FlareConfig } from '@flare-cms/core'
+import { createSciFiApp } from '@sci-fi-cms/core'
+import type { SciFiConfig } from '@sci-fi-cms/core'
 
-const config: FlareConfig = {
+const config: SciFiConfig = {
   collections: {
     directory: './src/collections',
     autoSync: true
@@ -55,14 +55,14 @@ const config: FlareConfig = {
   }
 }
 
-export default createFlareApp(config)
+export default createSciFiApp(config)
 ```
 
 ### 2. Define Collections
 
 ```typescript
 // src/collections/blog-posts.collection.ts
-import type { CollectionConfig } from '@flare-cms/core'
+import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'blog-posts',
@@ -103,18 +103,18 @@ export default {
 
 ```toml
 # wrangler.toml
-name = "my-flare-app"
+name = "my-sci-fi-cms-app"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "my-flare-db"
+database_name = "my-sci-fi-cms-db"
 database_id = "your-database-id"
 
 [[r2_buckets]]
 binding = "BUCKET"
-bucket_name = "my-flare-media"
+bucket_name = "my-sci-fi-cms-media"
 ```
 
 ### 4. Start Development
@@ -134,8 +134,8 @@ Visit `http://localhost:8787/admin` to access the admin interface.
 ### Main Application
 
 ```typescript
-import { createFlareApp } from '@flare-cms/core'
-import type { FlareConfig, FlareApp, Bindings, Variables } from '@flare-cms/core'
+import { createSciFiApp } from '@sci-fi-cms/core'
+import type { SciFiConfig, SciFiApp, Bindings, Variables } from '@sci-fi-cms/core'
 ```
 
 ### Services
@@ -147,7 +147,7 @@ import {
   MigrationService,
   Logger,
   PluginService
-} from '@flare-cms/core'
+} from '@sci-fi-cms/core'
 ```
 
 ### Middleware
@@ -160,7 +160,7 @@ import {
   loggingMiddleware,
   cacheHeaders,
   securityHeaders
-} from '@flare-cms/core'
+} from '@sci-fi-cms/core'
 ```
 
 ### Types
@@ -174,24 +174,24 @@ import type {
   User,
   Content,
   Media
-} from '@flare-cms/core'
+} from '@sci-fi-cms/core'
 ```
 
 ### Subpath Exports
 
 ```typescript
-import { MigrationService } from '@flare-cms/core/services'
-import { requireAuth } from '@flare-cms/core/middleware'
-import type { CollectionConfig } from '@flare-cms/core/types'
-import { renderForm } from '@flare-cms/core/templates'
-import { sanitizeInput } from '@flare-cms/core/utils'
-import { HookSystemImpl } from '@flare-cms/core/plugins'
+import { MigrationService } from '@sci-fi-cms/core/services'
+import { requireAuth } from '@sci-fi-cms/core/middleware'
+import type { CollectionConfig } from '@sci-fi-cms/core/types'
+import { renderForm } from '@sci-fi-cms/core/templates'
+import { sanitizeInput } from '@sci-fi-cms/core/utils'
+import { HookSystemImpl } from '@sci-fi-cms/core/plugins'
 ```
 
 ## Architecture
 
 ```
-@flare-cms/core
+@sci-fi-cms/core
 ├── src/
 │   ├── app.ts              # Application factory
 │   ├── db/                 # Database schemas & utilities
@@ -211,7 +211,7 @@ import { HookSystemImpl } from '@flare-cms/core/plugins'
 
 ## Migration System
 
-Flare CMS uses a **build-time migration bundler** because Cloudflare Workers cannot access the filesystem at runtime. All migration SQL is bundled into TypeScript during the build process.
+Sci-Fi CMS uses a **build-time migration bundler** because Cloudflare Workers cannot access the filesystem at runtime. All migration SQL is bundled into TypeScript during the build process.
 
 ```
 migrations/*.sql → scripts/generate-migrations.ts → src/db/migrations-bundle.ts → dist/

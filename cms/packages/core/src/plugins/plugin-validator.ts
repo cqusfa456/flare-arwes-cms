@@ -359,9 +359,9 @@ export class PluginValidator implements IPluginValidator {
   }
 
   /**
-   * Validate plugin compatibility with Flare CMS version
+   * Validate plugin compatibility with Sci-Fi CMS version
    */
-  validateCompatibility(plugin: Plugin, flareVersion: string): PluginValidationResult {
+  validateCompatibility(plugin: Plugin, sciFiVersion: string): PluginValidationResult {
     const errors: string[] = []
     const warnings: string[] = []
 
@@ -371,8 +371,8 @@ export class PluginValidator implements IPluginValidator {
     }
 
     try {
-      if (!semver.satisfies(flareVersion, plugin.compatibility)) {
-        errors.push(`Plugin requires Flare CMS ${plugin.compatibility}, but current version is ${flareVersion}`)
+      if (!semver.satisfies(sciFiVersion, plugin.compatibility)) {
+        errors.push(`Plugin requires Sci-Fi CMS ${plugin.compatibility}, but current version is ${sciFiVersion}`)
       }
     } catch (error) {
       errors.push(`Invalid compatibility version format: ${plugin.compatibility}`)

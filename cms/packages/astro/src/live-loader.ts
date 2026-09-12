@@ -1,15 +1,15 @@
 /**
- * Live loader for Flare CMS — requires Astro 5.10+ with
+ * Live loader for Sci-Fi CMS — requires Astro 5.10+ with
  * experimental.liveContentCollections enabled.
  */
 import type { LiveLoader } from 'astro/loaders'
-import type { FlareLoaderOptions, FlareContentItem } from './types'
-import { FlareClient } from './client'
+import type { SciFiLoaderOptions, SciFiContentItem } from './types'
+import { SciFiClient } from './client'
 
 /**
- * Map a Flare content item to the shape expected by Astro's Content Layer.
+ * Map a Sci-Fi content item to the shape expected by Astro's Content Layer.
  */
-function mapItemToEntry(item: FlareContentItem): { id: string; data: Record<string, unknown> } {
+function mapItemToEntry(item: SciFiContentItem): { id: string; data: Record<string, unknown> } {
   return {
     id: item.id,
     data: {
@@ -24,17 +24,17 @@ function mapItemToEntry(item: FlareContentItem): { id: string; data: Record<stri
 }
 
 /**
- * @experimental Live loader for Flare CMS.
+ * @experimental Live loader for Sci-Fi CMS.
  *
  * Fetches content at request time for SSR pages. Requires Astro 5.10+
  * with `experimental.liveContentCollections` enabled in astro.config.
  *
  * @example
  * ```ts
- * import { flareLiveLoader } from '@flare-cms/astro'
+ * import { sciFiLiveLoader } from '@sci-fi-cms/astro'
  *
  * const posts = defineCollection({
- *   loader: flareLiveLoader({
+ *   loader: sciFiLiveLoader({
  *     apiUrl: 'http://localhost:8787',
  *     collection: 'blog-posts',
  *     filter: { status: 'published' },
@@ -42,12 +42,12 @@ function mapItemToEntry(item: FlareContentItem): { id: string; data: Record<stri
  * })
  * ```
  */
-export function flareLiveLoader(options: FlareLoaderOptions): LiveLoader<Record<string, unknown>> {
+export function sciFiLiveLoader(options: SciFiLoaderOptions): LiveLoader<Record<string, unknown>> {
   return {
-    name: 'flare-live-loader',
+    name: 'sci-fi-live-loader',
 
     loadCollection: async ({ filter }) => {
-      const client = new FlareClient({
+      const client = new SciFiClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
         site: options.site,
@@ -55,7 +55,7 @@ export function flareLiveLoader(options: FlareLoaderOptions): LiveLoader<Record<
 
       try {
         let items = await client.fetchCollection(options.collection)
-        console.log(`[flare-live] ${options.collection}: fetched ${items?.length ?? 0} items`)
+        console.log(`[sci-fi-live] ${options.collection}: fetched ${items?.length ?? 0} items`)
 
         // Client-side filtering (API filters are broken, so we filter here)
         const statusFilter = options.filter?.status || (filter as any)?.status
@@ -67,13 +67,13 @@ export function flareLiveLoader(options: FlareLoaderOptions): LiveLoader<Record<
           entries: items.map(mapItemToEntry),
         }
       } catch (err) {
-        console.error(`[flare-live] ${options.collection} error:`, err)
+        console.error(`[sci-fi-live] ${options.collection} error:`, err)
         return { error: new Error(`Failed to load ${options.collection}: ${err}`) }
       }
     },
 
     loadEntry: async ({ filter }) => {
-      const client = new FlareClient({
+      const client = new SciFiClient({
         apiUrl: options.apiUrl,
         apiToken: options.apiToken,
         site: options.site,

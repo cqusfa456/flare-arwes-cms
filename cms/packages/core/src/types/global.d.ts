@@ -1,4 +1,4 @@
-// Global type definitions for Flare CMS
+// Global type definitions for Sci-Fi CMS
 
 // Cloudflare Workers environment bindings
 interface CloudflareBindings {

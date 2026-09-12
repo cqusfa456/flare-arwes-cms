@@ -229,7 +229,7 @@ export function createMagicLinkAuthPlugin(): Plugin {
     version: '1.0.0',
     description: 'Passwordless authentication via email magic links',
     author: {
-      name: 'Flare CMS Team',
+      name: 'Sci-Fi CMS Team',
       email: 'team@arwes.dev'
     },
     dependencies: ['email'],
@@ -361,7 +361,7 @@ function renderMagicLinkEmail(magicLink: string, expiryMinutes: number): string 
         </div>
 
         <div class="footer">
-          <p>This is an automated email from Flare CMS.</p>
+          <p>This is an automated email from Sci-Fi CMS.</p>
           <p>For security, this link can only be used once.</p>
         </div>
       </div>

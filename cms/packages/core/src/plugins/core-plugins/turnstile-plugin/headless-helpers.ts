@@ -2,7 +2,7 @@
  * Turnstile Headless Integration Helpers
  * 
  * Use these helpers in your React, Vue, or Angular applications
- * to integrate Cloudflare Turnstile with Flare CMS forms.
+ * to integrate Cloudflare Turnstile with Sci-Fi CMS forms.
  * 
  * @module headless-helpers
  * @clientside

@@ -1,12 +1,12 @@
 /**
  * Quill Rich Text Editor Plugin
  *
- * Provides Quill editor integration for rich text editing in Flare CMS
+ * Provides Quill editor integration for rich text editing in Sci-Fi CMS
  * https://quilljs.com/
  */
 
 import { PluginBuilder } from '../../sdk/plugin-builder'
-import type { Plugin } from '@flare-cms/core'
+import type { Plugin } from '@sci-fi-cms/core'
 
 /**
  * Quill Editor Configuration Options
@@ -370,13 +370,13 @@ export function createQuillEditorPlugin(): Plugin {
   const builder = PluginBuilder.create({
     name: 'quill-editor',
     version: '1.0.0',
-    description: 'Quill rich text editor integration for Flare CMS'
+    description: 'Quill rich text editor integration for Sci-Fi CMS'
   })
 
   // Add plugin metadata
   builder.metadata({
     author: {
-      name: 'Flare CMS Team',
+      name: 'Sci-Fi CMS Team',
       email: 'team@arwes.dev'
     },
     license: 'MIT',

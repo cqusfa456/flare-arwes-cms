@@ -1,8 +1,8 @@
 <!-- markdownlint-disable MD033 MD013 MD028 -->
 
-# ARWES × Flare CMS 功能总览
+# ARWES × Sci-Fi CMS 功能总览
 
-本文件详细介绍本项目的全部功能与特性，覆盖 **ARWES 框架**、**Flare CMS 内容管理**、**前端应用**、**运维部署** 四个层面。
+本文件详细介绍本项目的全部功能与特性，覆盖 **ARWES 框架**、**Sci-Fi CMS 内容管理**、**前端应用**、**运维部署** 四个层面。
 
 ---
 
@@ -20,7 +20,7 @@
   - [2.8 工具库 (tools)](#28-工具库)
   - [2.9 React 绑定](#29-react-绑定)
   - [2.10 Solid 绑定](#210-solid-绑定)
-- [3. Flare CMS 内容管理系统](#3-flare-cms-内容管理系统)
+- [3. Sci-Fi CMS 内容管理系统](#3-sci-fi-cms-内容管理系统)
   - [3.1 CMS Worker](#31-cms-worker)
   - [3.2 Collections 集合系统](#32-collections-集合系统)
   - [3.3 Admin 管理后台](#33-admin-管理后台)
@@ -51,7 +51,7 @@
 本项目是 [ARWES](https://arwes.dev) 科幻风格 UI 框架的完整工程化实现，包含：
 
 - **ARWES 框架内核**：23 个 TypeScript 包，提供动画、音效、科幻边框、动态背景、文字特效等
-- **Flare CMS**：自建 headless CMS（Cloudflare Worker），驱动内容管理
+- **Sci-Fi CMS**：自建 headless CMS（Cloudflare Worker），驱动内容管理
 - **Astro 7 文档站**：静态优先 + React islands + Tailwind
 - **Cloudflare 边缘部署**：Workers + Pages + D1 + KV + (R2/B2)
 
@@ -186,15 +186,15 @@
 
 ---
 
-## 3. Flare CMS 内容管理系统
+## 3. Sci-Fi CMS 内容管理系统
 
-Flare CMS 是 fork 自 SonicJS 的 headless CMS，运行在 Cloudflare Workers 上。
+Sci-Fi CMS 是 fork 自 SonicJS 的 headless CMS，运行在 Cloudflare Workers 上。
 
 ### 3.1 CMS Worker
 
 **`cms/packages/cms`** — Cloudflare Worker 应用
 
-- `createFlareApp`：应用工厂（Hono 框架）
+- `createSciFiApp`：应用工厂（Hono 框架）
 - D1 数据库绑定（`DB`）、KV 缓存（`CACHE_KV`）、媒体存储（`MEDIA_BUCKET` binding 或 S3 兼容适配器）
 - `scheduled` 处理器：定时发布内容（cron 每分钟），与 HTTP 请求走同一套 provider 解析
 - 存储后端由 `STORAGE_BACKEND` 选择（`r2` / `b2` / `s3`）；所选后端配置不完整时**启动即报错并列出缺失变量**，不会静默回退到 R2
@@ -244,16 +244,16 @@ Schema 字段类型：`string`、`number`、`boolean`、`date`、`datetime`、`e
 
 **Admin UI（Settings → Storage）**：provider 由环境变量决定，因此 UI **只读**展示当前生效后端，并并列展示全部支持的 provider 及各自所需变量；提供"Test connection"按钮调用 `POST /admin/settings/storage/test`。媒体大小上限、备份频率、允许类型等仍可编辑。旧的 `storageProvider`（`cloudflare`/`s3`/`local`）下拉框已移除 —— 它保存到 D1 后从不被后端读取。
 
-**`cms/packages/cms/src/storage/b2-storage.ts`** 现为兼容垫片，转发到 `@flare-cms/core` 的 `S3Storage`。
+**`cms/packages/cms/src/storage/b2-storage.ts`** 现为兼容垫片，转发到 `@sci-fi-cms/core` 的 `S3Storage`。
 
 ### 3.5 Astro 内容加载器
 
-**`@flare-cms/astro`** — Astro Content Layer 集成
+**`@sci-fi-cms/astro`** — Astro Content Layer 集成
 
-- `flareLoader`：构建时从 CMS API 拉取集合到 Astro content store
+- `sciFiLoader`：构建时从 CMS API 拉取集合到 Astro content store
 - 客户端过滤（`filter: { status: 'published' }`）
 - 日期消毒、schema 校验、构建缓存
-- `flareSchemaToZod`：CMS schema → Zod schema
+- `sciFiSchemaToZod`：CMS schema → Zod schema
 - **注**：类型内联（`types-cms.ts`）使包自包含，不依赖 core 类型图
 
 ### 3.6 认证与 API Tokens
@@ -268,11 +268,11 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 
 数据模型（迁移 `038_sites_registry.sql` + `039_site_hosting_providers.sql` + `040_site_build_environment.sql`）：`sites`（站点）→ `site_domains`（域名绑定），`content.site_id` 决定内容归属，`api_tokens.site_id` 把构建 token 钉在单个站点上。
 
-- **站点注册表**（`sites`）：slug、托管类型、Worker 名/Pages 项目名、Git 仓库/分支、Deploy Hook、构建命令/deploy 命令/输出目录/根目录/Node 版本、**构建期环境变量**（`build_env` JSON + CMS 自动生成的 `PUBLIC_FLARE_*`）、内容前缀、启用状态、最近一次构建结果
+- **站点注册表**（`sites`）：slug、托管类型、Worker 名/Pages 项目名、Git 仓库/分支、Deploy Hook、构建命令/deploy 命令/输出目录/根目录/Node 版本、**构建期环境变量**（`build_env` JSON + CMS 自动生成的 `PUBLIC_SCIFI_*`）、内容前缀、启用状态、最近一次构建结果
 - **托管类型与页面**：Admin → Sites **按类型分组**（Worker / Pages / External，各带计数与说明），支持 `?type=<provider>` 过滤；标签、可用字段与可执行动作全部来自 `services/site-providers.ts` 的元数据，因此 UI 不会给出该 provider 做不到的操作
 - **构建**：Worker 站点通过 **Workers Builds API** 直接触发（`POST /accounts/{id}/builds/triggers/{uuid}/builds`，带分支，返回 build uuid），**不再强制依赖 Deploy Hook**；Pages 站点仍走 **Deploy Hook**。构建由 Cloudflare 执行、CMS 只负责触发与回显，所以 GitHub Actions 里不再有站点构建。结果（queued / failed + 错误原因）写回 `sites.last_build_*`，并记录触发方式（`api` / `hook`）
 - **构建配置下发**：`syncBuildConfig()` 把构建命令/deploy 命令/根目录 `PATCH` 到 Workers Builds **trigger**（或 Pages 项目的 `build_config`），**并同时下发构建期环境变量**到 trigger（`PATCH .../triggers/{uuid}/environment_variables`）
-- **构建期环境变量**：CMS 自动生成 `PUBLIC_FLARE_API_URL`（CMS 自身地址，站点可固定、否则取 `FLARE_API_URL` 或请求 origin）、`PUBLIC_FLARE_SITE`（站点 slug）、`PUBLIC_FLARE_API_TOKEN`（**只读、限定该站点**的 API token，可一键轮换）。站点可在 Site settings 里用同名变量覆盖任意一个；其他变量（如运维自己在控制台加的）不被触碰
+- **构建期环境变量**：CMS 自动生成 `PUBLIC_SCIFI_API_URL`（CMS 自身地址，站点可固定、否则取 `SCIFI_API_URL` 或请求 origin）、`PUBLIC_SCIFI_SITE`（站点 slug）、`PUBLIC_SCIFI_API_TOKEN`（**只读、限定该站点**的 API token，可一键轮换）。站点可在 Site settings 里用同名变量覆盖任意一个；其他变量（如运维自己在控制台加的）不被触碰
 - **域名绑定**：通过 **Cloudflare API** 真实创建/删除自定义域名，并把校验状态（pending / active / error + 失败原因）镜像到 `site_domains`；支持「从 Cloudflare 刷新」以采纳在控制台手工添加的域名、并把云端已消失的标记为 `removed`；可指定 primary 域名
 - **预设**：`services/site-presets.ts` 用 `{{slug}}` 占位描述本仓库的构建契约，可一键导入缺失的站点：`apps/docs` 同时提供 **Worker 直传**与 **Pages 直传**两条预设（都走 `github-actions` 模式），新增一个 Astro 应用只需加一条预设，不必改代码
 - **部署模式**（`sites.deploy_mode`，留空按 provider 取默认）：`workers-builds`（Cloudflare 从 Git 构建，CMS 下发构建环境变量）/ **`github-actions`**（CMS dispatch `.github/workflows/deploy-site.yml`，runner 构建后直传 Worker 或 `wrangler pages deploy` —— **Cloudflare 侧完全不需要 Git 连接，也不需要 Deploy Hook**）/ `deploy-hook`（Pages 默认）/ `direct-upload`（你自己构建，CMS 只登记）。能力矩阵按模式收窄，UI 不会给出该模式做不到的按钮
@@ -305,7 +305,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **构建去重**：Workers Builds 在已有排队/初始化中的构建时会返回同一个构建并带 `already_exists: true`，CMS 视为成功而非冲突
 - **Deploy Hook 形状不同**：Pages 返回 `{ id, url }`，Workers 返回 `{ success, result: { build_uuid } }`；CMS 按 provider 解析，并**拒绝串用的 hook**（Worker 站点填 Pages hook 会直接报错，而不是静默不触发）
 - **Worker 可以不配 Deploy Hook**：CMS 优先用 Builds API 触发（要显式给分支），只有在没有 trigger 或 API 失败时才回落到 Deploy Hook；两者都不可用时给出可执行的报错
-- **构建环境变量**：`PUBLIC_FLARE_*` 由 CMS 计算并下发到 trigger。缺了它们，Astro 构建会静默回落到 `http://localhost:8787`，构建「成功」但内容为空——这正是把它们并入构建配置下发的原因
+- **构建环境变量**：`PUBLIC_SCIFI_*` 由 CMS 计算并下发到 trigger。缺了它们，Astro 构建会静默回落到 `http://localhost:8787`，构建「成功」但内容为空——这正是把它们并入构建配置下发的原因
 - **构建 token 钉站点**：自动签发的 token 带 `api_tokens.site_id`，服务端在解析内容作用域时**优先于** `X-Site`，因此一个站点的构建 token 改 `X-Site` 也读不到别的站点内容；轮换是显式动作（`rotateToken`）
 - **Worker 不能自己构建**：Workers Builds 是 **Git 集成**（GitHub/GitLab），Worker 运行时没有构建工具链与可写文件系统，跑不了 `astro build`。不连 Git 的形态是 **Direct Upload**（本地构建 → `wrangler deploy` / assets-upload 三步 API 直接推版本），此时 CMS 负责域名与内容；要让 Cloudflare 自己构建且不连 Git 只能用 **Containers**（付费计划）。CMS 在没有 trigger 时会同时给出"连 Git"和"本地 direct upload"两条路，而不是只报错
 
@@ -331,7 +331,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **写归属**：后台内容表单新增 **Site 选择器**（未注册任何站点时整块隐藏，单租户部署表单不变）；`POST /api/content` 接受 `siteId`（id）或 `site`（slug）；不传则创建共享内容；站点不存在返回 400
 - **不会误清空归属**：更新路径仅在表单**确实提交了** `site_id` 字段时才改写，因此任何没有渲染该字段的表单（如校验失败回显）都不会把已有归属静默清空；复制内容会继承原内容的站点
 - **可见性回显**：响应 `meta.siteScope` 返回 `{ mode, siteSlug, identifiedBy, reason }`，便于排查「构建出来是空的」
-- **构建端接入**：`@flare-cms/astro` 的 `flareLoader` / `flareLiveLoader` 新增 `site` 选项（发送 `X-Site`）；未识别到站点时会打印明确的告警而不是静默出空页面
+- **构建端接入**：`@sci-fi-cms/astro` 的 `sciFiLoader` / `sciFiLiveLoader` 新增 `site` 选项（发送 `X-Site`）；未识别到站点时会打印明确的告警而不是静默出空页面
 
 **代码**：`services/content-site-scope.ts`（作用域解析 + `resolveSiteId`）、`utils/query-filter.ts`（`internalAnd` 支持）、`routes/api.ts` 与 `routes/api-content-crud.ts`（读隔离 + 写归属）、`routes/admin-content.ts` 与 `templates/pages/admin-content-form.template.ts`（后台归属编辑）。
 
@@ -358,7 +358,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - `assets.html_handling = "drop-trailing-slash"`：Astro 用 `build.format: 'directory'`（页面在 `about/index.html`），该策略让 `/about` **直接**提供该文件（只有 `/about/` 才重定向），URL 稳定且**不需要 Worker 参与**。默认的 `auto-trailing-slash` 会把 `/about` 307 到 `/about/`；`"none"` 则要求 Worker 解析每个页面（每请求计费）
 - `assets.not_found_handling = "404-page"`：未命中时由资源层返回最近的 `404.html`（404 状态），同样不调用 Worker
 - 只处理 `GET`/`HEAD`，其他方法 405；`SITE_ROUTES`/`DEFAULT_SITE_PREFIX` 仍保留在 `src/worker.ts`——**但"一个 Worker 服务多个站点"必须开启 `run_worker_first`，从而每个请求都计费**，因此单站点默认走免费路径；要一 Worker 多站点就显式开回 `run_worker_first` 并接受计费，或者干脆每站点一个 Worker（CMS 的 `sites.cfProjectName` 正是这个模型）
-- `scripts/build-worker.sh` — 构建链：先建 cms 工作区（core + `@flare-cms/astro`），再建 ARWES packages，最后 `astro build`。**Cloudflare 无法在 Worker 里跑这条链**（Workers Builds 是 Git 集成，Worker 无构建工具链），不连 Git 时用 `npm run worker:deploy`（Direct Upload）本地/CI 构建后直传
+- `scripts/build-worker.sh` — 构建链：先建 cms 工作区（core + `@sci-fi-cms/astro`），再建 ARWES packages，最后 `astro build`。**Cloudflare 无法在 Worker 里跑这条链**（Workers Builds 是 Git 集成，Worker 无构建工具链），不连 Git 时用 `npm run worker:deploy`（Direct Upload）本地/CI 构建后直传
 
 组件库（`src/ui/`）：`Header`（导航栏+设置+音效开关）、`Nav`（侧边栏菜单）、`Button`、`Card`、`CodeBlock`（prism 高亮）、`Table`、`Modal`、`Breadcrumbs`、`FrameAlert` 等
 
@@ -421,7 +421,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 
 **`scripts/configure-secrets.mjs`** — 从 OAuth 状态创建/更新部署 secrets：
 
-- `CF_API_TOKEN` / `CF_ACCOUNT_ID` / `CF_D1_DATABASE_ID` / `CF_R2_BUCKET_NAME` / `CF_KV_NAMESPACE_ID` / `JWT_SECRET` / `FLARE_API_URL` / `PAGES_PROJECT_NAME`
+- `CF_API_TOKEN` / `CF_ACCOUNT_ID` / `CF_D1_DATABASE_ID` / `CF_R2_BUCKET_NAME` / `CF_KV_NAMESPACE_ID` / `JWT_SECRET` / `SCIFI_API_URL` / `PAGES_PROJECT_NAME`
 
 **`scripts/set-b2-secrets.mjs`** — B2 凭据写入工具。
 
@@ -454,12 +454,12 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 │  repo: cqusfa456/sci-fi-cms                                  │
 │  push main → Actions (deploy.yml: 只部署 CMS Worker)          │
 │  Secrets: CF_API_TOKEN / CF_ACCOUNT_ID / D1/KV IDs /        │
-│           JWT_SECRET / FLARE_API_URL / B2_* / S3_*          │
+│           JWT_SECRET / SCIFI_API_URL / B2_* / S3_*          │
 └───────────────────────────┬─────────────────────────────────┘
                             │ 仅 CMS Worker
                    ┌────────▼─────────┐
                    │  CMS Worker     │
-                   │  flare-cms      │
+                   │  sci-fi-cms      │
                    │  D1 (内容/站点) │
                    │  KV (缓存)      │
                    │  R2/B2/S3 (媒体)│
@@ -483,8 +483,8 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
                        │  build-time
                        ▼
                 ┌──────────────────┐
-                │  @flare-cms/astro│
-                │  flareLoader     │
+                │  @sci-fi-cms/astro│
+                │  sciFiLoader     │
                 └──────────────────┘
 
 本地开发:

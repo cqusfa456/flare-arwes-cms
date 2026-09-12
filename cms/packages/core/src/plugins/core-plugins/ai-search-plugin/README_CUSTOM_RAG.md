@@ -15,7 +15,7 @@
 
 ## Architecture: Custom RAG with Vectorize
 
-Unlike traditional approaches that require manual dashboard configuration, this plugin implements a **Custom RAG (Retrieval-Augmented Generation)** pipeline that works automatically for any Flare CMS user.
+Unlike traditional approaches that require manual dashboard configuration, this plugin implements a **Custom RAG (Retrieval-Augmented Generation)** pipeline that works automatically for any Sci-Fi CMS user.
 
 ### Components:
 
@@ -29,7 +29,7 @@ Unlike traditional approaches that require manual dashboard configuration, this 
 ### Step 1: Run Setup Script
 
 ```bash
-cd my-flare-app
+cd my-sci-fi-cms-app
 bash ../packages/core/src/plugins/core-plugins/ai-search-plugin/setup/vectorize-setup.sh
 ```
 
@@ -146,7 +146,7 @@ GET /api/search/suggest?q=cloudflare
 ### Search from Code
 
 ```typescript
-import { AISearchService } from '@flare-cms/core/plugins'
+import { AISearchService } from '@sci-fi-cms/core/plugins'
 
 const service = new AISearchService(db, ai, vectorize)
 
@@ -415,7 +415,7 @@ No migration needed - this IS the implementation!
 
 - [Cloudflare Vectorize](https://developers.cloudflare.com/vectorize/)
 - [Workers AI](https://developers.cloudflare.com/workers-ai/)
-- [Flare CMS AI Search](./README.md)
+- [Sci-Fi CMS AI Search](./README.md)
 
 ### Issues:
 
@@ -438,7 +438,7 @@ No migration needed - this IS the implementation!
 
 ✅ **Custom RAG with Vectorize delivers**:
 - No manual dashboard setup
-- Works for ANY Flare CMS user
+- Works for ANY Sci-Fi CMS user
 - Full semantic search capabilities
 - Excellent performance
 - Cost-effective (likely FREE)

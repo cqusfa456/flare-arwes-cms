@@ -118,7 +118,7 @@ apiSystemRoutes.get('/info', (c) => {
   const storageInfo = getStorageInfo(c.env)
 
   return c.json({
-    name: 'Flare CMS',
+    name: 'Sci-Fi CMS',
     version: appVersion,
     description: 'Modern headless CMS built on Cloudflare Workers',
     endpoints: {

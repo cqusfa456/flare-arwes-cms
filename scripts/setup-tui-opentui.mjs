@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * ARWES + Flare CMS 初始化控制台 (OpenTUI)
+ * ARWES + Sci-Fi CMS 初始化控制台 (OpenTUI)
  *
  * 以 GitHub 为唯一入口登录，之后进入主界面，像一个完整 TUI 应用：
  *
  *   ╭────────────────────────────────────────────╮
- *   │  ARWES × Flare CMS 控制台                   │
+ *   │  ARWES × Sci-Fi CMS 控制台                   │
  *   │  主菜单：                                    │
  *   │    ● Cloudflare 状态                        │
  *   │      GitHub Actions 状态                    │
@@ -137,7 +137,7 @@ const makeSelect = (options, opts = {}) =>
 
 // 全屏布局：顶部标题、中部内容、底部状态
 const mainBox = makeBox({
-  title: '🚀 ARWES + Flare CMS 控制台',
+  title: '🚀 ARWES + Sci-Fi CMS 控制台',
   flexDirection: 'column',
   titleColor: '#00ffcc'
 })
@@ -685,7 +685,7 @@ const panelCloudflare = async () => {
       { name: '创建 D1 数据库', value: 'd1' },
       { name: '创建 R2 桶', value: 'r2' },
       { name: '创建 KV namespace', value: 'kv' },
-      { name: '配置账号 secrets（CF_ACCOUNT_ID / FLARE_API_URL 等）', value: 'secrets' },
+      { name: '配置账号 secrets（CF_ACCOUNT_ID / SCIFI_API_URL 等）', value: 'secrets' },
       { name: '返回主菜单', value: 'exit' }
     ])
     if (action === BACK) return
@@ -842,12 +842,12 @@ const panelCloudflare = async () => {
         cfAccountId = accountId.trim() // 存入内存供 wrangler 使用
         await saveSecret('CF_ACCOUNT_ID', cfAccountId)
       }
-      const flareUrl = await askInput('CMS Worker URL（如 https://flare-cms.xxx.workers.dev）:', {
-        value: 'https://flare-cms.your-subdomain.workers.dev'
+      const sciFiUrl = await askInput('CMS Worker URL（如 https://sci-fi-cms.xxx.workers.dev）:', {
+        value: 'https://sci-fi-cms.your-subdomain.workers.dev'
       })
-      if (flareUrl === BACK) continue
-      if (flareUrl.trim() && !flareUrl.includes('your-subdomain')) {
-        await saveSecret('FLARE_API_URL', flareUrl.trim())
+      if (sciFiUrl === BACK) continue
+      if (sciFiUrl.trim() && !sciFiUrl.includes('your-subdomain')) {
+        await saveSecret('SCIFI_API_URL', sciFiUrl.trim())
       }
       setStatus('✓ Cloudflare 账号配置已保存')
       await sleep(600)
@@ -1032,7 +1032,7 @@ const panelSecrets = async () => {
 // ===========================================================================
 
 const mainMenu = async () => {
-  setTitle('🚀 ARWES + Flare CMS 控制台')
+  setTitle('🚀 ARWES + Sci-Fi CMS 控制台')
   setStatus('选择功能，Esc 返回上层，Ctrl+C 退出')
 
   const sel = await askSelect('主菜单:', [
@@ -1048,7 +1048,7 @@ const mainMenu = async () => {
 
 const main = async () => {
   try {
-    setTitle('🚀 ARWES + Flare CMS 控制台')
+    setTitle('🚀 ARWES + Sci-Fi CMS 控制台')
     setStatus('正在连接 GitHub...')
 
     // 唯一入口：GitHub WebAuth 登录

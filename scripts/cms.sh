@@ -1,5 +1,5 @@
 #!/bin/sh
-# Flare CMS 本地开发启动脚本
+# Sci-Fi CMS 本地开发启动脚本
 # 用法: sh ./scripts/cms.sh [dev|build|deploy|migrate|seed]
 
 set -e
@@ -8,18 +8,18 @@ cd "$(dirname "$0")/../cms"
 
 case "$1" in
   dev)
-    echo "▶ 启动 Flare CMS 本地服务 (http://localhost:8787)"
+    echo "▶ 启动 Sci-Fi CMS 本地服务 (http://localhost:8787)"
     echo "  Admin UI: http://localhost:8787/admin"
     cd packages/cms
     npx wrangler dev --local --port 8787
     ;;
   build)
-    echo "▶ 构建 Flare CMS 包"
+    echo "▶ 构建 Sci-Fi CMS 包"
     pnpm build
     pnpm build:astro
     ;;
   deploy)
-    echo "▶ 部署 Flare CMS 到 Cloudflare Workers"
+    echo "▶ 部署 Sci-Fi CMS 到 Cloudflare Workers"
     cd packages/cms
     npx wrangler deploy --env production
     ;;

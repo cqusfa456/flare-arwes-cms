@@ -20,7 +20,7 @@ import manifest from './manifest.json'
  * 
  * @example
  * ```typescript
- * import { AISearchService } from '@flare-cms/core/plugins'
+ * import { AISearchService } from '@sci-fi-cms/core/plugins'
  * 
  * const service = new AISearchService(db, aiSearch)
  * const results = await service.search({

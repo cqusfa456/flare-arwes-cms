@@ -28,7 +28,7 @@ function safeGetEnv(key: string): string | undefined {
 export function getDefaultTelemetryConfig(): TelemetryConfig {
   return {
     enabled: true,
-    host: safeGetEnv('FLARE_TELEMETRY_ENDPOINT') || 'https://stats.flarecms.dev',
+    host: safeGetEnv('SCIFI_TELEMETRY_ENDPOINT') || 'https://stats.flarecms.dev',
     debug: safeGetEnv('NODE_ENV') === 'development'
   }
 }
@@ -38,7 +38,7 @@ export function getDefaultTelemetryConfig(): TelemetryConfig {
  */
 export function isTelemetryEnabled(): boolean {
   // Check for explicit opt-out
-  const telemetryEnv = safeGetEnv('FLARE_TELEMETRY')
+  const telemetryEnv = safeGetEnv('SCIFI_TELEMETRY')
   if (telemetryEnv === 'false' || telemetryEnv === '0' || telemetryEnv === 'disabled') {
     return false
   }

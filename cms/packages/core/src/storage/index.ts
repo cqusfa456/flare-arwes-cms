@@ -3,7 +3,7 @@
  *
  * @example Worker entry point
  * ```ts
- * import { resolveStorage } from '@flare-cms/core'
+ * import { resolveStorage } from '@sci-fi-cms/core'
  *
  * const { bucket, info } = resolveStorage(env)
  * app.fetch(request, { ...env, MEDIA_BUCKET: bucket, STORAGE_INFO: info }, ctx)

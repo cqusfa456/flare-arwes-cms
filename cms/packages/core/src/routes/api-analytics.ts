@@ -1,7 +1,7 @@
 /**
  * Analytics Tracking API
  *
- * POST /api/track — receives beacon from <FlareAnalytics /> component
+ * POST /api/track — receives beacon from <SciFiAnalytics /> component
  * GET  /api/analytics/* — admin-only aggregated stats (HTMX endpoints)
  *
  * Privacy-first: no cookies, no PII, IP hashed with daily rotating salt

@@ -21,13 +21,17 @@ on:
 #                           Configuration: Edit, Workers Scripts: Read,
 #                           Zone: Read and, for Pages sites, Pages: Edit.
 #                           Create it with: node scripts/set-cf-token.mjs runtime
-#   CF_D1_DATABASE_ID     — D1 database ID (create: wrangler d1 create)
-#   CF_R2_BUCKET_NAME     — R2 bucket name (create: wrangler r2 bucket create)
-#   CF_KV_NAMESPACE_ID    — KV namespace ID (create: wrangler kv namespace create)
 #   JWT_SECRET            — CMS auth secret
-#   FLARE_API_URL         — deployed CMS worker URL
-#   FLARE_API_TOKEN       — (optional) read-only CMS API token
+#   SCIFI_API_URL         — deployed CMS worker URL
+#   SCIFI_API_TOKEN       — (optional) read-only CMS API token
 #   PAGES_PROJECT_NAME    — (optional) Pages project name, default: arwes-docs
+#
+# The D1 database (sci-fi-cms-db), KV namespace (sci-fi-cms-cache) and — when R2
+# is the media backend — the R2 bucket (sci-fi-cms-media) are created by this
+# workflow when they are missing; see scripts/cf-resources.py. CF_API_TOKEN
+# therefore needs D1, KV and R2 write permissions. The former
+# CF_D1_DATABASE_ID / CF_KV_NAMESPACE_ID / CF_R2_BUCKET_NAME secrets are
+# obsolete and ignored.
 # Storage backend (optional — only when using an S3-compatible backend
 # instead of R2). STORAGE_BACKEND selects the provider:
 #   STORAGE_BACKEND=b2  → required: B2_BUCKET, B2_ACCESS_KEY_ID,
@@ -68,6 +72,17 @@ jobs:
 
       # Inject all private values from GitHub secrets into the local
       # (ephemeral) wrangler.toml for this build. Nothing is persisted.
+      #
+      # The D1 database, the KV namespace and — when R2 is the media backend —
+      # the R2 bucket are resolved by NAME and created when missing
+      # (scripts/cf-resources.py). Deploying onto a fresh account, or onto one
+      # whose resources were deleted, therefore needs no manual step.
+      #
+      # The old CF_D1_DATABASE_ID / CF_KV_NAMESPACE_ID / CF_R2_BUCKET_NAME
+      # secrets are obsolete and deliberately ignored: an id whose resource no
+      # longer exists is exactly what used to fail this deploy with an opaque
+      # binding error. Resources are addressed by name (D1_NAME / KV_NAME /
+      # R2_NAME below).
       - name: Configure Cloudflare resources from secrets
         working-directory: cms/packages/cms
         env:
@@ -84,37 +99,30 @@ jobs:
           S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           S3_REGION: ${{ secrets.S3_REGION }}
           S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
+          # wrangler authenticates with these; cf-resources.py creates the
+          # resources with them too.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          D1_NAME: sci-fi-cms-db
+          KV_NAME: sci-fi-cms-cache
+          R2_NAME: sci-fi-cms-media
         run: |
-          if [ -z "${{ secrets.CF_D1_DATABASE_ID }}" ]; then
-            echo "::error::CF_D1_DATABASE_ID secret is required. Create a D1 database with 'wrangler d1 create' and add its ID as a secret."
-            exit 1
-          fi
-          if [ "$STORAGE_BACKEND" != "b2" ] && [ "$STORAGE_BACKEND" != "s3" ] && [ -z "${{ secrets.CF_R2_BUCKET_NAME }}" ]; then
-            echo "::error::CF_R2_BUCKET_NAME secret is required (or set STORAGE_BACKEND=b2/s3 to use an S3-compatible backend)."
-            exit 1
-          fi
-          if [ -z "${{ secrets.CF_KV_NAMESPACE_ID }}" ]; then
-            echo "::error::CF_KV_NAMESPACE_ID secret is required. Create a KV namespace with 'wrangler kv namespace create' and add its ID as a secret."
-            exit 1
-          fi
-          sed -i "s/database_id = \"[^\"]*\"/database_id = \"${{ secrets.CF_D1_DATABASE_ID }}\"/g" wrangler.toml
-          # 注意：此行必须用行首锚定 ^，否则会误伤 database_id 行中的 “id = " 子串
-          sed -i "s/^id = \"[^\"]*\"/id = \"${{ secrets.CF_KV_NAMESPACE_ID }}\"/g" wrangler.toml
+          set -euo pipefail
 
           # Non-R2 storage backend (optional, from secrets). Removes the R2
           # binding and injects STORAGE_BACKEND + the provider's variables.
           if [ "$STORAGE_BACKEND" = "b2" ] || [ "$STORAGE_BACKEND" = "s3" ]; then
             python3 "${{ github.workspace }}/scripts/storage-config.py" wrangler.toml || exit 1
-
-          else
-            sed -i "s/bucket_name = \"[^\"]*\"/bucket_name = \"${{ secrets.CF_R2_BUCKET_NAME }}\"/g" wrangler.toml
+            export SKIP_R2=1
           fi
+
+          python3 "${{ github.workspace }}/scripts/cf-resources.py" wrangler.toml || exit 1
 
           # JWT_SECRET for the production worker
           if [ -z "${{ secrets.JWT_SECRET }}" ]; then
             echo "::warning::JWT_SECRET secret not set. CMS auth will use a default value."
           fi
-          echo "Cloudflare resources configured from secrets"
+          echo "Cloudflare resources configured"
 
       # Smoke test only — this does NOT migrate production.
       #
@@ -216,8 +224,8 @@ jobs:
 #        build_command  : sh ./apps/docs/scripts/build-worker.sh
 #        deploy_command : cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy
 #        root_directory : /
-#      and the build environment (PUBLIC_FLARE_API_URL, PUBLIC_FLARE_SITE and a
-#      read-only PUBLIC_FLARE_API_TOKEN scoped to that site) on the trigger, so a
+#      and the build environment (PUBLIC_SCIFI_API_URL, PUBLIC_SCIFI_SITE and a
+#      read-only PUBLIC_SCIFI_API_TOKEN scoped to that site) on the trigger, so a
 #      build knows which CMS and which site it is building for.
 #   3. Press "Build now". Worker sites build through the Builds API
 #      (POST .../builds/triggers/{uuid}/builds), so no Deploy Hook is required;
