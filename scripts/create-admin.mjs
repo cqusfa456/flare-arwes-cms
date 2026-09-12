@@ -43,6 +43,7 @@ const value = (name, fallback = '') => {
 }
 
 const local = flag('local')
+const printSql = flag('print-sql')
 const databaseName = value('database', process.env.CF_D1_DATABASE_NAME || 'sci-fi-cms-db')
 let email = (value('email', process.env.SCIFI_ADMIN_EMAIL || '') || '').trim().toLowerCase()
 let username = (value('username', process.env.SCIFI_ADMIN_USERNAME || '') || '').trim() || 'admin'
@@ -113,7 +114,6 @@ const main = async () => {
     password = await prompt('管理员密码（至少 8 位，输入不回显）: ', { hidden: true })
   }
 
-  const databaseId = resolveDatabaseId()
   const passwordHash = hashPassword(password)
   const now = Date.now()
   const id = `admin-${now}-${randomUUID().slice(0, 8)}`
@@ -128,6 +128,14 @@ const main = async () => {
     `WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = ${sqlQuote(email)});`
   ].join('\n')
 
+  // --print-sql is a dry run: no Cloudflare call, no wrangler, just the statement
+  // that would be executed (useful for review and for tests).
+  if (printSql) {
+    console.log(sql)
+    return
+  }
+
+  const databaseId = resolveDatabaseId()
   console.log(`D1 ${databaseName} (${databaseId}) — ${local ? 'local' : 'remote'}`)
   try {
     const out = wrangler([
