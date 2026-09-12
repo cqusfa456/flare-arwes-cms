@@ -25,7 +25,7 @@ set -uo pipefail
 API='https://api.cloudflare.com/client/v4'
 RENEW_WITHIN_DAYS="${RENEW_WITHIN_DAYS:-30}"
 DRY_RUN="${DRY_RUN:-0}"
-WORKER_DIR="${WORKER_DIR:-cms/packages/cms}"
+WORKER_DIR="${WORKER_DIR:-$SCRIPT_DIR/../cms/packages/cms}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 fail() {
