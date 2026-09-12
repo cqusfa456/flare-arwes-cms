@@ -11,6 +11,14 @@
  *
  * See https://developers.cloudflare.com/fundamentals/api/how-to/account-owned-token-template/
  *
+ * Permission names and scopes are documented at
+ * https://developers.cloudflare.com/fundamentals/api/reference/permissions/ —
+ * note that this reference contains two naming generations (e.g. "Cloudflare
+ * Pages: Edit" and an older "Pages Read/Write"). The template URL carries
+ * *keys*, not names, and the token form silently drops keys it does not
+ * recognise, so when in doubt ask the API for the truth:
+ *   GET /user/tokens/permission_groups   → id (= key), name, scopes
+ *
  * Two tokens are needed by this project and they are NOT interchangeable:
  *
  *   * `ci`      — used by the GitHub Actions deploy job (`wrangler deploy`,
@@ -59,10 +67,17 @@ export const TOKEN_TEMPLATES = {
       { key: 'dns', type: 'edit' },
       // The CMS is the control plane for site builds, and the deploy workflow
       // installs this same token on the Worker when CF_SITES_API_TOKEN is not
-      // set — so without these two the fallback path could not push a build
-      // environment or trigger a build. Confirm both rows on the dashboard
-      // page: Cloudflare publishes no key for either.
+      // set — so without these the fallback path could not push a build
+      // environment, trigger a build, or deploy a Pages project.
+      //
+      // Cloudflare publishes no template key for either, and the token form
+      // drops unknown keys, so a wrong guess fails silently. Names come from
+      // https://developers.cloudflare.com/fundamentals/api/reference/permissions/
+      // ("Workers CI: Edit", "Cloudflare Pages: Edit", account scope). That
+      // reference also lists an older "Pages" generation, so both spellings are
+      // sent and the page pre-fills whichever it knows.
       { key: 'workers_ci', type: 'edit', inferred: true },
+      { key: 'cloudflare_pages', type: 'edit', inferred: true },
       { key: 'pages', type: 'edit', inferred: true }
     ],
     checklist: [
@@ -74,8 +89,8 @@ export const TOKEN_TEMPLATES = {
       'Workers Routes: Edit ← 域级权限，绑定自定义域名必需',
       'Zone: Read（按主机名解析所属 zone）',
       'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）',
-      'Workers CI: Edit（即 Workers Builds；**官方未公布 key，页面不会预填这一行**，请手动 “Add more” 添加：Workers CI → Edit）',
-      'Pages: Edit（**同样不会预填**，请手动添加：Pages → Edit；不做 Pages 部署可跳过）'
+      'Workers CI: Edit（即 Workers Builds；**官方未公布 key，页面可能不会预填**，没有就手动 “Add more” 添加）',
+      'Cloudflare Pages: Edit（列表里也可能显示为 Pages；**同样可能不会预填**，请手动确认。不做 Pages 部署可跳过）'
     ]
   },
   runtime: {
@@ -89,20 +104,22 @@ export const TOKEN_TEMPLATES = {
       // Bind / unbind Worker custom domains.
       { key: 'workers_routes', type: 'edit' },
       // The permissions reference lists this permission as "Workers CI"
-      // (Cloudflare's name for Workers Builds) but publishes no key for it.
-      // Keys follow the snake_case display name, so this is the expected value
-      // — flagged as inferred so the UI asks the user to confirm the row.
+      // (Cloudflare's name for Workers Builds) but publishes no key for it, and
+      // the form drops unknown keys. Keys follow the snake_case display name, so
+      // this is the expected value — flagged as inferred.
       { key: 'workers_ci', type: 'edit', inferred: true },
       // Only needed when the CMS also manages Cloudflare Pages sites (domains
-      // and build config). Same caveat as above: confirm the row on the page.
+      // and build config). The reference carries two generations of this name
+      // ("Cloudflare Pages" and "Pages"), so both spellings are sent.
+      { key: 'cloudflare_pages', type: 'edit', inferred: true },
       { key: 'pages', type: 'edit', inferred: true }
     ],
     checklist: [
       'Workers Scripts: Read（解析 Worker tag）',
       'Zone: Read（按主机名解析所属 zone）',
       'Workers Routes: Edit（绑定/解绑自定义域名）',
-      'Workers CI: Edit（即 Workers Builds；触发构建、下发构建环境变量。**官方未公布 key，页面不会预填**，请手动添加）',
-      'Pages: Edit（仅当还用 CMS 管理 Pages 站点时。**同样不会预填**，请手动添加）'
+      'Workers CI: Edit（即 Workers Builds；触发构建、下发构建环境变量。**官方未公布 key，页面可能不会预填**，请手动确认）',
+      'Cloudflare Pages: Edit（也可能显示为 Pages；仅当还用 CMS 管理 Pages 站点时。**同样可能不会预填**，请手动确认）'
     ]
   }
 }
