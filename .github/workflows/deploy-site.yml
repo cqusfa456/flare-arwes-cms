@@ -53,9 +53,9 @@ on:
         default: main
         type: string
       node_version:
-        description: Node.js version
+        description: Node.js version (Astro 7 requires >= 22.12; the CMS sends the site's recorded nodeVersion)
         required: false
-        default: "20"
+        default: "22"
         type: string
 
 # One deploy per site at a time: two uploads racing would publish whichever

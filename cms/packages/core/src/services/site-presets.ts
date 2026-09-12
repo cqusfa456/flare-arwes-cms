@@ -21,6 +21,8 @@ export interface SitePreset {
   provider: SiteProvider
   /** How the build runs: null = the provider default. */
   deployMode?: SiteDeployMode
+  /** Node version the build needs; the workflow defaults to 22 (Astro 7 needs >= 22.12). */
+  nodeVersion?: string
   /** Worker name or Pages project name. */
   cfProjectName: string
   description: string
@@ -50,6 +52,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     slug: 'arwes-docs',
     provider: 'cloudflare-worker',
     deployMode: 'github-actions',
+    nodeVersion: '22',
     cfProjectName: 'arwes-docs-worker',
     description:
       'Arwes documentation site. Astro builds into apps/docs/build and the Worker serves it from static assets, so one build can answer on several custom domains.',
@@ -72,6 +75,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     slug: 'arwes-docs-pages',
     provider: 'cloudflare-pages',
     deployMode: 'github-actions',
+    nodeVersion: '22',
     cfProjectName: 'arwes-docs',
     description:
       'The same docs build, uploaded to a Cloudflare Pages project instead of a Worker. Pages projects take custom domains and subdomains directly, and Direct Upload means Cloudflare still needs no Git connection.',
@@ -107,6 +111,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     app: 'apps/{{slug}}',
     template: true,
     deployMode: 'github-actions',
+    nodeVersion: '22',
     notes: [
       'The app needs its own wrangler configuration with an assets binding, plus scripts/build-worker.sh (copy apps/docs/scripts/build-worker.sh).',
       'Name the site after the app directory: slug "play" resolves {{slug}} to apps/play and arwes-play-worker.'
@@ -138,6 +143,7 @@ export const presetToSiteInput = (preset: SitePreset, slug: string): SiteInput =
   description: preset.description,
   provider: preset.provider,
   ...(preset.deployMode ? { deployMode: preset.deployMode } : {}),
+  ...(preset.nodeVersion ? { nodeVersion: preset.nodeVersion } : {}),
   cfProjectName: substitutePreset(preset.cfProjectName, slug),
   gitRepo: preset.gitRepo,
   gitBranch: preset.gitBranch,
