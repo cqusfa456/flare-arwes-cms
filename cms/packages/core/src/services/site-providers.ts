@@ -28,6 +28,8 @@ export interface SiteProviderCapabilities {
   triggerBuild: boolean
   /** A build can be started through the Builds API, without a Deploy Hook. */
   triggerBuildViaApi: boolean
+  /** A build can be started by dispatching a GitHub Actions workflow. */
+  triggerBuildViaGithubActions: boolean
   /** A build needs a stored Deploy Hook URL. */
   triggerBuildViaHook: boolean
   /** The CMS can attach/detach custom domains through the Cloudflare API. */
@@ -81,6 +83,7 @@ export const SITE_PROVIDERS: SiteProviderInfo[] = [
     can: {
       triggerBuild: true,
       triggerBuildViaApi: true,
+      triggerBuildViaGithubActions: true,
       triggerBuildViaHook: true,
       manageDomains: true,
       syncBuildConfig: true,
@@ -111,6 +114,7 @@ export const SITE_PROVIDERS: SiteProviderInfo[] = [
     can: {
       triggerBuild: true,
       triggerBuildViaApi: false,
+      triggerBuildViaGithubActions: true,
       triggerBuildViaHook: true,
       manageDomains: true,
       syncBuildConfig: true,
@@ -132,6 +136,7 @@ export const SITE_PROVIDERS: SiteProviderInfo[] = [
     can: {
       triggerBuild: false,
       triggerBuildViaApi: false,
+      triggerBuildViaGithubActions: false,
       triggerBuildViaHook: false,
       manageDomains: false,
       syncBuildConfig: false,

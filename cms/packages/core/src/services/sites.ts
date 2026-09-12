@@ -24,6 +24,8 @@ import { createApiToken, revokeApiToken } from './api-tokens'
 import { getSiteProvider, providerLabel } from './site-providers'
 import type { SiteProviderCapabilities } from './site-providers'
 import { importablePresets, presetToSiteInput } from './site-presets'
+import { dispatchWorkflow, githubDeployStatus, resolveGithubDispatch } from './github-actions'
+import type { GithubDeployStatus } from './github-actions'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,6 +53,73 @@ export const CLOUDFLARE_HOSTING_PROVIDERS: SiteProvider[] = [
   'cloudflare-worker'
 ]
 
+/**
+ * How a site gets built and deployed.
+ *
+ *  * `workers-builds` — Cloudflare builds it from a Git connection. The CMS
+ *    drives the Builds API and pushes the trigger's build environment.
+ *  * `github-actions` — the CMS dispatches `.github/workflows/deploy-site.yml`
+ *    with the site's build contract. The runner builds and uploads directly, so
+ *    Cloudflare needs no Git connection and no Deploy Hook.
+ *  * `deploy-hook`    — a stored Deploy Hook URL rebuilds the site (the usual
+ *    shape for a Pages project, which builds on Cloudflare's side).
+ *  * `direct-upload`  — nothing for the CMS to trigger: the operator builds and
+ *    uploads (`wrangler deploy` / `wrangler pages deploy`).
+ */
+export type SiteDeployMode =
+  | 'workers-builds'
+  | 'github-actions'
+  | 'deploy-hook'
+  | 'direct-upload'
+
+export const SITE_DEPLOY_MODES: SiteDeployMode[] = [
+  'workers-builds',
+  'github-actions',
+  'deploy-hook',
+  'direct-upload'
+]
+
+/** The mode a provider uses when the site does not pin one. */
+export const defaultDeployMode = (provider: SiteProvider): SiteDeployMode => {
+  if (provider === 'cloudflare-worker') return 'workers-builds'
+  if (provider === 'cloudflare-pages') return 'deploy-hook'
+  return 'direct-upload'
+}
+
+/**
+ * Coerce a stored/submitted value into a deploy mode, or null for "provider
+ * default". Anything unrecognised — an empty string from a form whose select was
+ * left on the default, a value from an older/newer schema — becomes null rather
+ * than being stored and then mis-resolved at build time.
+ */
+export const normalizeDeployMode = (value: unknown): SiteDeployMode | null => {
+  if (typeof value !== 'string') return null
+  const candidate = value.trim()
+  return (SITE_DEPLOY_MODES as string[]).includes(candidate)
+    ? (candidate as SiteDeployMode)
+    : null
+}
+
+/** Human label for a deploy mode, for the admin UI and messages. */
+export const deployModeLabel = (mode: SiteDeployMode): string => {
+  switch (mode) {
+    case 'workers-builds':
+      return 'Cloudflare Workers Builds (Git-connected)'
+    case 'github-actions':
+      return 'GitHub Actions (CMS-dispatched, no Git connection in Cloudflare)'
+    case 'deploy-hook':
+      return 'Cloudflare Deploy Hook'
+    case 'direct-upload':
+      return 'Manual direct upload'
+  }
+}
+
+/** A Worker trigger's `root_directory` uses `/` for the repo root; a shell wants `.`. */
+export const normalizeRootDirectory = (value: string | null | undefined): string => {
+  const raw = (value ?? '').trim()
+  return raw === '' || raw === '/' || raw === './' ? '.' : raw
+}
+
 /** 'pending' | 'active' | 'error' | 'removed' */
 export type SiteDomainStatus = 'pending' | 'active' | 'error' | 'removed'
 
@@ -75,6 +144,8 @@ export interface Site {
   name: string
   description: string | null
   provider: SiteProvider
+  /** Null means "use the provider default" — see {@link defaultDeployMode}. */
+  deployMode: SiteDeployMode | null
   /** Pages project name (Pages provider) or Worker name (Worker provider). */
   cfProjectName: string | null
   /** Workers Builds identifies Workers by immutable tag, not by name. */
@@ -116,6 +187,7 @@ export interface SiteInput {
   name: string
   description?: string | null
   provider?: SiteProvider
+  deployMode?: SiteDeployMode | null
   cfProjectName?: string | null
   cfWorkerTag?: string | null
   cfTriggerUuid?: string | null
@@ -143,8 +215,8 @@ export interface BuildTriggerResult {
   ok: boolean
   siteId: string
   triggeredAt: number
-  /** How the build was started: the Builds API or a Deploy Hook. */
-  via?: 'api' | 'hook'
+  /** How the build was started. */
+  via?: 'api' | 'hook' | 'github-actions'
   /** Deploy hook response body, when Pages returns one. */
   buildId?: string
   buildUrl?: string
@@ -247,6 +319,7 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   name: String(row.name),
   description: (row.description as string | null) ?? null,
   provider: ((row.provider as string) || 'cloudflare-pages') as SiteProvider,
+  deployMode: normalizeDeployMode(row.deploy_mode),
   cfProjectName: (row.cf_project_name as string | null) ?? null,
   cfWorkerTag: (row.cf_worker_tag as string | null) ?? null,
   cfTriggerUuid: (row.cf_trigger_uuid as string | null) ?? null,
@@ -662,9 +735,9 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, build_env, content_token, content_token_id,
+           content_prefix, build_env, content_token, content_token_id, deploy_mode,
            is_active, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
       )
       .bind(
         id,
@@ -688,6 +761,7 @@ export class SitesService {
         input.buildEnv && Object.keys(input.buildEnv).length > 0
           ? JSON.stringify(input.buildEnv)
           : null,
+        input.deployMode === undefined ? null : normalizeDeployMode(input.deployMode),
         input.isActive === false ? 0 : 1,
         now,
         now
@@ -718,6 +792,7 @@ export class SitesService {
       name: 'name',
       description: 'description',
       provider: 'provider',
+      deployMode: 'deploy_mode',
       cfProjectName: 'cf_project_name',
       cfWorkerTag: 'cf_worker_tag',
       cfTriggerUuid: 'cf_trigger_uuid',
@@ -744,6 +819,7 @@ export class SitesService {
       assignments.push(`${column} = ?`)
       if (key === 'slug') values.push(normalizeSiteSlug(String(value)))
       else if (key === 'isActive') values.push(value ? 1 : 0)
+      else if (key === 'deployMode') values.push(normalizeDeployMode(value))
       else if (key === 'buildEnv')
         values.push(
           value && typeof value === 'object' && Object.keys(value as object).length > 0
@@ -821,9 +897,26 @@ export class SitesService {
       throw new SitesConfigError(`Site "${site.slug}" is inactive; enable it before building`)
     }
 
+    const mode = this.effectiveDeployMode(site)
+
+    // A dispatched GitHub Actions workflow is how a site gets built without any
+    // Cloudflare-side Git connection: the runner builds and uploads directly.
+    if (mode === 'github-actions') {
+      return await this.dispatchSiteBuild(site)
+    }
+
+    if (mode === 'direct-upload') {
+      throw new SitesConfigError(
+        `Site "${site.slug}" is set to manual direct upload, so there is no build for the CMS to trigger. ` +
+          `Build and upload it yourself${this.directUploadHint(site)}, or pick a deploy mode the CMS can drive: ` +
+          `"github-actions" (runs the build in GitHub Actions), "workers-builds" (Cloudflare builds from Git) or "deploy-hook".`
+      )
+    }
+
     // A Worker with a Git-connected trigger does not need a Deploy Hook: the
     // Builds API starts the build directly and returns the build uuid.
     if (
+      mode === 'workers-builds' &&
       site.provider === 'cloudflare-worker' &&
       this.capabilities(site).triggerBuildViaApi &&
       options.via !== 'hook'
@@ -1207,9 +1300,36 @@ export class SitesService {
     return buildSiteEnvironment(site, options)
   }
 
-  /** What the CMS can do for this site, from the provider catalog. */
+  /** The deploy mode this site effectively uses (its own value, or the provider default). */
+  effectiveDeployMode(site: Site): SiteDeployMode {
+    return site.deployMode ?? defaultDeployMode(site.provider)
+  }
+
+  /**
+   * What the CMS can do for this site: the provider's abilities narrowed by the
+   * site's deploy mode, so the UI never offers an action that cannot work.
+   */
   capabilities(site: Site): SiteProviderCapabilities {
-    return getSiteProvider(site.provider).can
+    const base = getSiteProvider(site.provider).can
+    const mode = this.effectiveDeployMode(site)
+    return {
+      ...base,
+      triggerBuild: base.triggerBuild && mode !== 'direct-upload',
+      triggerBuildViaApi: base.triggerBuildViaApi && mode === 'workers-builds',
+      triggerBuildViaGithubActions:
+        base.triggerBuildViaGithubActions && mode === 'github-actions',
+      triggerBuildViaHook:
+        base.triggerBuildViaHook && mode !== 'direct-upload' && mode !== 'github-actions',
+      // Build settings and the trigger's environment only exist on a
+      // Git-connected Workers Builds site; a dispatched Action carries its own.
+      syncBuildConfig: base.syncBuildConfig && mode === 'workers-builds',
+      pushBuildEnv: base.pushBuildEnv && mode === 'workers-builds'
+    }
+  }
+
+  /** Client-safe view of the GitHub dispatch configuration for this site. */
+  async githubStatus(site?: Site): Promise<GithubDeployStatus> {
+    return githubDeployStatus(this.env, this.settings, site)
   }
 
   /**
@@ -1275,6 +1395,80 @@ export class SitesService {
   private buildDashboardUrl(site: Site, buildId: string | undefined): string | null {
     if (!buildId || !site.cfProjectName) return null
     return `https://dash.cloudflare.com/?to=/:account/workers/services/view/${encodeURIComponent(site.cfProjectName)}/builds/${encodeURIComponent(buildId)}`
+  }
+
+  /**
+   * Start a build by dispatching the generic GitHub Actions workflow.
+   *
+   * The workflow itself is site-agnostic: the CMS sends the site's own build
+   * contract as inputs, so the registry stays the single source of truth for how
+   * the site is built and where the output is uploaded. That is what lets a site
+   * be deployed without any Cloudflare-side Git connection and without a Deploy
+   * Hook.
+   */
+  private async dispatchSiteBuild(site: Site): Promise<BuildTriggerResult> {
+    if (site.provider === 'external') {
+      throw new SitesConfigError(
+        `Site "${site.slug}" is hosted externally; the CMS can only record it`
+      )
+    }
+
+    const target = await resolveGithubDispatch(this.env, this.settings, site)
+    if (!target) {
+      throw new SitesConfigError(
+        `Site "${site.slug}" deploys through GitHub Actions, but no GitHub token and repository are configured. ` +
+          `Save them under Admin → Sites → GitHub deploy, or set the GITHUB_TOKEN and GITHUB_REPO Worker secrets.`
+      )
+    }
+
+    const buildCommand = (site.buildCommand || '').trim()
+    const deployCommand = (site.deployCommand || '').trim()
+    if (!buildCommand || !deployCommand) {
+      throw new SitesConfigError(
+        `Site "${site.slug}" needs both a build command and a deploy command before GitHub Actions can deploy it.`
+      )
+    }
+
+    const triggeredAt = Date.now()
+    const result = await dispatchWorkflow(target, {
+      site: site.slug,
+      provider: site.provider,
+      build_command: buildCommand,
+      deploy_command: deployCommand,
+      root_directory: normalizeRootDirectory(site.rootDir),
+      ref: target.ref,
+      ...(site.nodeVersion ? { node_version: site.nodeVersion } : {})
+    })
+
+    if (!result.ok) {
+      await this.recordBuild(site.id, {
+        status: 'failed',
+        at: triggeredAt,
+        error: result.error ?? 'GitHub Actions dispatch failed'
+      })
+      return {
+        ok: false,
+        siteId: site.id,
+        triggeredAt,
+        via: 'github-actions',
+        buildUrl: result.runUrl,
+        ...(result.error === undefined ? {} : { error: result.error })
+      }
+    }
+
+    await this.recordBuild(site.id, {
+      status: 'dispatched',
+      at: triggeredAt,
+      buildUrl: result.runUrl
+    })
+
+    return {
+      ok: true,
+      siteId: site.id,
+      triggeredAt,
+      via: 'github-actions',
+      buildUrl: result.runUrl
+    }
   }
 
   /**

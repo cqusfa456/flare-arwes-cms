@@ -11,7 +11,7 @@
  * a site with the slug `play` becomes `sh ./apps/play/scripts/build-worker.sh`.
  */
 
-import type { SiteInput, SiteProvider } from './sites'
+import type { SiteDeployMode, SiteInput, SiteProvider } from './sites'
 
 export interface SitePreset {
   id: string
@@ -19,6 +19,8 @@ export interface SitePreset {
   /** Suggested slug; empty for templates the operator must name. */
   slug: string
   provider: SiteProvider
+  /** How the build runs: null = the provider default. */
+  deployMode?: SiteDeployMode
   /** Worker name or Pages project name. */
   cfProjectName: string
   description: string
@@ -47,6 +49,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     name: 'Arwes Docs',
     slug: 'arwes-docs',
     provider: 'cloudflare-worker',
+    deployMode: 'github-actions',
     cfProjectName: 'arwes-docs-worker',
     description:
       'Arwes documentation site. Astro builds into apps/docs/build and the Worker serves it from static assets, so one build can answer on several custom domains.',
@@ -59,9 +62,31 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     outputDir: 'apps/docs/build',
     app: 'apps/docs',
     notes: [
-      'Connect the Worker "arwes-docs-worker" to the Git repository in Cloudflare (Worker → Settings → Builds) so a trigger exists.',
-      'Create a Deploy Hook as a fallback, or let the CMS trigger builds through the Builds API.',
+      'Builds and uploads through GitHub Actions (Admin → Sites → Deploy via GitHub Actions): the workflow runs build_command then deploy_command and uploads directly, so Cloudflare needs no Git connection and no Deploy Hook.',
       'Bind a custom domain (for example docs.<your-domain>) from this page; *.workers.dev works too but is blocked on some networks.'
+    ]
+  },
+  {
+    id: 'arwes-docs-pages',
+    name: 'Arwes Docs (Cloudflare Pages)',
+    slug: 'arwes-docs-pages',
+    provider: 'cloudflare-pages',
+    deployMode: 'github-actions',
+    cfProjectName: 'arwes-docs',
+    description:
+      'The same docs build, uploaded to a Cloudflare Pages project instead of a Worker. Pages projects take custom domains and subdomains directly, and Direct Upload means Cloudflare still needs no Git connection.',
+    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitBranch: 'main',
+    buildCommand: 'sh ./apps/docs/scripts/build-worker.sh',
+    deployCommand:
+      'cms/packages/cms/node_modules/.bin/wrangler pages deploy apps/docs/build --project-name=arwes-docs --branch=main',
+    rootDir: '/',
+    outputDir: 'apps/docs/build',
+    app: 'apps/docs',
+    notes: [
+      'Create the Pages project first (or reuse the existing arwes-docs one); Direct Upload projects cannot be rebuilt by a Deploy Hook, which is exactly why this preset dispatches GitHub Actions instead.',
+      'The Pages project must expose the right production branch name (--branch=main above) for its production deployment to advance.',
+      'Bind domains from this page: Pages custom domains do not need a zone id, unlike Worker custom domains.'
     ]
   },
   {
@@ -81,6 +106,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     outputDir: 'apps/{{slug}}/build',
     app: 'apps/{{slug}}',
     template: true,
+    deployMode: 'github-actions',
     notes: [
       'The app needs its own wrangler configuration with an assets binding, plus scripts/build-worker.sh (copy apps/docs/scripts/build-worker.sh).',
       'Name the site after the app directory: slug "play" resolves {{slug}} to apps/play and arwes-play-worker.'
@@ -111,6 +137,7 @@ export const presetToSiteInput = (preset: SitePreset, slug: string): SiteInput =
   name: preset.name,
   description: preset.description,
   provider: preset.provider,
+  ...(preset.deployMode ? { deployMode: preset.deployMode } : {}),
   cfProjectName: substitutePreset(preset.cfProjectName, slug),
   gitRepo: preset.gitRepo,
   gitBranch: preset.gitBranch,

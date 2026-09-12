@@ -24,8 +24,10 @@ import type {
   SiteDomain,
   SiteDeploymentInfo,
   CloudflareCredentialStatus,
+  SiteDeployMode,
   SiteProvider
 } from '../../services/sites'
+import type { GithubDeployStatus } from '../../services/github-actions'
 
 export interface SitesListPageData {
   sites: Array<Site & { domains: SiteDomain[]; contentOwned: number; contentShared: number }>
@@ -37,6 +39,7 @@ export interface SitesListPageData {
   totalCount: number
   presets: SitePreset[]
   credentials: CloudflareCredentialStatus
+  github: GithubDeployStatus
   user?: { name: string; email: string; role: string }
   version?: string
 }
@@ -50,6 +53,11 @@ export interface SiteDetailPageData {
   contentShared: number
   credentials: CloudflareCredentialStatus
   capabilities: SiteProviderCapabilities
+  /** Every deploy mode the CMS can drive, with its label (provider default included). */
+  deployModes: Array<{ id: SiteDeployMode; label: string }>
+  /** The mode this site actually uses: its own value, or the provider default. */
+  effectiveDeployMode: SiteDeployMode
+  github: GithubDeployStatus
   /** Masked build-time environment the CMS would push to a Worker trigger. */
   buildEnv: Array<{ key: string; value: string; secret: boolean; managed: boolean }>
   isPreset: boolean
@@ -125,6 +133,24 @@ const providerOptions = (providers: SiteProviderInfo[], selected: SiteProvider |
     .map(
       (provider) =>
         `<option value="${escapeHtml(provider.id)}" ${selected === provider.id ? 'selected' : ''}>${escapeHtml(provider.label)}</option>`
+    )
+    .join('')
+
+/**
+ * `<option>` list for a deploy-mode select. The empty leading option is the
+ * provider default, so leaving it alone never pins a mode the CMS then has to
+ * argue with (see {@link defaultDeployMode} in `services/sites`).
+ */
+const deployModeOptions = (
+  modes: Array<{ id: SiteDeployMode; label: string }>,
+  selected: SiteDeployMode | ''
+): string =>
+  ['<option value="">Provider default</option>']
+    .concat(
+      modes.map(
+        (mode) =>
+          `<option value="${escapeHtml(mode.id)}" ${selected === mode.id ? 'selected' : ''}>${escapeHtml(mode.label)}</option>`
+      )
     )
     .join('')
 
@@ -411,6 +437,8 @@ export function renderSiteNewPage(data: {
   credentials: CloudflareCredentialStatus
   providers: SiteProviderInfo[]
   presets: SitePreset[]
+  deployModes: Array<{ id: SiteDeployMode; label: string }>
+  github: GithubDeployStatus
   user?: { name: string; email: string; role: string }
   version?: string
 }): string {
@@ -503,6 +531,16 @@ export function renderSiteNewPage(data: {
             </select>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="${LABEL}">Deploy mode</label>
+            <select id="site-deploy-mode" class="${INPUT}">
+              ${deployModeOptions(data.deployModes, '')}
+            </select>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              How the CMS starts a build. Leave it on the provider default unless this site builds through GitHub Actions
+              (no Git connection in Cloudflare) or a Deploy Hook.
+            </p>
           </div>
           <div data-provider-field="project">
             <label class="${LABEL}">Worker name / Pages project</label>
@@ -652,7 +690,9 @@ export function renderSiteNewPage(data: {
               outputDir: withSlug(val('site-output-dir'), slug),
               rootDir: val('site-root-dir'),
               cfZoneId: val('site-zone'),
-              contentPrefix: val('site-prefix')
+              contentPrefix: val('site-prefix'),
+              // Omitted when empty so the site stays on its provider default.
+              deployMode: val('site-deploy-mode') || undefined
             })
           });
           var data = await response.json();
@@ -692,6 +732,68 @@ export function renderSiteNewPage(data: {
 export function renderSiteDetailPage(data: SiteDetailPageData): string {
   const { site, domains, capabilities } = data
   const providerInfo = getSiteProvider(site.provider)
+
+  // The effective mode is always resolved (site value, else provider default),
+  // so the label lookup can only miss if the catalog and the site disagree.
+  const effectiveMode = data.deployModes.find((mode) => mode.id === data.effectiveDeployMode)
+  const deployModeLabel = effectiveMode ? effectiveMode.label : data.effectiveDeployMode
+
+  const githubSourceLabel =
+    data.github.source === 'env'
+      ? 'Worker secrets'
+      : data.github.source === 'settings'
+        ? 'saved settings'
+        : 'nowhere yet'
+  const githubStatus = data.github.configured
+    ? `Configured from ${githubSourceLabel} · token ${data.github.hasToken ? 'saved' : 'missing'}${data.github.repo ? ` · repository ${data.github.repo}` : ''}`
+    : 'not configured'
+
+  // Where the build actually runs, in the site's own terms: the generic sentence
+  // is right for the Cloudflare-side routes, the dispatch one for GitHub.
+  const buildRouteSentence = capabilities.triggerBuildViaGithubActions
+    ? `${providerInfo.label} needs no Git connection and no Deploy Hook: the CMS dispatches a GitHub Actions workflow that runs this site's build and deploy commands and uploads the output directly.`
+    : `${providerInfo.label} performs the build; the CMS only triggers it${capabilities.triggerBuildViaApi ? ' through the Builds API or' : ' through'}${capabilities.triggerBuildViaHook ? ' the Deploy Hook' : ''}.`
+
+  const githubTarget = data.github.configured
+    ? `<p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+        GitHub target <code class="text-zinc-900 dark:text-zinc-100">${escapeHtml(data.github.repo ?? '—')}</code>
+        · workflow <code class="text-zinc-900 dark:text-zinc-100">${escapeHtml(data.github.workflow)}</code>
+        @ <code class="text-zinc-900 dark:text-zinc-100">${escapeHtml(data.github.ref)}</code>
+        · credentials from ${escapeHtml(githubSourceLabel)}
+      </p>`
+    : `<p class="mt-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+        GitHub Actions is not configured yet: a dispatch needs <strong>both a token and a repository</strong>, so this button will fail until they are saved.
+        Set them in the <strong>GitHub deploy</strong> card below, or set the <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> Worker secrets.
+      </p>`
+
+  const githubCard = `
+      <!-- GitHub deploy -->
+      <div class="${CARD} p-6">
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">GitHub deploy</h2>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          This is how a site can be built with <strong>no Git connection on Cloudflare's side</strong>: the CMS dispatches
+          <code>${escapeHtml(data.github.workflow)}</code>, which runs the site's build command and then its deploy command on a GitHub runner and uploads the output directly.
+        </p>
+        <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label class="${LABEL}">Repository (owner/name)</label>
+            <input id="gh-repo" class="${INPUT}" value="${escapeHtml(data.github.repo ?? '')}" placeholder="owner/repo" />
+          </div>
+          <div>
+            <label class="${LABEL}">Token</label>
+            <input id="gh-token" type="password" class="${INPUT}" placeholder="leave blank to keep the saved token" autocomplete="new-password" />
+          </div>
+        </div>
+        <p class="mt-3 text-xs ${data.github.configured ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}">${escapeHtml(githubStatus)}</p>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <button onclick="saveGithub(this)" class="${SECONDARY_BTN}">Save GitHub settings</button>
+          <div id="github-result" class="text-sm"></div>
+        </div>
+        <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+          The token needs <code>Actions: write</code> (fine-grained, scoped to this repository) or the classic <code>workflow</code> scope.
+          It is stored with the deploy settings and never rendered back into this page.
+        </p>
+      </div>`
 
   const domainRows = domains.length === 0
     ? `<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No domains bound yet.</td></tr>`
@@ -786,7 +888,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><code>${escapeHtml(site.slug)}</code></p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="triggerBuild(this, '${capabilities.triggerBuildViaApi ? 'api' : 'hook'}')" class="${SECONDARY_BTN}" ${capabilities.triggerBuild ? '' : 'disabled title="This provider cannot be built from the CMS"'}>Build now</button>
+          <button onclick="triggerBuild(this, '${capabilities.triggerBuildViaApi ? 'api' : 'hook'}')" class="${SECONDARY_BTN}" ${capabilities.triggerBuild ? '' : 'disabled title="This provider cannot be built from the CMS"'}>${capabilities.triggerBuildViaGithubActions ? 'Deploy via GitHub Actions' : 'Build now'}</button>
           ${capabilities.triggerBuildViaHook && site.deployHookUrl ? `<button onclick="triggerBuild(this, 'hook')" class="${SECONDARY_BTN}">Build via Deploy Hook</button>` : ''}
         </div>
       </div>
@@ -810,13 +912,23 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <dl class="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2 text-xs">
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Last triggered</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Status</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
+          <div class="flex items-center justify-between gap-4">
+            <dt class="text-zinc-500 dark:text-zinc-400">Deploy mode</dt>
+            <dd>
+              <span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">${escapeHtml(deployModeLabel)}</span>
+              ${site.deployMode === null ? '<span class="ml-2 text-zinc-500 dark:text-zinc-400">provider default</span>' : ''}
+            </dd>
+          </div>
         </dl>
         ${site.lastBuildError ? `<p class="mt-3 rounded-lg bg-red-50 dark:bg-red-500/10 p-3 text-xs text-red-700 dark:text-red-400">${escapeHtml(site.lastBuildError)}</p>` : ''}
-        <p class="mt-4 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.label)} performs the build; the CMS only triggers it${capabilities.triggerBuildViaApi ? ' through the Builds API or' : ' through'}${capabilities.triggerBuildViaHook ? ' the Deploy Hook' : ''}.</p>
+        <p class="mt-4 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(buildRouteSentence)}</p>
+        ${capabilities.triggerBuildViaGithubActions ? githubTarget : ''}
         ${capabilities.listDeployments ? `<div id="deployments" class="mt-4">${deploymentRows}</div>` : ''}
       </div>
 
       ${buildEnvCard}
+
+      ${githubCard}
 
       ${capabilities.manageDomains ? `
       <!-- Domains -->
@@ -858,6 +970,16 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
               Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.
+            </p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="${LABEL}">Deploy mode</label>
+            <select id="s-deploy-mode" class="${INPUT}">
+              ${deployModeOptions(data.deployModes, data.effectiveDeployMode)}
+            </select>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              How the CMS starts a build. The provider default is shown resolved above; picking "Provider default" clears the
+              pinned mode so the site follows the provider again.
             </p>
           </div>
           <div data-provider-field="project"><label class="${LABEL}">Worker name / Pages project</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
@@ -955,18 +1077,56 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       ${providerFieldsScript}
 
       async function triggerBuild(button, via) {
+        var label = button ? button.textContent : '';
         if (button) { button.disabled = true; button.textContent = 'Triggering...'; }
         var data = await call('/admin/sites/api/sites/' + SITE_ID + '/build', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ via: via || TRIGGER_VIA })
-        }, 'action-result', 'Build queued on ' + PROVIDER_LABEL + '. Refresh deployments in a minute.');
-        if (button) { button.disabled = false; button.textContent = 'Build now'; }
+        }, 'action-result');
+        if (button) { button.disabled = false; button.textContent = label; }
         if (!data) return;
+        // A dispatched workflow run takes minutes, so its message — and the link
+        // to the run — has to survive instead of being wiped by a reload.
+        if (data.via === 'github-actions') { reportGithubRun(data); return; }
         report('action-result', true, 'Build queued on ' + PROVIDER_LABEL
           + (data.via === 'api' ? ' through the Builds API' : ' through the Deploy Hook')
           + (data.buildUrl ? ' — ' + data.buildUrl : '') + '. Refresh deployments in a minute.');
         setTimeout(function () { location.reload(); }, 2500);
+      }
+
+      // The run URL is the whole point of the message: render it as a link, never
+      // as text, and leave it on screen while the run finishes.
+      function reportGithubRun(data) {
+        var result = document.getElementById('action-result');
+        if (!result) { return; }
+        result.className = 'text-sm text-emerald-600 dark:text-emerald-400';
+        result.textContent = 'Deploy dispatched on ' + PROVIDER_LABEL + ' as a GitHub Actions run. A run takes a few minutes';
+        if (data.buildUrl) {
+          var link = document.createElement('a');
+          link.href = data.buildUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'ml-1 text-indigo-600 dark:text-indigo-400 hover:underline';
+          link.textContent = 'watch the run on GitHub';
+          result.appendChild(link);
+        }
+        result.appendChild(document.createTextNode('. Refresh deployments when it finishes.'));
+      }
+
+      // Separate path from the sites API, so it reuses call() without widening it.
+      async function saveGithub(button) {
+        if (button) button.disabled = true;
+        var payload = { githubRepo: val('gh-repo') };
+        var token = val('gh-token');
+        if (token) { payload.githubToken = token; }
+        var data = await call('/admin/deploy/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }, 'github-result', 'Saved');
+        if (button) button.disabled = false;
+        if (data) { setTimeout(function () { location.reload(); }, 800); }
       }
 
       async function saveSite(button) {
@@ -979,6 +1139,9 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           buildCommand: val('s-build'), deployCommand: val('s-deploy'),
           outputDir: val('s-output'), rootDir: val('s-root'),
           contentPrefix: val('s-prefix'), cfZoneId: val('s-zone'),
+          // An empty select means "provider default": the API stores null and
+          // effectiveDeployMode() falls back to the provider's own mode.
+          deployMode: val('s-deploy-mode') || null,
           isActive: document.getElementById('s-active').checked
         };
         var data = await call('/admin/sites/api/sites/' + SITE_ID, {

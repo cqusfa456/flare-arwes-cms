@@ -271,6 +271,30 @@ Admin → Sites 按**托管类型分组**展示（Worker / Pages / External）�
    CMS 不下发
 3. 创建 **Deploy Hook** 填入站点，再 **Bind domain**
 
+**四种部署模式**（`sites.deploy_mode`，留空则按 provider 取默认）
+
+| 模式 | 谁执行构建 | 需要什么 | 适用 |
+| --- | --- | --- | --- |
+| `workers-builds` | Cloudflare（从 Git 连接） | Worker 已连 Git 仓库并存在 trigger | 默认（Worker），CMS 能下发构建环境变量 |
+| `github-actions` | GitHub Actions（CMS dispatch） | 已保存 GitHub 仓库 + token | **Cloudflare 侧不连 Git**；Worker 直传或 Pages Direct Upload |
+| `deploy-hook` | Cloudflare（Pages 项目自行构建） | Deploy Hook URL | 默认（Pages），项目已连 Git |
+| `direct-upload` | 你自己 | 本地构建后 `wrangler deploy` | CMS 只登记，不触发 |
+
+**`github-actions` 模式（推荐用于"不在 Cloudflare 连 Git"）**
+
+1. 生成一个**细粒度 PAT**：仅本仓库，权限 **Actions: write**（经典 token 则需 `workflow` scope）
+2. 在 **Admin → Sites → GitHub deploy** 卡片填入仓库（`owner/name`）与 token
+   （也可用 Worker secret `GITHUB_TOKEN` / `GITHUB_REPO`，或复用旧的 `/admin/deploy/api/settings`）
+3. 站点详情的按钮变成 **Deploy via GitHub Actions**：CMS 会 dispatch
+   `.github/workflows/deploy-site.yml`，并把**该站点自己的** build/deploy 命令、root directory、slug 作为输入传过去
+   （仓库始终是唯一真源，工作流本身与站点无关）
+4. 工作流在 runner 上跑 `build_command`，再跑 `deploy_command` 直传：
+   - Worker：`cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy`
+   - Pages：`wrangler pages deploy apps/docs/build --project-name=<project> --branch=main`（Direct Upload，同样不需要 Cloudflare 连 Git；Pages 自定义域名/子域名绑定不需要 zone）
+
+构建期内容：工作流注入 `PUBLIC_FLARE_API_URL`（来自 GitHub secret `FLARE_API_URL`）+ `PUBLIC_FLARE_SITE`（站点 slug）。
+**内容 API 对已发布内容是公开的**（按 `X-Site` 隔离），所以不需要额外的 CMS API token；若提供 token 则必须有效（无效会被 401 拒绝）。
+
 **不想连 Git？（Direct Upload）**
 
 Cloudflare **不能在 Worker 里构建你的站点**：Workers Builds 本身就是 Git 集成（GitHub/GitLab），而

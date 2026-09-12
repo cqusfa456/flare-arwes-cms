@@ -1,0 +1,127 @@
+name: Deploy site
+
+# Generic, site-agnostic deploy job for CMS-managed sites.
+#
+# The CMS dispatches this workflow from Admin → Sites ("Deploy via GitHub
+# Actions") with the site's own build contract as inputs, so the CMS stays the
+# single source of truth for how a site is built and where it is deployed —
+# and Cloudflare never needs a Git connection to the site.
+#
+# Why this exists: Cloudflare cannot build an Astro app inside a Worker
+# (Workers Builds is a Git integration, and a Worker has no build toolchain), so
+# a Git-less setup needs *somewhere* to run the build. This workflow is that
+# place, and it deploys by direct upload:
+#   * cloudflare-worker → `wrangler deploy` (assets upload API)
+#   * cloudflare-pages  → `wrangler pages deploy` (Direct Upload, no Git needed)
+# Both keep the site's own traffic on free static-asset serving.
+#
+# Content: the build reads the CMS API at build time. That API is public for
+# published content and scopes by `X-Site`, so no API token is required —
+# PUBLIC_FLARE_API_URL and PUBLIC_FLARE_SITE are enough. (Set FLARE_API_TOKEN to
+# send an X-API-Key anyway; an *invalid* one is rejected with 401.)
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Site slug registered in the CMS (sent as PUBLIC_FLARE_SITE / X-Site)
+        required: true
+        type: string
+      provider:
+        description: Hosting provider the CMS recorded for this site
+        required: true
+        type: choice
+        options:
+          - cloudflare-worker
+          - cloudflare-pages
+      build_command:
+        description: Command that produces the static output (run in root_directory)
+        required: true
+        type: string
+      deploy_command:
+        description: Command that uploads the output (wrangler deploy / wrangler pages deploy)
+        required: true
+        type: string
+      root_directory:
+        description: Directory the commands run in, relative to the repository root ("." for the root)
+        required: false
+        default: "."
+        type: string
+      ref:
+        description: Git ref to build
+        required: false
+        default: main
+        type: string
+      node_version:
+        description: Node.js version
+        required: false
+        default: "20"
+        type: string
+
+# One deploy per site at a time: two uploads racing would publish whichever
+# finished last, which is rarely what was intended.
+concurrency:
+  group: deploy-site-${{ inputs.site }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy ${{ inputs.site }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarise the dispatched build
+        run: |
+          echo "site            : ${{ inputs.site }}"
+          echo "provider        : ${{ inputs.provider }}"
+          echo "build_command   : ${{ inputs.build_command }}"
+          echo "deploy_command  : ${{ inputs.deploy_command }}"
+          echo "root_directory  : ${{ inputs.root_directory }}"
+          echo "ref             : ${{ inputs.ref }}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      # The monorepo builds the CMS workspace with pnpm and the ARWES packages
+      # with npm, so both toolchains have to be present.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: pnpm
+          cache-dependency-path: cms/pnpm-lock.yaml
+
+      - name: Check the CMS API URL is configured
+        run: |
+          if [ -z "${{ secrets.FLARE_API_URL }}" ]; then
+            echo "::error::FLARE_API_URL secret is not set. Without it the build falls back to http://localhost:8787 and publishes empty content."
+            exit 1
+          fi
+
+      # The build reads published content from the CMS for exactly this site.
+      - name: Build
+        working-directory: ${{ inputs.root_directory }}
+        env:
+          PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
+          PUBLIC_FLARE_API_TOKEN: ${{ secrets.FLARE_API_TOKEN }}
+          PUBLIC_FLARE_SITE: ${{ inputs.site }}
+        run: ${{ inputs.build_command }}
+
+      # Direct upload: no Cloudflare-side Git connection, no Deploy Hook.
+      - name: Deploy
+        working-directory: ${{ inputs.root_directory }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          PUBLIC_FLARE_API_URL: ${{ secrets.FLARE_API_URL }}
+          PUBLIC_FLARE_SITE: ${{ inputs.site }}
+        run: ${{ inputs.deploy_command }}
+
+      - name: Result
+        if: success()
+        run: |
+          echo "✅ ${{ inputs.site }} built and deployed (${{ inputs.provider }})."
+          echo "Custom domains are managed from Admin → Sites; they are unaffected by a deploy."

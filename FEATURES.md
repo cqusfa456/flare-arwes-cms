@@ -274,12 +274,14 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **构建配置下发**：`syncBuildConfig()` 把构建命令/deploy 命令/根目录 `PATCH` 到 Workers Builds **trigger**（或 Pages 项目的 `build_config`），**并同时下发构建期环境变量**到 trigger（`PATCH .../triggers/{uuid}/environment_variables`）
 - **构建期环境变量**：CMS 自动生成 `PUBLIC_FLARE_API_URL`（CMS 自身地址，站点可固定、否则取 `FLARE_API_URL` 或请求 origin）、`PUBLIC_FLARE_SITE`（站点 slug）、`PUBLIC_FLARE_API_TOKEN`（**只读、限定该站点**的 API token，可一键轮换）。站点可在 Site settings 里用同名变量覆盖任意一个；其他变量（如运维自己在控制台加的）不被触碰
 - **域名绑定**：通过 **Cloudflare API** 真实创建/删除自定义域名，并把校验状态（pending / active / error + 失败原因）镜像到 `site_domains`；支持「从 Cloudflare 刷新」以采纳在控制台手工添加的域名、并把云端已消失的标记为 `removed`；可指定 primary 域名
-- **预设**：`services/site-presets.ts` 用 `{{slug}}` 占位描述本仓库的构建契约（`apps/docs` 已内置），可一键导入缺失的站点；新增一个 Astro 应用只需加一条预设，不必改代码
+- **预设**：`services/site-presets.ts` 用 `{{slug}}` 占位描述本仓库的构建契约，可一键导入缺失的站点：`apps/docs` 同时提供 **Worker 直传**与 **Pages 直传**两条预设（都走 `github-actions` 模式），新增一个 Astro 应用只需加一条预设，不必改代码
+- **部署模式**（`sites.deploy_mode`，留空按 provider 取默认）：`workers-builds`（Cloudflare 从 Git 构建，CMS 下发构建环境变量）/ **`github-actions`**（CMS dispatch `.github/workflows/deploy-site.yml`，runner 构建后直传 Worker 或 `wrangler pages deploy` —— **Cloudflare 侧完全不需要 Git 连接，也不需要 Deploy Hook**）/ `deploy-hook`（Pages 默认）/ `direct-upload`（你自己构建，CMS 只登记）。能力矩阵按模式收窄，UI 不会给出该模式做不到的按钮
+- **GitHub dispatch**：`services/github-actions.ts` 依次从 env（`GITHUB_TOKEN`/`GITHUB_REPO`）、已有的 `deploy.github_*` 设置、站点 `gitRepo` 解析目标；dispatch 时把**站点自己的** build/deploy 命令与 root directory 作为工作流输入，仓库始终是唯一真源。错误码被翻译成可执行建议（401 token 失效 / 403 缺 `Actions: write` / 404 仓库或工作流不存在 / 422 ref 或输入不匹配）。构建期内容读取不需要 CMS token（内容 API 对已发布内容公开，按 `X-Site` 隔离）
 - **内容归属**：`content.site_id` 为 `NULL` 表示**共享内容**（所有站点可读），否则只属于该站点；后台可见每个站点拥有/共享的内容条数
 
 **凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署。**部署流水线会自动装好这两个 secret**：`.github/workflows/deploy.yml` 用 `wrangler secret put` 下发，优先取专用的 GitHub secret `CF_SITES_API_TOKEN`（最小权限 runtime token，`node scripts/set-cf-token.mjs runtime` 一键生成），未设置时回落到 CI 的 `CF_API_TOKEN` 并告警。Cloudflare API token、Deploy Hook URL（能力型 URL）与构建 token 都永不返回给客户端（JSON 响应中掩码）。
 
-**代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名/构建环境逻辑）、`services/site-providers.ts`（托管类型元数据）、`services/site-presets.ts`（Arwes 预设）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）。
+**代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名/构建环境逻辑）、`services/site-providers.ts`（托管类型元数据）、`services/site-presets.ts`（Arwes 预设）、`services/github-actions.ts`（Actions dispatch 与凭据解析）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）、迁移 `041_site_deploy_mode.sql`。
 
 **一次性前置条件**（每个站点）：托管目标需为 **Git 连接**（Pages 项目或 Worker 的 Workers Builds，使其存在 trigger；Direct Upload 无法重建）。Worker 站点随后由 CMS 下发构建设置与环境变量即可触发构建；Pages 站点还需创建 Deploy Hook 并填入站点。
 

@@ -15,9 +15,12 @@ import type { Context } from 'hono'
 import { requireAuth, requireRole } from '../middleware'
 import { SettingsService } from '../services/settings'
 import { SitesService, SitesConfigError, buildSiteEnvironment } from '../services/sites'
-import type { Site, SiteInput } from '../services/sites'
+import type { Site, SiteInput, SiteDeployMode } from '../services/sites'
+import { SITE_DEPLOY_MODES, deployModeLabel, defaultDeployMode } from '../services/sites'
 import { SITE_PROVIDERS, getSiteProvider } from '../services/site-providers'
 import { ARWES_SITE_PRESETS } from '../services/site-presets'
+import { githubDeployStatus } from '../services/github-actions'
+import type { GithubDeployStatus } from '../services/github-actions'
 import { logAudit, getClientIP } from '../services/audit-log'
 import {
   renderSitesListPage,
@@ -116,6 +119,18 @@ const MANAGED_BUILD_ENV_KEYS = [
   'PUBLIC_FLARE_SITE',
   'PUBLIC_FLARE_API_TOKEN'
 ]
+
+/** Deploy-mode options for the admin forms (value + label). */
+const deployModeOptions = (): Array<{ id: SiteDeployMode; label: string }> =>
+  SITE_DEPLOY_MODES.map((mode) => ({ id: mode, label: deployModeLabel(mode) }))
+
+/** GitHub dispatch configuration, for the pages that offer "Deploy". */
+const githubStatusFor = (c: SitesContext, site?: Site): Promise<GithubDeployStatus> =>
+  githubDeployStatus(
+    c.env as unknown as Record<string, unknown>,
+    new SettingsService(c.env.DB),
+    site
+  )
 
 /** Show a token's prefix, never its secret. */
 const maskSecret = (value: string): string =>
@@ -378,6 +393,8 @@ adminSitesRoutes.get('/new', async (c) => {
       credentials: await service.getCredentialStatus(),
       providers: SITE_PROVIDERS,
       presets: ARWES_SITE_PRESETS,
+      deployModes: deployModeOptions(),
+      github: await githubStatusFor(c),
       ...(pageUser(c.get('user')) ? { user: pageUser(c.get('user'))! } : {}),
       version: c.get('appVersion')
     })
@@ -415,6 +432,7 @@ adminSitesRoutes.get('/', async (c) => {
       totalCount: sites.length,
       presets: ARWES_SITE_PRESETS,
       credentials: await service.getCredentialStatus(),
+      github: await githubStatusFor(c),
       ...(user ? { user } : {}),
       version: c.get('appVersion')
     })
@@ -454,6 +472,9 @@ adminSitesRoutes.get('/:slug', async (c) => {
       capabilities: service.capabilities(site),
       buildEnv: buildEnvView(site, apiBaseUrlFor(c, site)),
       isPreset: ARWES_SITE_PRESETS.some((preset) => preset.slug === site.slug),
+      deployModes: deployModeOptions(),
+      effectiveDeployMode: service.effectiveDeployMode(site),
+      github: await githubStatusFor(c, site),
       ...(user ? { user } : {}),
       version: c.get('appVersion')
     })
