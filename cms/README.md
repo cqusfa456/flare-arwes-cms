@@ -240,6 +240,11 @@ node scripts/set-cf-token.mjs
   `node scripts/set-cf-token.mjs runtime` 生成，权限最小：Workers Scripts:Read、Zone:Read、
   Workers Routes:Edit、Workers CI:Edit(=Builds)、Pages:Edit），未设置时回落到 CI 的
   `CF_API_TOKEN` 并打印告警。所以不需要手工 `wrangler secret put`
+- **按需生成 token（推荐）**：`node scripts/create-cf-token.mjs ci|runtime`。它用一个**引导 token**
+  （用户级 `API Tokens Write`——唯一需要手动创建的 token，脚本会打印预填好权限的一键链接）调用
+  `POST /user/tokens` 生成目标 token：权限按**权限组 UUID** 精确指定（包含此前无法用预填链接带出的
+  `Pages Write`），默认 365 天有效期，并写入 `CF_API_TOKEN` / `CF_SITES_API_TOKEN`。
+  这样就不再依赖控制台预填链接的 key 词表——那个词表会**静默丢弃未知 key**，正是 Pages 权限一直加不上的原因
 - API token 永不返回给客户端；Deploy Hook URL（能力型 URL）与构建 token 在 JSON 响应中被掩码
 
 ### 从 CMS 注册与构建一个站点

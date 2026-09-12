@@ -44,6 +44,18 @@ export const USER_TOKEN_PAGE = 'https://dash.cloudflare.com/profile/api-tokens'
  * check that row on the dashboard page rather than trusting the pre-fill.
  */
 export const TOKEN_TEMPLATES = {
+  bootstrap: {
+    label: 'Cloudflare 引导 token（用来按需生成其他 token）',
+    purpose:
+      '调用 POST /user/tokens 生成 CI / runtime token；这是唯一必须手动创建的 token，之后一切都可脚本化',
+    tokenName: 'Flare CMS Bootstrap (token minting)',
+    permissions: [{ key: 'api_tokens', type: 'edit' }],
+    checklist: [
+      'API Tokens：「编辑」（**用户级**，英文名 “API Tokens Write”）—— 已实测可预填',
+      '这一项用 “编辑” 而不是 “读取”：只有写权限才能创建新 token',
+      '请妥善保管：它是后续所有 token 的唯一入口；若不希望它长期有效，可给它设个较长有效期，到期再手动重建'
+    ]
+  },
   ci: {
     label: 'Cloudflare CI / 部署 token',
     purpose:
