@@ -58,58 +58,15 @@ jobs:
           cache: pnpm
           cache-dependency-path: cms/pnpm-lock.yaml
 
-      # Resolve ONE credential for every wrangler call below.
-      #
-      # Two kinds of credential can drive this workflow:
-      #   * CF_API_TOKEN      — a long-lived API token (preferred).
-      #   * CF_REFRESH_TOKEN  — the OAuth refresh token from
-      #     `node scripts/oauth-login.mjs`. It is exchanged for a fresh
-      #     one-hour access token on every run, so unlike storing an access
-      #     token there is no hourly expiry. It carries workers/d1/kv/pages
-      #     write, which is everything the deploy needs; it can NOT mint API
-      #     tokens, so the CMS runtime credential falls back to being unset.
-      #
-      # The OAuth path is used when CF_REFRESH_TOKEN is present; delete that
-      # secret to go back to CF_API_TOKEN.
+      # Resolve ONE credential for every wrangler call below; see
+      # scripts/ci-cf-credential.sh for what CF_REFRESH_TOKEN and CF_API_TOKEN
+      # each provide. It exports CF_CREDENTIAL (masked) plus
+      # CF_CREDENTIAL_SOURCE through GITHUB_ENV.
       - name: Resolve the Cloudflare credential
         env:
-          CI_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
-          OAUTH_CLIENT_ID: 54d11594-84e4-41aa-b438-e81b8fa78ee7
-        run: |
-          set -uo pipefail
-          credential=""
-          source="none"
-
-          if [ -n "${REFRESH_TOKEN}" ]; then
-            echo "Exchanging CF_REFRESH_TOKEN for a fresh OAuth access token"
-            credential=$(curl -s --max-time 60 -X POST https://dash.cloudflare.com/oauth2/token \
-              -H 'Content-Type: application/x-www-form-urlencoded' \
-              --data-urlencode grant_type=refresh_token \
-              --data-urlencode "refresh_token=${REFRESH_TOKEN}" \
-              --data-urlencode "client_id=${OAUTH_CLIENT_ID}" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))' 2>/dev/null || true)
-            if [ -n "${credential}" ]; then
-              source="oauth refresh"
-            else
-              echo "::warning::CF_REFRESH_TOKEN could not be exchanged (revoked?); falling back to CF_API_TOKEN."
-            fi
-          fi
-
-          if [ -z "${credential}" ] && [ -n "${CI_API_TOKEN}" ]; then
-            credential="${CI_API_TOKEN}"
-            source="CF_API_TOKEN"
-          fi
-
-          if [ -z "${credential}" ]; then
-            echo "::error::No usable Cloudflare credential. Set CF_API_TOKEN (node scripts/set-cf-token.mjs ci) or CF_REFRESH_TOKEN (node scripts/oauth-login.mjs)."
-            exit 1
-          fi
-
-          echo "::add-mask::${credential}"
-          echo "CF_CREDENTIAL=${credential}" >> "$GITHUB_ENV"
-          echo "CF_CREDENTIAL_SOURCE=${source}" >> "$GITHUB_ENV"
-          echo "Using the ${source} credential"
+          CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: bash scripts/ci-cf-credential.sh
 
       - name: Install CMS dependencies
         working-directory: cms

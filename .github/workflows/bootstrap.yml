@@ -55,6 +55,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: cms/pnpm-lock.yaml
 
+      # One credential for every Cloudflare call below (see
+      # scripts/ci-cf-credential.sh).
+      - name: Resolve the Cloudflare credential
+        env:
+          CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: bash scripts/ci-cf-credential.sh
+
       - name: Install CMS dependencies
         working-directory: cms
         run: pnpm install --frozen-lockfile --ignore-scripts
@@ -69,7 +77,7 @@ jobs:
       - name: Create or update the administrator
         working-directory: cms/packages/cms
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           SCIFI_ADMIN_PASSWORD: ${{ secrets.SCIFI_ADMIN_PASSWORD }}
           # Passed through the environment rather than interpolated into the
@@ -91,7 +99,7 @@ jobs:
           EXPECT_STORAGE: ${{ inputs.expect_storage }}
           ADMIN_EMAIL: ${{ inputs.admin_email }}
           ADMIN_PASSWORD: ${{ secrets.SCIFI_ADMIN_PASSWORD }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           set -euo pipefail

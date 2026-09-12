@@ -99,6 +99,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: cms/pnpm-lock.yaml
 
+      # One credential for every Cloudflare call below (see
+      # scripts/ci-cf-credential.sh).
+      - name: Resolve the Cloudflare credential
+        env:
+          CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: bash scripts/ci-cf-credential.sh
+
       - name: Check the CMS API URL is configured
         run: |
           # SCIFI_API_URL is the current secret. FLARE_API_URL is the pre-rename
@@ -129,7 +137,7 @@ jobs:
         if: inputs.provider == 'cloudflare-pages' && inputs.pages_project != ''
         working-directory: ${{ inputs.root_directory }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           PAGES_PROJECT: ${{ inputs.pages_project }}
           DEPLOY_BRANCH: ${{ inputs.ref }}
@@ -153,7 +161,7 @@ jobs:
       - name: Deploy
         working-directory: ${{ inputs.root_directory }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           PUBLIC_SCIFI_API_URL: ${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}
           PUBLIC_SCIFI_SITE: ${{ inputs.site }}
