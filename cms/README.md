@@ -52,6 +52,16 @@ node scripts/create-admin.mjs --email you@example.com --username admin
 # 密码交互输入（不回显），也可以用 SCIFI_ADMIN_PASSWORD 环境变量
 ```
 
+本地没有 Cloudflare 凭据时，用 Actions 跑同一件事（推荐）：
+
+> Actions → **Bootstrap CMS admin** → Run workflow（填邮箱/用户名）
+
+它用仓库自己的 `CF_API_TOKEN` 建/改管理员，然后**验证部署**：`GET /` 与
+`/auth/login` 是否 200、`/api/system/health` 是否数据库与存储后端都 healthy 且
+provider 等于期望值（默认 `b2`）、`migrations` 表是否有运行时迁移记录、以及用该
+账号真实登录一次拿 token。只需先添加仓库 secret `SCIFI_ADMIN_PASSWORD`（≥8 位）。
+B2/S3 后端下健康检查会真发一次 `head()` 往返，因此它确实在验证存储凭据。
+
 `POST /auth/seed-admin` 已默认关闭：它用硬编码密码建号并会重置已有管理员密码，
 生产环境等于后门。仅在不可公开访问的环境里临时把它打开：
 

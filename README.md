@@ -87,17 +87,22 @@ cd apps/docs && npm run dev   # http://localhost:9002
 
 配置所需 secrets（向导第 3 步已自动设置）：
 
-| Secret                              | 说明                                |
-| ----------------------------------- | ----------------------------------- |
-| `CF_API_TOKEN` / `CF_ACCOUNT_ID`    | Cloudflare 凭据                     |
-| `JWT_SECRET`                        | CMS 认证密钥                        |
-| `SCIFI_API_URL` / `SCIFI_API_TOKEN` | 部署后的 CMS 地址与只读 Token       |
-| `STORAGE_BACKEND`                   | 存储后端：`r2`（默认）/ `b2` / `s3` |
-| `B2_*` / `S3_*`                     | （可选）S3 兼容后端凭据             |
+| Secret                              | 说明                                           |
+| ----------------------------------- | ---------------------------------------------- |
+| `CF_API_TOKEN` / `CF_ACCOUNT_ID`    | Cloudflare 凭据                                |
+| `JWT_SECRET`                        | CMS 认证密钥                                   |
+| `SCIFI_API_URL` / `SCIFI_API_TOKEN` | 部署后的 CMS 地址与只读 Token                  |
+| `SCIFI_ADMIN_PASSWORD`              | （可选）Bootstrap 工作流创建管理员时使用的密码 |
+| `STORAGE_BACKEND`                   | 存储后端：`r2`（默认）/ `b2` / `s3`            |
+| `B2_*` / `S3_*`                     | （可选）S3 兼容后端凭据                        |
 
 D1 / KV / R2 不再需要写 ID：部署时按名字查找并按需创建（`scripts/cf-resources.py`），
 旧的 `CF_D1_DATABASE_ID` / `CF_KV_NAMESPACE_ID` / `CF_R2_BUCKET_NAME` 已废弃。
 `CF_API_TOKEN` 若含 **API Tokens: 编辑**，部署流程会自动铸一只最小权限的运行时 token 给 CMS。
+
+首次部署后，用 Actions → **Bootstrap CMS admin** 建管理员并顺带验证部署：
+它会检查 HTTP、`/api/system/health`（数据库与存储后端是否 healthy、provider 是否为
+`b2`）、运行时迁移条数，并用该账号真实登录一次。设好 `SCIFI_ADMIN_PASSWORD` 即可运行。
 
 `CF_API_TOKEN` 必须是**长期 API Token**（不是 1 小时寿命的 OAuth token）。用预填权限的页面一键生成：
 
