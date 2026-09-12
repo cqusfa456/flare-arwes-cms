@@ -168,6 +168,10 @@ jobs:
       - name: Set Cloudflare API worker secrets
         working-directory: cms/packages/cms
         env:
+          # wrangler authenticates with these two; the step below is the one
+          # that writes the *value* of CF_API_TOKEN onto the Worker.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CI_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
           ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
