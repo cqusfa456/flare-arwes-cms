@@ -66,14 +66,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #    deploy's own permissions and disappears with its TTL.
 if [ -n "${CF_BOOTSTRAP_TOKEN:-}" ]; then
   echo "Minting an on-demand deploy token from CF_BOOTSTRAP_TOKEN"
+  MINT_LOG="$(mktemp)"
   CREDENTIAL="$(CF_BOOTSTRAP_TOKEN="${CF_BOOTSTRAP_TOKEN}" CF_ACCOUNT_ID="${CF_ACCOUNT_ID:-}" \
-    node "${SCRIPT_DIR}/create-cf-token.mjs" ci --print-token --ttl-days "${CI_TOKEN_TTL_DAYS:-1}" 2>/dev/null \
+    node "${SCRIPT_DIR}/create-cf-token.mjs" ci --print-token --ttl-days "${CI_TOKEN_TTL_DAYS:-1}" 2>"${MINT_LOG}" \
     | sed -n 's/^__TOKEN__//p' | tail -1)"
   if [ -n "${CREDENTIAL}" ]; then
     SOURCE="bootstrap mint"
   else
-    echo "::warning::CF_BOOTSTRAP_TOKEN could not mint a deploy token (revoked? no API Tokens: Write?); falling back."
+    # Never swallow this: a silent failure here is what let a run fall back to a
+    # revoked token and fail later with an unrelated-looking auth error.
+    echo "::warning::CF_BOOTSTRAP_TOKEN could not mint a deploy token; falling back. Reason:"
+    tail -15 "${MINT_LOG}" | sed 's/^/    /'
   fi
+  rm -f "${MINT_LOG}"
 fi
 
 if [ -z "${CREDENTIAL}" ] && [ -n "${CF_REFRESH_TOKEN:-}" ]; then
