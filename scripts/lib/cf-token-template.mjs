@@ -70,26 +70,15 @@ export const TOKEN_TEMPLATES = {
       // set — so without these the fallback path could not push a build
       // environment, trigger a build, or deploy a Pages project.
       //
-      // Cloudflare publishes no template key for either, and the form drops keys
-      // it does not recognise, so a wrong guess fails silently. The authoritative
-      // identities, read from this account's own permission-group list
-      // (GET /api/v4/user/tokens/permission_groups via a dashboard session), are:
-      //
-      //   Pages Write       8d28297797f24fb8a0c332fe0866ec89  com.cloudflare.api.account
-      //   Workers CI Write  2e095cf436e2455fa62c9a9c2e18c478  com.cloudflare.api.account
-      //
-      // Note the names use Cloudflare's older Read/Write generation — there is no
-      // "Edit" spelling for these two — while the template URL's own vocabulary is
-      // read|edit for the newer groups. The group id is a UUID and is NOT accepted
-      // as a key by the form (verified), so several spellings are sent and the
-      // page pre-fills whichever it knows; a missed row is reported by the
-      // capability probe and named in the checklist below.
-      { key: 'pages', type: 'write', inferred: true },
-      { key: 'pages', type: 'edit', inferred: true },
-      { key: 'cloudflare_pages', type: 'write', inferred: true },
-      { key: 'cloudflare_pages', type: 'edit', inferred: true },
-      { key: 'workers_ci', type: 'write', inferred: true },
+      // Workers Builds ("Workers 构建配置" / "Workers CI Write", account scope).
       { key: 'workers_ci', type: 'edit', inferred: true }
+      // "Cloudflare Pages" ("Pages Write", account scope, id
+      // 8d28297797f24fb8a0c332fe0866ec89) is deliberately NOT listed: it cannot
+      // be pre-filled through this URL. Verified against the rendered form, one
+      // candidate at a time — pages:edit, pages:write, cloudflare_pages:edit,
+      // cloudflare_pages:write and the group's UUID were all ignored, while the
+      // same page pre-filled the other nine rows. The checklist below therefore
+      // tells the operator to add that single row by hand.
     ],
     checklist: [
       'Workers Scripts: Edit（部署 Worker）',
@@ -100,8 +89,8 @@ export const TOKEN_TEMPLATES = {
       'Workers Routes: Edit ← 域级权限，绑定自定义域名必需',
       'Zone: Read（按主机名解析所属 zone）',
       'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）',
-      'Workers CI Write（即 Workers Builds，**账户级**；控制台里就叫 “Workers CI Write”。**模板 URL 可能预填不上**，没有就手动 “Add more” 添加）',
-      'Pages Write（**账户级**；控制台里叫 “Pages Write”，不要找 “Pages Edit”，没有这个拼写。不做 Pages 部署可跳过。**同样可能预填不上**）'
+      'Workers 构建配置：「编辑」（= Workers CI Write，**账户级**；链接已预填）',
+      '⚠ Cloudflare Pages：「编辑」（= Pages Write，**账户级**）—— **这一行无法通过链接预填，必须手动加**：点「添加更多」→ 资源选「帐户」→ 权限选「Cloudflare Pages」→ 级别选「编辑」。不做 Pages 部署可跳过'
     ]
   },
   runtime: {
@@ -114,22 +103,18 @@ export const TOKEN_TEMPLATES = {
       { key: 'zone', type: 'read' },
       // Bind / unbind Worker custom domains.
       { key: 'workers_routes', type: 'edit' },
-      // Authoritative names (see the ci preset for the ids): "Workers CI Write"
-      // and "Pages Write", both account scope, older Read/Write generation.
-      // Several spellings are sent because the form drops keys it cannot match.
-      { key: 'workers_ci', type: 'write', inferred: true },
-      { key: 'workers_ci', type: 'edit', inferred: true },
-      { key: 'pages', type: 'write', inferred: true },
-      { key: 'pages', type: 'edit', inferred: true },
-      { key: 'cloudflare_pages', type: 'write', inferred: true },
-      { key: 'cloudflare_pages', type: 'edit', inferred: true }
+      // One type only: the form treats each (key, type) pair as its own row, so
+      // listing several types for one permission pre-fills duplicate rows
+      // (observed with workers_ci before this was fixed). Pages is not listed at
+      // all — it cannot be pre-filled; see the ci preset for the evidence.
+      { key: 'workers_ci', type: 'edit', inferred: true }
     ],
     checklist: [
       'Workers Scripts: Read（解析 Worker tag）',
       'Zone: Read（按主机名解析所属 zone）',
       'Workers Routes: Edit（绑定/解绑自定义域名）',
-      'Workers CI Write（即 Workers Builds，**账户级**；触发构建、下发构建环境变量。**可能预填不上**，请手动确认）',
-      'Pages Write（**账户级**；仅当还用 CMS 管理 Pages 站点时。**可能预填不上**，请手动确认）'
+      'Workers 构建配置：「编辑」（= Workers CI Write，**账户级**；链接已预填）',
+      '⚠ Cloudflare Pages：「编辑」（= Pages Write，**账户级**）—— **无法通过链接预填，必须手动加**：资源选「帐户」→ 权限选「Cloudflare Pages」→ 级别选「编辑」。仅当还用 CMS 管理 Pages 站点时需要'
     ]
   }
 }

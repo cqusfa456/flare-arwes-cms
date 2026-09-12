@@ -99,9 +99,15 @@ if (!token) {
   const url = buildTokenTemplateUrl(TEMPLATE_ID, { accountId })
 
   console.log(`\n即将创建：${template.label}`)
-  console.log(`用途：${template.purpose}\n`)
-  console.log('页面会自动勾选这些权限（请在页面上核对）：')
+  console.log(`用途：${template.purpose}`)
+  console.log(`令牌名称（页面上应显示）：${template.tokenName}\n`)
+  // The checklist is honest about what the link can and cannot pre-fill: some
+  // permissions have no published template key, and at least one ("Cloudflare
+  // Pages") is ignored by the form even when guessed, so it has to be added by
+  // hand. Saying so here is cheaper than discovering it from a failing deploy.
+  console.log('权限清单（链接能预填的会预填，标 ⚠ 的必须手动添加）：')
   for (const line of tokenChecklist(TEMPLATE_ID)) console.log(`  · ${line}`)
+  console.log('\n创建后请对照摘要页：上面清单里的每一行都应存在，且不应有重复行。')
   console.log('\n如果没有自动打开浏览器，请手动访问：')
   console.log(`  ${url}\n`)
 
