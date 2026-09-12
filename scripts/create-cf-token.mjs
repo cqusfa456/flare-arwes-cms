@@ -224,7 +224,9 @@ const policies = [
 const body = { name: spec.tokenName, policies }
 if (!flag('no-expiry')) {
   if (!Number.isFinite(ttlDays) || ttlDays <= 0) fail(`--ttl-days 需要一个正数，收到 ${ttlDays}`)
-  body.expires_on = new Date(Date.now() + ttlDays * 86400000).toISOString()
+  body.expires_on = new Date(Date.now() + ttlDays * 86400000)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
 }
 console.log('[3/4] 准备创建 ...')
 console.log(`  名称: ${body.name}`)
