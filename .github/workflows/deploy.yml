@@ -45,6 +45,11 @@ jobs:
   deploy-cms:
     name: Deploy CMS Worker
     runs-on: ubuntu-latest
+    # Serialise CMS deploys: the runtime-credential step prunes superseded
+    # tokens by name, which must not delete the token a parallel run is using.
+    concurrency:
+      group: deploy-cms
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
