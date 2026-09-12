@@ -141,7 +141,7 @@ const main = async () => {
     const out = wrangler([
       'd1',
       'execute',
-      databaseName,
+      local ? databaseName : databaseId,
       local ? '--local' : '--remote',
       '--command',
       sql
