@@ -233,8 +233,14 @@ node scripts/set-cf-token.mjs
 > 向导里的 OAuth 登录只用在本会话内执行 wrangler 命令，不再写入 secret。
 
 凭据：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，未设置时回落到 D1 设置
-（可在 Admin → Sites 页面底部保存，便于轮换而无需重新部署）。API token 永不返回给客户端；
-Deploy Hook URL 属于能力型 URL，在 JSON 响应中被掩码。
+（可在 Admin → Sites 页面底部保存，便于轮换而无需重新部署）。
+
+- **部署 workflow 会自动装好这两个 secret**：`.github/workflows/deploy.yml` 里有一步
+  `wrangler secret put`，优先使用专用的 GitHub secret **`CF_SITES_API_TOKEN`**（用
+  `node scripts/set-cf-token.mjs runtime` 生成，权限最小：Workers Scripts:Read、Zone:Read、
+  Workers Routes:Edit、Workers CI:Edit(=Builds)、Pages:Edit），未设置时回落到 CI 的
+  `CF_API_TOKEN` 并打印告警。所以不需要手工 `wrangler secret put`
+- API token 永不返回给客户端；Deploy Hook URL（能力型 URL）与构建 token 在 JSON 响应中被掩码
 
 ### 从 CMS 注册与构建一个站点
 

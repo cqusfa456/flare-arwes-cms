@@ -11,6 +11,16 @@ on:
 #   CF_API_TOKEN          — Cloudflare API token (Workers Scripts: Edit,
 #                           Pages: Edit, D1, R2, KV permissions)
 #   CF_ACCOUNT_ID         — Cloudflare account ID
+#   CF_SITES_API_TOKEN    — (optional) dedicated token for the CMS runtime.
+#                           Deploying pushes it into the Worker as CF_API_TOKEN
+#                           so the CMS can manage domains, builds and the build
+#                           environment. When unset the CI token above is used,
+#                           which works but is broader than the CMS needs.
+#                           Must be user-scoped (the Workers Builds API rejects
+#                           account-scoped tokens) and carry Workers Builds
+#                           Configuration: Edit, Workers Scripts: Read,
+#                           Zone: Read and, for Pages sites, Pages: Edit.
+#                           Create it with: node scripts/set-cf-token.mjs runtime
 #   CF_D1_DATABASE_ID     — D1 database ID (create: wrangler d1 create)
 #   CF_R2_BUCKET_NAME     — R2 bucket name (create: wrangler r2 bucket create)
 #   CF_KV_NAMESPACE_ID    — KV namespace ID (create: wrangler kv namespace create)
@@ -143,12 +153,50 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
+      # Hand the deployed CMS the credentials it needs to drive Cloudflare at
+      # runtime (custom domains, Workers Builds, the trigger's build
+      # environment). Without these the Sites page can register sites and own
+      # content, but every build/domain action reports "credentials are not
+      # configured".
+      #
+      # The Worker resolves credentials environment-first
+      # (CF_API_TOKEN / CF_ACCOUNT_ID) and only then falls back to D1 settings,
+      # so this is the same mechanism as Admin → Sites → Save credentials —
+      # just automated. A dedicated CF_SITES_API_TOKEN is preferred because the
+      # runtime token only needs the Sites permissions; the CI token is broader
+      # than the CMS requires.
+      - name: Set Cloudflare API worker secrets
+        working-directory: cms/packages/cms
+        env:
+          CI_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
+          ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          RUNTIME_TOKEN="${SITES_API_TOKEN:-$CI_API_TOKEN}"
+          if [ -z "$RUNTIME_TOKEN" ]; then
+            echo "::warning::No Cloudflare API token available; skipping CMS runtime credentials."
+            exit 0
+          fi
+          if [ -z "$SITES_API_TOKEN" ]; then
+            echo "::warning::CF_SITES_API_TOKEN is not set - using the CI token for the CMS runtime. Create a scoped token (node scripts/set-cf-token.mjs runtime) and store it as CF_SITES_API_TOKEN."
+          fi
+          printf '%s' "$RUNTIME_TOKEN" | npx wrangler secret put CF_API_TOKEN --env production
+          if [ -n "$ACCOUNT_ID" ]; then
+            printf '%s' "$ACCOUNT_ID" | npx wrangler secret put CF_ACCOUNT_ID --env production
+          else
+            echo "::warning::CF_ACCOUNT_ID is not set; the CMS will need the account id saved from Admin → Sites."
+          fi
+
 # NOTE: this workflow deploys ONLY the CMS Worker.
 #
 # Site builds are owned by the CMS itself: each site is registered in
 # Admin → Sites with its hosting target (a Worker with static assets, or a
-# Cloudflare Pages project) and a Deploy Hook, and rebuilding is triggered from
-# there. See cms/packages/core/src/services/sites.ts.
+# Cloudflare Pages project), and building, domain binding and content ownership
+# are driven from there. See cms/packages/core/src/services/sites.ts.
+#
+# The runtime credentials this workflow installs (CF_API_TOKEN /
+# CF_ACCOUNT_ID) are what let the Sites page talk to Cloudflare. Nothing else has
+# to be pasted by hand.
 #
 # Previously a `deploy-docs` job built ./apps/docs and ran `wrangler pages
 # deploy` here. It was removed so that all sites — their build config, domain
@@ -157,27 +205,22 @@ jobs:
 #
 # Setup required once per site in Cloudflare. For the docs Worker
 # (apps/docs/wrangler.jsonc, name `arwes-docs-worker`):
-#   1. Connect the Worker to this Git repository: Worker → Settings → Builds.
-#   2. Create a Workers Builds trigger with
+#   1. Make the Worker exist and connect it to this Git repository:
+#      Worker → Settings → Builds.
+#   2. In Admin → Sites press "Import Arwes presets" to register it (or register
+#      manually), then press "Push build config + env". That installs
 #        build_command  : sh ./apps/docs/scripts/build-worker.sh
 #        deploy_command : cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy
 #        root_directory : /
-#      (the CMS can push build/deploy command + root directory from Admin → Sites
-#      → "Push build config to Cloudflare").
-#   3. Create a Deploy Hook under the same Settings → Builds screen and paste its
-#      URL into Admin → Sites. It looks like
-#      https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/<id> —
-#      the CMS rejects a Pages hook pasted onto a Worker site (and vice versa).
-#   4. Set the build-time environment variables on the trigger (Workers Builds
-#      keeps them per trigger): PUBLIC_FLARE_API_URL, PUBLIC_FLARE_API_TOKEN and,
-#      when content is scoped per site, PUBLIC_FLARE_SITE (the site slug
-#      registered in Admin → Sites). Without PUBLIC_FLARE_SITE a build sees
-#      shared content only once any site is registered.
-#   5. Attach custom domains from Admin → Sites. A Worker can serve many
-#      hostnames; the CMS binds them through the Workers custom-domains API.
-#
-# For a Pages-hosted site instead, the equivalent steps are: connect the Pages
-# project to this Git repository (Direct Upload projects cannot be rebuilt by a
-# Deploy Hook), set the build command / output directory, create a Deploy Hook
-# and paste its URL into Admin → Sites.
+#      and the build environment (PUBLIC_FLARE_API_URL, PUBLIC_FLARE_SITE and a
+#      read-only PUBLIC_FLARE_API_TOKEN scoped to that site) on the trigger, so a
+#      build knows which CMS and which site it is building for.
+#   3. Press "Build now". Worker sites build through the Builds API
+#      (POST .../builds/triggers/{uuid}/builds), so no Deploy Hook is required;
+#      creating one and pasting its URL into the site stays available as a
+#      fallback. Pages sites still require a Deploy Hook (Direct Upload projects
+#      cannot be rebuilt by one).
+#   4. Attach custom domains from Admin → Sites. A Worker can serve many
+#      hostnames; the CMS binds them through the Workers custom-domains API and
+#      rejects a hostname that is not inside a zone the token can see.
 

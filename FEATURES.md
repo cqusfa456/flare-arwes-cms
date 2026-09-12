@@ -277,7 +277,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 - **预设**：`services/site-presets.ts` 用 `{{slug}}` 占位描述本仓库的构建契约（`apps/docs` 已内置），可一键导入缺失的站点；新增一个 Astro 应用只需加一条预设，不必改代码
 - **内容归属**：`content.site_id` 为 `NULL` 表示**共享内容**（所有站点可读），否则只属于该站点；后台可见每个站点拥有/共享的内容条数
 
-**凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署；Cloudflare API token、Deploy Hook URL（能力型 URL）与构建 token 都永不返回给客户端（JSON 响应中掩码）。
+**凭据**：Worker secrets `CF_API_TOKEN` / `CF_ACCOUNT_ID` 优先，缺省回落到 D1 设置，可在 Admin → Sites 中轮换而无需重新部署。**部署流水线会自动装好这两个 secret**：`.github/workflows/deploy.yml` 用 `wrangler secret put` 下发，优先取专用的 GitHub secret `CF_SITES_API_TOKEN`（最小权限 runtime token，`node scripts/set-cf-token.mjs runtime` 一键生成），未设置时回落到 CI 的 `CF_API_TOKEN` 并告警。Cloudflare API token、Deploy Hook URL（能力型 URL）与构建 token 都永不返回给客户端（JSON 响应中掩码）。
 
 **代码**：`cms/packages/core/src/services/sites.ts`（注册表 + Cloudflare 客户端 + 构建/域名/构建环境逻辑）、`services/site-providers.ts`（托管类型元数据）、`services/site-presets.ts`（Arwes 预设）、`routes/admin-sites.ts`（页面 + JSON API，挂载于 `/admin/sites`）、`templates/pages/admin-sites.template.ts`（列表 / 新建 / 详情）。
 

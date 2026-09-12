@@ -67,23 +67,40 @@ const fail = (message) => {
   process.exit(1)
 }
 
+/**
+ * Which token this run manages. They are different tokens with different
+ * permissions and must not overwrite each other:
+ *
+ *   node scripts/set-cf-token.mjs            → ci      → GitHub secret CF_API_TOKEN
+ *   node scripts/set-cf-token.mjs runtime    → runtime → GitHub secret CF_SITES_API_TOKEN
+ *
+ * The workflow installs CF_SITES_API_TOKEN on the Worker as CF_API_TOKEN, which
+ * is what the CMS uses at runtime for domains, builds and build environments.
+ */
+const TEMPLATE_ID = (process.argv[2] || 'ci').trim()
+if (!TOKEN_TEMPLATES[TEMPLATE_ID]) {
+  fail(`未知的 token 模板 "${TEMPLATE_ID}"。可用：${Object.keys(TOKEN_TEMPLATES).join(', ')}`)
+}
+const SECRET_BY_TEMPLATE = { ci: 'CF_API_TOKEN', runtime: 'CF_SITES_API_TOKEN' }
+const SECRET_NAME = SECRET_BY_TEMPLATE[TEMPLATE_ID] || 'CF_API_TOKEN'
+const template = TOKEN_TEMPLATES[TEMPLATE_ID]
+
 let token = (process.env.CF_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN || '').trim()
 const accountId = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
 
 // ---- 0) 没有 token 时，打开预填权限的 Cloudflare 页面，粘贴回来即可 ----
 if (!token) {
   if (!process.stdin.isTTY) {
-    const url = buildTokenTemplateUrl('ci', { accountId })
-    fail(`未提供 token。设置 CF_API_TOKEN 环境变量，或打开这个已预填权限的页面创建：\n  ${url}`)
+    const url = buildTokenTemplateUrl(TEMPLATE_ID, { accountId })
+    fail(`未提供 token。用环境变量传入，或打开这个已预填权限的页面创建后重跑：\n  ${url}`)
   }
 
-  const template = TOKEN_TEMPLATES.ci
-  const url = buildTokenTemplateUrl('ci', { accountId })
+  const url = buildTokenTemplateUrl(TEMPLATE_ID, { accountId })
 
   console.log(`\n即将创建：${template.label}`)
   console.log(`用途：${template.purpose}\n`)
   console.log('页面会自动勾选这些权限（请在页面上核对）：')
-  for (const line of tokenChecklist('ci')) console.log(`  · ${line}`)
+  for (const line of tokenChecklist(TEMPLATE_ID)) console.log(`  · ${line}`)
   console.log('\n如果没有自动打开浏览器，请手动访问：')
   console.log(`  ${url}\n`)
 
@@ -180,7 +197,7 @@ const setSecret = async (name, value) => {
   }
 }
 
-const toWrite = { CF_API_TOKEN: token }
+const toWrite = { [SECRET_NAME]: token }
 if (resolvedAccountId) toWrite.CF_ACCOUNT_ID = resolvedAccountId
 
 for (const [name, value] of Object.entries(toWrite)) {
@@ -194,7 +211,12 @@ for (const [name, value] of Object.entries(toWrite)) {
 
 console.log('\n✅ 完成。只改动了:', Object.keys(toWrite).join(', '))
 console.log('   未触碰 JWT_SECRET / D1 / KV / R2 / FLARE_API_URL / PAGES_PROJECT_NAME。')
-console.log('\n下一步建议先本地验证迁移能打到远端:')
-console.log(
-  '   cd cms/packages/cms && npx wrangler d1 migrations apply DB --env production --remote'
-)
+console.log('\n下一步：')
+if (TEMPLATE_ID === 'runtime') {
+  console.log('   这个 token 由部署 workflow 装到 Worker 上（作为 CF_API_TOKEN），下次 push 生效；')
+  console.log('   也可立刻在 Admin → Sites 底部表单粘贴使用（存进 D1 设置，无需重新部署）。')
+} else {
+  console.log('   push 到 main 会触发部署。')
+}
+console.log('   生产库 schema 由 CMS 运行时迁移（Worker 打包了全部 migrations，首个请求时应用），')
+console.log('   不要用 wrangler d1 migrations apply --remote：那会引入第二套跟踪表。')

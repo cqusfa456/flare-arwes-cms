@@ -18,9 +18,12 @@
  *                 Stored as the `CF_API_TOKEN` GitHub secret. Must be a
  *                 long-lived API token: an OAuth access token lives 1 hour,
  *                 which is what made the pipeline fail roughly hourly.
- *   * `runtime` — used by the deployed CMS Worker to manage custom domains and
- *                 Workers Builds. Stored on the Worker (Admin → Sites, or a
- *                 Worker secret). The Workers Builds API only accepts a
+ *   * `runtime` — used by the deployed CMS Worker to manage custom domains,
+ *                 Workers Builds and each trigger's build environment. Stored as
+ *                 the `CF_SITES_API_TOKEN` GitHub secret, which the deploy
+ *                 workflow installs on the Worker as `CF_API_TOKEN` (see
+ *                 .github/workflows/deploy.yml); it can also be pasted into
+ *                 Admin → Sites. The Workers Builds API only accepts a
  *                 user-scoped token.
  */
 
@@ -53,7 +56,14 @@ export const TOKEN_TEMPLATES = {
       // NOT part of Cloudflare's Workers template: Worker custom domains have
       // Cloudflare create the DNS record internally. Kept because the same
       // token also covers Pages custom domains and direct DNS work.
-      { key: 'dns', type: 'edit' }
+      { key: 'dns', type: 'edit' },
+      // The CMS is the control plane for site builds, and the deploy workflow
+      // installs this same token on the Worker when CF_SITES_API_TOKEN is not
+      // set — so without these two the fallback path could not push a build
+      // environment or trigger a build. Confirm both rows on the dashboard
+      // page: Cloudflare publishes no key for either.
+      { key: 'workers_ci', type: 'edit', inferred: true },
+      { key: 'pages', type: 'edit', inferred: true }
     ],
     checklist: [
       'Workers Scripts: Edit（部署 Worker）',
@@ -63,12 +73,15 @@ export const TOKEN_TEMPLATES = {
       'Account Settings: Read（列出账号，用于自动填写 CF_ACCOUNT_ID）',
       'Workers Routes: Edit ← 域级权限，绑定自定义域名必需',
       'Zone: Read（按主机名解析所属 zone）',
-      'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）'
+      'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）',
+      'Workers CI: Edit（即 Workers Builds；CMS 触发构建/下发构建环境变量要用到，key 官方未公布，请确认已勾选）',
+      'Pages: Edit（CMS 管理 Pages 站点时用到，key 同样未公布，请确认）'
     ]
   },
   runtime: {
     label: 'Cloudflare Runtime token（CMS 管理域名/构建）',
-    purpose: 'CMS Worker 管理自定义域名与 Workers Builds（必须 user-scoped）',
+    purpose:
+      'CMS Worker 管理自定义域名、Workers Builds 与构建环境变量（必须 user-scoped；存为 GitHub secret CF_SITES_API_TOKEN 或直接填进 Admin → Sites）',
     tokenName: 'Flare CMS Runtime (sites)',
     permissions: [
       { key: 'workers_scripts', type: 'read' },
@@ -79,13 +92,17 @@ export const TOKEN_TEMPLATES = {
       // (Cloudflare's name for Workers Builds) but publishes no key for it.
       // Keys follow the snake_case display name, so this is the expected value
       // — flagged as inferred so the UI asks the user to confirm the row.
-      { key: 'workers_ci', type: 'edit', inferred: true }
+      { key: 'workers_ci', type: 'edit', inferred: true },
+      // Only needed when the CMS also manages Cloudflare Pages sites (domains
+      // and build config). Same caveat as above: confirm the row on the page.
+      { key: 'pages', type: 'edit', inferred: true }
     ],
     checklist: [
       'Workers Scripts: Read（解析 Worker tag）',
       'Zone: Read（按主机名解析所属 zone）',
       'Workers Routes: Edit（绑定/解绑自定义域名）',
-      'Workers CI: Edit（即 Workers Builds；这个 key 官方未公布，请在页面上确认已勾选）'
+      'Workers CI: Edit（即 Workers Builds；触发构建、下发构建环境变量。这个 key 官方未公布，请在页面上确认已勾选）',
+      'Pages: Edit（仅当还用 CMS 管理 Pages 站点时；key 同样未公布，请确认）'
     ]
   }
 }
