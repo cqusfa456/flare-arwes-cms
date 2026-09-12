@@ -30,4 +30,27 @@ const pages = defineCollection({
   })
 })
 
-export const collections = { pages }
+// Documentation managed in the CMS (Admin → Content → docs / docs-sections).
+// `docs` items carry title/slug/excerpt/order plus markdown content and are
+// rendered under /docs/<slug>; `docs-sections` carries the section metadata
+// (name/slug/order/description) and is available for navigation.
+const docs = defineCollection({
+  loader: sciFiLoader({
+    apiUrl: API_URL,
+    apiToken: API_TOKEN,
+    site: SITE,
+    collection: 'docs',
+    filter: { status: 'published' }
+  })
+})
+
+const docsSections = defineCollection({
+  loader: sciFiLoader({
+    apiUrl: API_URL,
+    apiToken: API_TOKEN,
+    site: SITE,
+    collection: 'docs-sections'
+  })
+})
+
+export const collections = { pages, docs, docsSections }
