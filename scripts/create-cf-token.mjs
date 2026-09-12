@@ -93,7 +93,18 @@ const ttlDays = Number(value('ttl-days', '365'))
 const dryRun = flag('dry-run')
 const printToken = flag('print-token')
 const writeSecret = !flag('no-secret') && !printToken
-const bootstrap = (process.env.CF_BOOTSTRAP_TOKEN || '').trim()
+// Tokens contain no whitespace, but a value copied out of a browser or pasted
+// into a secret can arrive with an embedded newline. A newline inside a header
+// value makes Cloudflare answer HTTP 400 "Invalid request headers", which reads
+// like a permissions problem and sent us looking in the wrong place once.
+const rawBootstrap = process.env.CF_BOOTSTRAP_TOKEN || ''
+const bootstrap = rawBootstrap.replace(/\s+/g, '')
+if (rawBootstrap && !bootstrap) fail('CF_BOOTSTRAP_TOKEN 只有空白字符，请重新复制 token')
+if (rawBootstrap !== bootstrap) {
+  console.log(
+    `  note: CF_BOOTSTRAP_TOKEN 含 ${rawBootstrap.length - bootstrap.length} 个空白字符，已自动去除（这类字符会让 Cloudflare 返回 400 Invalid request headers）`
+  )
+}
 
 if (!bootstrap) {
   // The bootstrap token is the one thing that cannot be minted, so make creating
