@@ -133,20 +133,22 @@ async function stepCloudflareResources(apiToken) {
   if (whoami.includes('Not logged in') || whoami.includes('Failed to fetch auth token')) {
     log.warn('Cloudflare 未登录，跳过资源创建。可稍后手动运行:')
     log.warn('  cd cms/packages/cms && npx wrangler login')
-    log.warn('  npx wrangler d1 create arwes-cms-db')
-    log.warn('  npx wrangler r2 bucket create arwes-cms-media')
-    log.warn('  npx wrangler kv namespace create arwes-cms-kv')
+    log.warn('  npx wrangler d1 create sci-fi-cms-db')
+    log.warn('  npx wrangler r2 bucket create sci-fi-cms-media')
+    log.warn('  npx wrangler kv namespace create sci-fi-cms-cache')
     return { d1Id: null, r2Name: null, kvId: null }
   }
 
-  // 资源 ID 不再写入 wrangler.toml（保留 REPLACE_WITH_YOUR_* 占位符），
-  // 只返回给 stepGitHubSecrets 写入 GitHub secrets
+  // The names below must match scripts/cf-resources.py (D1_NAME / KV_NAME /
+  // R2_NAME): the deploy resolves the resources by name and creates them when
+  // missing, so a differently named database here would leave the deployment
+  // talking to a second, empty one.
   const resourceInfo = { d1Id: null, r2Name: null, kvId: null }
 
   // --- D1 database ---
   const d1Name = await text({
     message: 'D1 数据库名称（用于存储 CMS 内容）:',
-    initialValue: 'arwes-cms-db'
+    initialValue: 'sci-fi-cms-db'
   })
   if (isCancel(d1Name)) process.exit(0)
 
@@ -155,7 +157,7 @@ async function stepCloudflareResources(apiToken) {
   const d1Out = wr(`d1 create ${d1Name}`)
   const d1Id =
     extractId(d1Out, /database_id\s*=\s*"([^"]+)"/) || extractId(d1Out, /(\b[0-9a-f]{32}\b)/)
-  s.stop(d1Id ? `D1 数据库已创建: ${d1Id}` : 'D1 创建失败（可能已存在）')
+  s.stop(d1Id ? `D1 数据库已就绪: ${d1Id}` : 'D1 创建失败（可能已存在）')
 
   if (d1Id) {
     resourceInfo.d1Id = d1Id
@@ -163,8 +165,8 @@ async function stepCloudflareResources(apiToken) {
 
   // --- R2 bucket ---
   const r2Name = await text({
-    message: 'R2 存储桶名称（用于媒体文件）:',
-    initialValue: 'arwes-cms-media'
+    message: 'R2 存储桶名称（仅 R2 后端需要；B2/S3 后端会在部署时移除该绑定）:',
+    initialValue: 'sci-fi-cms-media'
   })
   if (isCancel(r2Name)) process.exit(0)
 
@@ -180,20 +182,20 @@ async function stepCloudflareResources(apiToken) {
   // --- KV namespace ---
   const kvName = await text({
     message: 'KV Namespace 名称（用于缓存/限流）:',
-    initialValue: 'arwes-cms-kv'
+    initialValue: 'sci-fi-cms-cache'
   })
   if (isCancel(kvName)) process.exit(0)
 
   s.start(`创建 KV namespace ${kvName}...`)
   const kvOut = wr(`kv namespace create ${kvName}`)
   const kvId = extractId(kvOut, /id\s*=\s*"([^"]+)"/) || extractId(kvOut, /(\b[0-9a-f]{32}\b)/)
-  s.stop(kvId ? `KV namespace 已创建: ${kvId}` : 'KV 创建失败（可能已存在）')
+  s.stop(kvId ? `KV namespace 已就绪: ${kvId}` : 'KV 创建失败（可能已存在）')
 
   if (kvId) {
     resourceInfo.kvId = kvId
   }
 
-  log.success('D1/R2/KV 资源就绪（ID 将写入 GitHub secrets）')
+  log.success('D1/R2/KV 资源就绪（部署工作流按名字查找，无需写入 secrets）')
   return resourceInfo
 }
 

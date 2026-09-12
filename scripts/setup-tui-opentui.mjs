@@ -685,6 +685,7 @@ const panelCloudflare = async () => {
       { name: '创建 D1 数据库', value: 'd1' },
       { name: '创建 R2 桶', value: 'r2' },
       { name: '创建 KV namespace', value: 'kv' },
+      { name: '创建 CMS 管理员账号（写入已部署的 D1）', value: 'admin' },
       { name: '配置账号 secrets（CF_ACCOUNT_ID / SCIFI_API_URL 等）', value: 'secrets' },
       { name: '返回主菜单', value: 'exit' }
     ])
@@ -774,7 +775,9 @@ const panelCloudflare = async () => {
     }
 
     if (action === 'd1') {
-      const name = await askInput('D1 数据库名称:', { value: 'arwes-cms-db' })
+      // The name must match scripts/cf-resources.py's D1_NAME: the deploy looks
+      // the database up by name and creates it when missing.
+      const name = await askInput('D1 数据库名称:', { value: 'sci-fi-cms-db' })
       if (name === BACK) continue
       setStatus(`创建 D1 ${name}...`)
       await sleep(300)
@@ -786,18 +789,20 @@ const panelCloudflare = async () => {
         id = null
       }
       if (id) {
-        setStatus('✓ D1 已创建，保存 CF_D1_DATABASE_ID...')
-        await saveSecret('CF_D1_DATABASE_ID', id)
-        await sleep(500)
+        // Deliberately NOT written to a secret any more: the deploy resolves the
+        // database by name, and a stored id whose database no longer exists is
+        // what used to fail the workflow with an opaque binding error.
+        setStatus(`✓ D1 ${name} 已就绪（id ${String(id).slice(0, 8)}…，无需写入 secret）`)
+        await sleep(700)
       } else {
-        setStatus('D1 创建失败（未登录则无法创建），可手动在 secrets 面板补录')
+        setStatus('D1 创建失败（未登录则无法创建）；首次部署时工作流也会自动创建')
         await sleep(1200)
       }
       continue
     }
 
     if (action === 'r2') {
-      const name = await askInput('R2 桶名称:', { value: 'arwes-cms-media' })
+      const name = await askInput('R2 桶名称:', { value: 'sci-fi-cms-media' })
       if (name === BACK) continue
       setStatus(`创建 R2 桶 ${name}...`)
       await sleep(300)
@@ -806,14 +811,14 @@ const panelCloudflare = async () => {
       } catch {
         // 忽略
       }
-      await saveSecret('CF_R2_BUCKET_NAME', name)
-      setStatus('✓ CF_R2_BUCKET_NAME 已保存')
-      await sleep(500)
+      setStatus(`✓ R2 桶 ${name} 已就绪（仅 R2 后端需要；无需写入 secret）`)
+      await sleep(700)
       continue
     }
 
     if (action === 'kv') {
-      const name = await askInput('KV namespace 名称:', { value: 'arwes-cms-kv' })
+      // Title used by cf-resources.py's KV_NAME lookup.
+      const name = await askInput('KV namespace 名称:', { value: 'sci-fi-cms-cache' })
       if (name === BACK) continue
       setStatus(`创建 KV ${name}...`)
       await sleep(300)
@@ -825,12 +830,65 @@ const panelCloudflare = async () => {
         id = null
       }
       if (id) {
-        setStatus('✓ KV 已创建，保存 CF_KV_NAMESPACE_ID...')
-        await saveSecret('CF_KV_NAMESPACE_ID', id)
-        await sleep(500)
+        setStatus(`✓ KV ${name} 已就绪（id ${String(id).slice(0, 8)}…，无需写入 secret）`)
+        await sleep(700)
       } else {
-        setStatus('KV 创建失败，可手动在 secrets 面板补录')
+        setStatus('KV 创建失败；首次部署时工作流也会自动创建')
         await sleep(1200)
+      }
+      continue
+    }
+
+    if (action === 'admin') {
+      // First administrator for the DEPLOYED database. Delegates to
+      // scripts/create-admin.mjs so the TUI, the classic TUI and a bare command
+      // all write the same row with the same pbkdf2 scheme the Worker verifies.
+      // The password travels through the environment, never through argv.
+      const email = await askInput('管理员邮箱:', { value: 'admin@arwes.dev' })
+      if (email === BACK) continue
+      if (!String(email).includes('@')) {
+        setStatus('邮箱格式不正确')
+        await sleep(1200)
+        continue
+      }
+      const usernameRaw = await askInput('管理员用户名:', { value: 'admin' })
+      if (usernameRaw === BACK) continue
+      // Constrain the charset: the value is interpolated into a command line.
+      const username = /^[A-Za-z0-9._-]+$/.test(String(usernameRaw)) ? String(usernameRaw) : 'admin'
+      const password = await askInput('管理员密码（至少 8 位）:', {})
+      if (password === BACK) continue
+      if (!password || String(password).length < 8) {
+        setStatus('密码至少 8 位')
+        await sleep(1200)
+        continue
+      }
+
+      setStatus('在远端 D1 创建管理员...')
+      await sleep(300)
+      let out = ''
+      try {
+        out = execSync(
+          `"${process.execPath}" "${join(ROOT, 'scripts', 'create-admin.mjs')}" --email "${email}" --username "${username}"`,
+          {
+            cwd: ROOT,
+            encoding: 'utf-8',
+            stdio: 'pipe',
+            env: {
+              ...process.env,
+              SCIFI_ADMIN_PASSWORD: String(password),
+              ...(cfToken ? { CLOUDFLARE_API_TOKEN: cfToken } : {})
+            }
+          }
+        )
+      } catch (error) {
+        out = `${error.stdout || ''}${error.stderr || ''}`
+      }
+      if (/admin ready/.test(out)) {
+        setStatus(`✓ 管理员已创建：${email}`)
+        await sleep(900)
+      } else {
+        setStatus(`创建失败：${String(out).trim().split('\n').slice(-2).join(' | ').slice(0, 170)}`)
+        await sleep(2200)
       }
       continue
     }

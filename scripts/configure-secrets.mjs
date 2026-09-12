@@ -105,19 +105,18 @@ if (!accountId) {
 }
 console.log(`✓ account_id: ${accountId}`)
 
-// ---- 资源 ID（已创建的用已创建的；可环境变量覆盖）----
-console.log('\n[2/4] 资源确认...')
-const d1Id = process.env.CF_D1_DATABASE_ID || '9096c6ab-bb18-4f94-b836-c2673d3c8b19' // 已创建
-const kvId = process.env.CF_KV_NAMESPACE_ID || '50ff25b411a149cfbfdfeb615cd0acbd' // 已创建
-const r2Name = process.env.CF_R2_BUCKET_NAME || 'arwes-cms-media'
+// ---- 其他部署参数 ----
+//
+// D1 / KV / R2 的 ID 曾经在这里硬编码并写入 secrets。部署工作流现在按名字
+// 查找并按需创建这些资源（scripts/cf-resources.py），所以这里不再写它们：
+// 一个指向已删除资源的 ID 只会让部署以晦涩的绑定错误失败。
+console.log('\n[2/4] 部署参数确认...')
 const sciFiUrl = process.env.SCIFI_API_URL || 'https://sci-fi-cms.cqusfa.workers.dev'
 const pagesName = process.env.PAGES_PROJECT_NAME || 'arwes-docs'
 
-console.log(`  D1: ${d1Id}`)
-console.log(`  KV: ${kvId}`)
-console.log(`  R2: ${r2Name}`)
 console.log(`  SCIFI_URL: ${sciFiUrl}`)
 console.log(`  PAGES: ${pagesName}`)
+console.log('  D1/KV/R2: 由部署工作流按名字解析（不再写入 secrets）')
 
 // ---- 写入 secrets ----
 console.log('\n[3/4] 写入 GitHub secrets...')
@@ -156,9 +155,6 @@ const jwtSecret = `arwes-${Date.now().toString(36)}-${Math.random().toString(36)
 const secrets = {
   CF_API_TOKEN: cfToken,
   CF_ACCOUNT_ID: accountId,
-  CF_D1_DATABASE_ID: d1Id,
-  CF_R2_BUCKET_NAME: r2Name,
-  CF_KV_NAMESPACE_ID: kvId,
   JWT_SECRET: jwtSecret,
   SCIFI_API_URL: sciFiUrl,
   PAGES_PROJECT_NAME: pagesName
