@@ -110,6 +110,12 @@ D1 / KV / R2 不再需要写 ID：部署时按名字查找并按需创建（`scr
 node scripts/set-cf-token.mjs     # 打开页面 → 确认 → 粘贴 → 自动校验并写入 secret
 ```
 
+> **关于 OAuth 兜底路径（`CF_REFRESH_TOKEN`）**：`scripts/ci-cf-credential.sh` 支持用
+> `node scripts/oauth-login.mjs` 得到的 refresh token 每次换取新鲜凭据，但它**只能用一次**——
+> Cloudflare 每次兑换都会轮换，而 CI 无法把新值写回 secret（那需要一个能改仓库 secret 的
+> PAT）。用已轮换过的旧值重试还会触发 reuse 检测，撤销整条 token 家族。
+> 因此它只适合一次性部署；长期请用 `CF_API_TOKEN`。
+
 ## 功能亮点
 
 - **ARWES** — 科幻风格 UI 框架：动画、音效、帧边框、动态背景

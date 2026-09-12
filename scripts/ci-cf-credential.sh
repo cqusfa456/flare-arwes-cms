@@ -19,6 +19,20 @@
 # CF_CREDENTIAL_SOURCE naming which path produced it) through GITHUB_ENV, so it
 # is available to later steps as ${{ env.CF_CREDENTIAL }}.
 #
+# ⚠ The OAuth refresh token is SINGLE USE. Cloudflare rotates it on every
+# exchange, and a run that uses it cannot store the replacement (that would need
+# a credential with repository-secrets write). So the stored token works for
+# exactly one run and the next run fails with invalid_grant — as happened here
+# (run #57 consumed it, the following runs could not). Worse, re-presenting an
+# already-rotated token trips reuse detection and revokes the whole token family.
+#
+# Use the OAuth path for a one-off deploy, not as the permanent mechanism:
+# prefer a long-lived CF_API_TOKEN (node scripts/set-cf-token.mjs ci), which also
+# lets the deploy mint the Worker's scoped runtime credential. To make the OAuth
+# path sustainable, add a repository secret holding a PAT with secrets:write and
+# persist the rotated refresh token from the workflow — deliberately not done by
+# default, because CI would then hold a credential that can rewrite every secret.
+#
 # Usage (in a workflow step):
 #   env:
 #     CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
