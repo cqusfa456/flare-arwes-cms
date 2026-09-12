@@ -217,7 +217,9 @@ const policies = [
     effect: 'allow',
     // Every zone in the account: the CMS resolves the zone per hostname at bind
     // time, so pinning a single zone here would break multi-domain sites.
-    resources: { 'com.cloudflare.api.account.zone.*': '*' },
+    resources: {
+      [`com.cloudflare.api.account.${accountId}`]: { 'com.cloudflare.api.account.zone.*': '*' }
+    },
     permission_groups: zoneGroups.map((g) => ({ id: g.id }))
   }
 ]
