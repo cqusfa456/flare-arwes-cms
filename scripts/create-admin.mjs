@@ -105,6 +105,35 @@ const resolveDatabaseId = () => {
   return match.uuid
 }
 
+/** Remote D1 writes go through the API directly. wrangler d1 execute <name>
+ * resolves the NAME against the local wrangler.toml, whose database_id is still
+ * the placeholder (API error 7400 Invalid uuid), and passing the resolved uuid
+ * makes wrangler look for a database by that name. Neither works. */
+const queryRemote = async (accountId, databaseId, statement) => {
+  const token = (process.env.CLOUDFLARE_API_TOKEN || process.env.CF_API_TOKEN || '').trim()
+  if (!token) fail('remote writes need CLOUDFLARE_API_TOKEN (or CF_API_TOKEN) in the environment')
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'sci-fi-cms-admin'
+      },
+      body: JSON.stringify({ sql: statement })
+    }
+  )
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok || json.success === false) {
+    const detail = (json.errors ?? []).map((e) => e.message || 'code ' + e.code).join('; ')
+    throw new Error(
+      `${statement.slice(0, 50)}… -> HTTP ${res.status}${detail ? ': ' + detail : ''}`
+    )
+  }
+  return json
+}
+
 const main = async () => {
   if (!email) email = (await prompt('管理员邮箱: ')).toLowerCase()
   if (!email.includes('@')) fail(`"${email}" does not look like an email address`)
@@ -138,15 +167,25 @@ const main = async () => {
   const databaseId = resolveDatabaseId()
   console.log(`D1 ${databaseName} (${databaseId}) — ${local ? 'local' : 'remote'}`)
   try {
-    const out = wrangler([
-      'd1',
-      'execute',
-      local ? databaseName : databaseId,
-      local ? '--local' : '--remote',
-      '--command',
-      sql
-    ])
-    console.log(out.trim().split('\n').slice(0, 6).join('\n'))
+    if (local) {
+      const out = wrangler(['d1', 'execute', databaseName, '--local', '--command', sql])
+      console.log(out.trim().split('\n').slice(0, 6).join('\n'))
+    } else {
+      const accountId = (
+        process.env.CLOUDFLARE_ACCOUNT_ID ||
+        process.env.CF_ACCOUNT_ID ||
+        ''
+      ).trim()
+      if (!accountId)
+        fail('remote writes need CLOUDFLARE_ACCOUNT_ID (or CF_ACCOUNT_ID) in the environment')
+      const statements = sql
+        .split(/;\s*\n/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => (part.endsWith(';') ? part : part + ';'))
+      for (const statement of statements) await queryRemote(accountId, databaseId, statement)
+      console.log(`  ${statements.length} statement(s) applied to ${databaseName} (${databaseId})`)
+    }
   } catch (error) {
     const detail = `${error.stdout || ''}${error.stderr || ''}`.trim()
     if (/no such table/i.test(detail)) {
