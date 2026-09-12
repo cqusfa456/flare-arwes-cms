@@ -117,7 +117,7 @@ fi
 [ -n "${CF_BOOTSTRAP_TOKEN:-}" ] || fail 'CF_BOOTSTRAP_TOKEN is not set, so a replacement token cannot be minted'
 MINT_LOG="$(mktemp)"
 REPLACEMENT="$(CF_BOOTSTRAP_TOKEN="${CF_BOOTSTRAP_TOKEN}" CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID}" \
-  node "${SCRIPT_DIR}/create-cf-token.mjs" runtime --print-token --no-expiry 2>"${MINT_LOG}" \
+  node "${SCRIPT_DIR}/create-cf-token.mjs" runtime --print-token --no-expiry --prune 2>"${MINT_LOG}" \
   | sed -n 's/^__TOKEN__//p' | tail -1)"
 if [ -z "$REPLACEMENT" ]; then
   tail -15 "${MINT_LOG}" | sed 's/^/    /'

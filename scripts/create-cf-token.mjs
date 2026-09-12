@@ -235,6 +235,26 @@ console.log(`  名称: ${body.name}`)
 console.log(`  有效期: ${body.expires_on ? body.expires_on.slice(0, 10) : '永不过期'}`)
 console.log(`  账号级权限 ${accountGroups.length} 项 / 区域级权限 ${zoneGroups.length} 项`)
 
+// Delete every other token that shares this token's name, so repeated runs do
+// not pile up credentials. A revoked token cannot be addressed by the id from
+// /tokens/verify (it returns none), which is why the lookup is by name.
+const pruneSiblings = async (keepId) => {
+  const listed = await cf(`/accounts/${accountId}/tokens?per_page=50`)
+  const stale = (listed ?? []).filter((t) => t.name === spec.tokenName && t.id !== keepId)
+  if (stale.length === 0) {
+    console.log('  no superseded token to remove')
+    return
+  }
+  for (const token of stale) {
+    try {
+      await cf(`/accounts/${accountId}/tokens/${token.id}`, { method: 'DELETE' })
+      console.log(`  removed superseded token ${token.id}`)
+    } catch (error) {
+      console.log(`  could not remove ${token.id}: ${error.message}`)
+    }
+  }
+}
+
 if (dryRun) {
   console.log('\n--dry-run：未创建任何 token。')
   process.exit(0)

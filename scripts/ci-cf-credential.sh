@@ -68,7 +68,7 @@ if [ -n "${CF_BOOTSTRAP_TOKEN:-}" ]; then
   echo "Minting an on-demand deploy token from CF_BOOTSTRAP_TOKEN"
   MINT_LOG="$(mktemp)"
   CREDENTIAL="$(CF_BOOTSTRAP_TOKEN="${CF_BOOTSTRAP_TOKEN}" CF_ACCOUNT_ID="${CF_ACCOUNT_ID:-}" \
-    node "${SCRIPT_DIR}/create-cf-token.mjs" ci --print-token --ttl-days "${CI_TOKEN_TTL_DAYS:-1}" 2>"${MINT_LOG}" \
+    node "${SCRIPT_DIR}/create-cf-token.mjs" ci --print-token --ttl-days "${CI_TOKEN_TTL_DAYS:-1}" --prune 2>"${MINT_LOG}" \
     | sed -n 's/^__TOKEN__//p' | tail -1)"
   if [ -n "${CREDENTIAL}" ]; then
     SOURCE="bootstrap mint"
