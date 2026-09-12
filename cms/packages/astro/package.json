@@ -32,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/arwes.git",
+    "url": "git+https://github.com/cqusfa456/sci-fi-cms.git",
     "directory": "packages/astro"
   },
   "dependencies": {}

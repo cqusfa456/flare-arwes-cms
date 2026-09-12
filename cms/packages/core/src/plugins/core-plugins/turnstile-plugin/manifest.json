@@ -7,7 +7,7 @@
   "category": "security",
   "icon": "shield-check",
   "homepage": "https://developers.cloudflare.com/turnstile/",
-  "repository": "https://github.com/your-org/arwes",
+  "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",
   "permissions": ["settings:write", "admin:access"],
   "dependencies": [],

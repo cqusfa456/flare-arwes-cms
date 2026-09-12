@@ -56,7 +56,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     cfProjectName: 'arwes-docs-worker',
     description:
       'Arwes documentation site. Astro builds into apps/docs/build and the Worker serves it from static assets, so one build can answer on several custom domains.',
-    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitRepo: 'cqusfa456/sci-fi-cms',
     gitBranch: 'main',
     buildCommand: 'sh ./apps/docs/scripts/build-worker.sh',
     deployCommand:
@@ -79,7 +79,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     cfProjectName: 'arwes-docs',
     description:
       'The same docs build, uploaded to a Cloudflare Pages project instead of a Worker. Pages projects take custom domains and subdomains directly, and Direct Upload means Cloudflare still needs no Git connection.',
-    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitRepo: 'cqusfa456/sci-fi-cms',
     gitBranch: 'main',
     buildCommand: 'sh ./apps/docs/scripts/build-worker.sh',
     deployCommand:
@@ -101,7 +101,7 @@ export const ARWES_SITE_PRESETS: SitePreset[] = [
     cfProjectName: 'arwes-{{slug}}-worker',
     description:
       'Template for another Astro app in this monorepo: builds the app and serves its static output from a Worker, with per-site content pulled from the CMS at build time.',
-    gitRepo: 'cqusfa456/flare-arwes-cms',
+    gitRepo: 'cqusfa456/sci-fi-cms',
     gitBranch: 'main',
     buildCommand: 'sh ./apps/{{slug}}/scripts/build-worker.sh',
     deployCommand:

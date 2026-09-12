@@ -88,13 +88,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/arwes.git",
+    "url": "git+https://github.com/cqusfa456/sci-fi-cms.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/your-org/arwes/issues"
+    "url": "https://github.com/cqusfa456/sci-fi-cms/issues"
   },
-  "homepage": "https://github.com/your-org/arwes",
+  "homepage": "https://github.com/cqusfa456/sci-fi-cms",
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "drizzle-orm": "^0.44.0",

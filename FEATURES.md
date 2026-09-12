@@ -451,7 +451,7 @@ CMS 是所有网站的**唯一控制面**：每个站点的构建、域名绑定
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                          GitHub                              │
-│  repo: cqusfa456/flare-arwes-cms                             │
+│  repo: cqusfa456/sci-fi-cms                                  │
 │  push main → Actions (deploy.yml: 只部署 CMS Worker)          │
 │  Secrets: CF_API_TOKEN / CF_ACCOUNT_ID / D1/KV IDs /        │
 │           JWT_SECRET / FLARE_API_URL / B2_* / S3_*          │

@@ -5,7 +5,7 @@
   "description": "Passwordless authentication via email one-time codes",
   "author": "Flare CMS Team",
   "homepage": "https://flarecms.dev/plugins/otp-login",
-  "repository": "https://github.com/your-org/arwes",
+  "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",
   "category": "security",
   "tags": ["otp", "passwordless", "authentication", "email", "2fa"],

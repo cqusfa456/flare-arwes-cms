@@ -5,7 +5,7 @@
   "description": "Three-tiered caching system with in-memory and KV storage. Provides automatic caching for content, users, media, and API responses with configurable TTL and invalidation patterns.",
   "author": "Flare CMS",
   "homepage": "https://flarecms.dev/plugins/cache",
-  "repository": "https://github.com/your-org/arwes",
+  "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",
   "category": "system",
   "tags": ["cache", "performance", "optimization", "kv", "memory"],

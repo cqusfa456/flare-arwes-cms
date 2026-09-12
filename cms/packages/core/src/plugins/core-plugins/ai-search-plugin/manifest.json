@@ -7,7 +7,7 @@
   "category": "content",
   "icon": "magnifying-glass",
   "homepage": "https://developers.cloudflare.com/ai-search/",
-  "repository": "https://github.com/your-org/arwes",
+  "repository": "https://github.com/cqusfa456/sci-fi-cms",
   "license": "MIT",
   "permissions": ["settings:write", "admin:access", "content:read"],
   "dependencies": [],

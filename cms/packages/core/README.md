@@ -220,7 +220,7 @@ migrations/*.sql → scripts/generate-migrations.ts → src/db/migrations-bundle
 ## Documentation
 
 - [flarecms.dev](https://flarecms.dev)
-- [GitHub](https://github.com/your-org/arwes)
+- [GitHub](https://github.com/cqusfa456/sci-fi-cms)
 
 ## License
 

@@ -98,7 +98,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
             <div class="mt-2 text-sm text-amber-700 dark:text-amber-300">
               <p>
                 Plugin management is currently under active development. While functional, some features may change or have limitations.
-                Please report any issues on <a href="https://github.com/your-org/arwes/issues" target="_blank" class="font-medium underline hover:text-amber-900 dark:hover:text-amber-100">GitHub Issues</a>.
+                Please report any issues on <a href="https://github.com/cqusfa456/sci-fi-cms/issues" target="_blank" class="font-medium underline hover:text-amber-900 dark:hover:text-amber-100">GitHub Issues</a>.
               </p>
             </div>
           </div>

@@ -84,5 +84,5 @@ export const ROUTES_INFO = {
     'workflowAdminRoutes'
   ],
   status: 'Core package routes ready',
-  reference: 'https://github.com/your-org/arwes'
+  reference: 'https://github.com/cqusfa456/sci-fi-cms'
 } as const
