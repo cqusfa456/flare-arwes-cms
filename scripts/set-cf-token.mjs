@@ -55,6 +55,7 @@ import {
   tokenChecklist,
   verifyCfToken,
   listCfAccounts,
+  probeTokenCapabilities,
   TOKEN_TEMPLATES
 } from './lib/cf-token-template.mjs'
 
@@ -163,6 +164,30 @@ let resolvedAccountId = accountId
 if (!resolvedAccountId && accountLookup.ok && accountLookup.accounts.length === 1) {
   resolvedAccountId = accountLookup.accounts[0].id
   console.log(`  (只有一个账号，将同时写入 CF_ACCOUNT_ID = ${resolvedAccountId})`)
+}
+
+// ---- 2.5) 实际探测权限（预填 URL 无法表达全部权限，尤其是 Pages）----
+//
+// Cloudflare 不为 "Workers CI" 与 "Pages" 公布 permission key，未知 key 会被页面
+// 静默丢弃，所以从模板 URL 建出来的 token 仍可能缺 Pages 权限。这里直接拿 token 去
+// 打这些 API，把"缺什么"在写入之前说清楚。
+console.log('[2.5/3] 探测实际权限（打真实 API）...')
+const capabilities = await probeTokenCapabilities(token, resolvedAccountId)
+for (const cap of capabilities) {
+  const mark = cap.ok === true ? '✓' : cap.ok === null ? '–' : '✗'
+  console.log(`  ${mark} ${cap.label}`)
+  if (cap.ok === false) {
+    const detail = (cap.errors ?? []).map((e) => e.message || `code ${e.code}`).join('; ')
+    console.log(`      HTTP ${cap.httpStatus}${detail ? `: ${detail}` : ''}`)
+  }
+}
+const missing = capabilities.filter((cap) => cap.ok === false)
+if (missing.length > 0) {
+  console.log('\n⚠ 这个 token 缺少以下能力，相关功能会在 CI/后台里失败：')
+  for (const cap of missing) console.log(`    · ${cap.permission}  →  ${cap.label}`)
+  console.log('  修法：在 API 令牌页面编辑该 token，用 “Add more” 手动补上这些权限后保存')
+  console.log('  （官方未公布这些 permission key，所以模板 URL 不会预填它们）。')
+  console.log('  令牌值不变的话无需重新写入 secret。\n')
 }
 
 // ---- 3) 写入 GitHub secrets（libsodium sealed box，与 configure-secrets.mjs 同机制）----

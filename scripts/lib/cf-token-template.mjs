@@ -74,8 +74,8 @@ export const TOKEN_TEMPLATES = {
       'Workers Routes: Edit ← 域级权限，绑定自定义域名必需',
       'Zone: Read（按主机名解析所属 zone）',
       'DNS: Edit（官方 Workers 模板不含此项；Worker 域名由 Cloudflare 自动建 DNS，保留是为了兼顾 Pages 域名或直接改 DNS）',
-      'Workers CI: Edit（即 Workers Builds；CMS 触发构建/下发构建环境变量要用到，key 官方未公布，请确认已勾选）',
-      'Pages: Edit（CMS 管理 Pages 站点时用到，key 同样未公布，请确认）'
+      'Workers CI: Edit（即 Workers Builds；**官方未公布 key，页面不会预填这一行**，请手动 “Add more” 添加：Workers CI → Edit）',
+      'Pages: Edit（**同样不会预填**，请手动添加：Pages → Edit；不做 Pages 部署可跳过）'
     ]
   },
   runtime: {
@@ -101,8 +101,8 @@ export const TOKEN_TEMPLATES = {
       'Workers Scripts: Read（解析 Worker tag）',
       'Zone: Read（按主机名解析所属 zone）',
       'Workers Routes: Edit（绑定/解绑自定义域名）',
-      'Workers CI: Edit（即 Workers Builds；触发构建、下发构建环境变量。这个 key 官方未公布，请在页面上确认已勾选）',
-      'Pages: Edit（仅当还用 CMS 管理 Pages 站点时；key 同样未公布，请确认）'
+      'Workers CI: Edit（即 Workers Builds；触发构建、下发构建环境变量。**官方未公布 key，页面不会预填**，请手动添加）',
+      'Pages: Edit（仅当还用 CMS 管理 Pages 站点时。**同样不会预填**，请手动添加）'
     ]
   }
 }
@@ -178,6 +178,74 @@ export async function verifyCfToken(token) {
   } catch (error) {
     return { ok: false, status: null, httpStatus: 0, errors: [{ message: String(error) }] }
   }
+}
+
+/**
+ * The APIs this project actually depends on, used to *test* a token instead of
+ * trusting the pre-filled form.
+ *
+ * This matters because the template URL cannot express every permission:
+ * Cloudflare publishes no permission key for "Workers CI" (Workers Builds) or
+ * "Pages", and a page that receives an unknown key silently drops it. A token
+ * created from the template URL can therefore still be missing exactly the
+ * permission a Pages deploy needs — which is what happened here: the token
+ * deployed the CMS and a Worker fine, then failed every Pages call with
+ * "Authentication error [code: 10000]".
+ */
+export const TOKEN_CAPABILITY_PROBES = [
+  {
+    id: 'workers',
+    label: 'Workers Scripts（部署 CMS / 站点 Worker）',
+    permission: 'Workers Scripts: Edit',
+    path: (accountId) => `/accounts/${accountId}/workers/scripts`
+  },
+  {
+    id: 'pages',
+    label: 'Cloudflare Pages（Pages 项目、直传部署、其域名）',
+    permission: 'Pages: Edit',
+    path: (accountId) => `/accounts/${accountId}/pages/projects`
+  },
+  {
+    id: 'zones',
+    label: 'Zone 读取（把自定义域名解析到所属 zone）',
+    permission: 'Zone: Read',
+    path: () => `/zones?per_page=1`
+  }
+]
+
+/**
+ * Probe each capability the project needs. Never throws; returns one entry per
+ * probe with `ok` and, when it failed, the permission to add.
+ */
+export async function probeTokenCapabilities(token, accountId) {
+  const results = []
+  for (const probe of TOKEN_CAPABILITY_PROBES) {
+    const needsAccount = probe.path('').includes('/accounts/')
+    if (needsAccount && !accountId) {
+      results.push({
+        ...probe,
+        ok: null,
+        httpStatus: 0,
+        errors: [{ message: 'no account id available' }]
+      })
+      continue
+    }
+    try {
+      const res = await fetch(`https://api.cloudflare.com/client/v4${probe.path(accountId)}`, {
+        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'flare-cms-token-check' }
+      })
+      const json = await res.json().catch(() => ({}))
+      results.push({
+        ...probe,
+        ok: res.ok && json.success !== false,
+        httpStatus: res.status,
+        errors: json.errors ?? []
+      })
+    } catch (error) {
+      results.push({ ...probe, ok: false, httpStatus: 0, errors: [{ message: String(error) }] })
+    }
+  }
+  return results
 }
 
 /**
