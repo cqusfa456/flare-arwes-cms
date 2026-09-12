@@ -142,7 +142,34 @@ if (!gh?.token || !gh?.repo) {
 
 // ---- 1) 先验证 Cloudflare 是否接受这个 token，避免写入一个坏值 ----
 console.log('\n[1/3] 验证 Cloudflare token ...')
-const verified = await verifyCfToken(token)
+// Account-owned tokens verify on the account endpoint; the user endpoint answers
+// 403 for them, which would look like "your token is invalid".
+const verified =
+  TEMPLATE_ID === 'bootstrap'
+    ? await (async () => {
+        const acct = resolvedAccountId || (process.env.CF_ACCOUNT_ID || '').trim()
+        if (!acct) {
+          return { ok: true, status: 'unknown', httpStatus: 0, errors: [] }
+        }
+        try {
+          const res = await fetch(
+            `https://api.cloudflare.com/client/v4/accounts/${acct}/tokens/verify`,
+            {
+              headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'sci-fi-cms-token-check' }
+            }
+          )
+          const json = await res.json().catch(() => ({}))
+          return {
+            ok: res.ok && json.success === true,
+            status: json.result?.status ?? null,
+            httpStatus: res.status,
+            errors: json.errors ?? []
+          }
+        } catch (error) {
+          return { ok: false, status: null, httpStatus: 0, errors: [{ message: String(error) }] }
+        }
+      })()
+    : await verifyCfToken(token)
 if (!verified.ok) {
   fail(
     `Cloudflare 拒绝了该 token (HTTP ${verified.httpStatus}): ` +

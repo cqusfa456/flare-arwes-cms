@@ -151,7 +151,20 @@ const cf = async (path, init = {}) => {
 console.log('[1/4] 解析权限组（按名字 → UUID）...')
 let groups
 try {
-  groups = await cf('/user/tokens/permission_groups?limit=500')
+  // Account-owned tokens: the permission catalogue is account-scoped, so resolve
+  // the account first and hand it to the later step through the environment.
+  let catalogueAccount = (process.env.CF_ACCOUNT_ID || '').trim()
+  if (!catalogueAccount) {
+    const visible = await cf('/accounts')
+    if (!visible || visible.length !== 1) {
+      fail(
+        `需要恰好一个可见账号（或设置 CF_ACCOUNT_ID）。当前可见 ${visible ? visible.length : 0} 个。`
+      )
+    }
+    catalogueAccount = visible[0].id
+    process.env.CF_ACCOUNT_ID = catalogueAccount
+  }
+  groups = await cf(`/accounts/${catalogueAccount}/tokens/permission_groups?limit=500`)
 } catch (error) {
   fail(
     `无法读取权限组：${error.message}\n` +
@@ -225,7 +238,7 @@ if (dryRun) {
 
 let created
 try {
-  created = await cf('/user/tokens', { method: 'POST', body })
+  created = await cf(`/accounts/${accountId}/tokens`, { method: 'POST', body })
 } catch (error) {
   fail(`创建失败：${error.message}`)
 }

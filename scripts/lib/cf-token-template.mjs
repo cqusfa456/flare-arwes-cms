@@ -45,15 +45,23 @@ export const USER_TOKEN_PAGE = 'https://dash.cloudflare.com/profile/api-tokens'
  */
 export const TOKEN_TEMPLATES = {
   bootstrap: {
-    label: 'Cloudflare 引导 token（用来按需生成其他 token）',
+    // Account-owned (service principal) token: created from the account token
+    // page, permission key is account-scoped, and the URL format carries no
+    // accountId/zoneId. Web OAuth cannot create these — Cloudflare's OAuth
+    // allow-list rejects every token-management scope (measured: invalid_scope
+    // for account_api_tokens:write/edit, api_tokens:write, tokens:write and
+    // account_api_tokens:read), so this one token is the only manual step.
+    accountLevel: true,
+    label: 'Cloudflare 账户级 bootstrap token（用来按需生成其他 token）',
     purpose:
-      '调用 POST /user/tokens 生成 CI / runtime token；这是唯一必须手动创建的 token，之后一切都可脚本化',
-    tokenName: 'Sci-Fi CMS Bootstrap (token minting)',
-    permissions: [{ key: 'api_tokens', type: 'edit' }],
+      '调用 POST /accounts/{id}/tokens 生成部署 / 运行时 token；这是唯一必须手动创建的 token，且属于账户而非个人，不随人员变动失效',
+    tokenName: 'Sci-Fi CMS Bootstrap (account)',
+    permissions: [{ key: 'account_api_tokens', type: 'edit' }],
     checklist: [
-      'API Tokens：「编辑」（**用户级**，英文名 “API Tokens Write”）—— 已实测可预填',
-      '这一项用 “编辑” 而不是 “读取”：只有写权限才能创建新 token',
-      '请妥善保管：它是后续所有 token 的唯一入口；若不希望它长期有效，可给它设个较长有效期，到期再手动重建'
+      '需在**账户级**页面创建（Manage Account → Account API Tokens），要求 Super Administrator',
+      'API 令牌：「编辑」（账户级，英文名 “API Tokens Write”）—— 键名 account_api_tokens',
+      '值形如 cfat_…（账户级 token 的可扫描前缀），创建后只显示一次',
+      '⚠ 该键能否在表单里预填尚未实测：若名称为空或权限行没出现，请手动选「帐户 → 权限 → API 令牌 → 编辑」'
     ]
   },
   ci: {
@@ -152,8 +160,9 @@ export function buildTokenTemplateUrl(templateId, options = {}) {
 
   const params = new URLSearchParams({
     permissionGroupKeys: permissions,
-    accountId: options.accountId?.trim() || '*',
-    zoneId: 'all',
+    ...(template.accountLevel
+      ? {}
+      : { accountId: options.accountId?.trim() || '*', zoneId: 'all' }),
     name: options.tokenName?.trim() || template.tokenName
   })
 
@@ -162,7 +171,12 @@ export function buildTokenTemplateUrl(templateId, options = {}) {
   // as the token name and the field came up empty. The documented examples use
   // %20 (name=Custom%20Token), so re-encode spaces instead. A literal plus in a
   // value would already be %2B, so this cannot corrupt anything.
-  return `${USER_TOKEN_PAGE}?${params.toString().replace(/\+/g, '%20')}`
+  const query = params.toString().replace(/\+/g, '%20')
+
+  // Account-owned tokens live on the account page and take no accountId/zoneId.
+  return template.accountLevel
+    ? `https://dash.cloudflare.com/?to=/:account/api-tokens&${query}`
+    : `${USER_TOKEN_PAGE}?${query}`
 }
 
 /**
