@@ -168,15 +168,21 @@ export function buildTokenTemplateUrl(templateId, options = {}) {
 /**
  * Open a URL in the default browser.
  *
- * Uses execFile with an argument array rather than a shell string: these URLs
- * contain `&`, which `cmd /c start` would otherwise treat as a command
- * separator.
+ * Windows must NOT go through `cmd /c start`: cmd re-parses its own command
+ * line, so the `%` in this URL's percent-encoding is expanded as a variable and
+ * the first unquoted `&` starts a new command. The dashboard then received a
+ * mangled URL (no permissions, no name) even though the printed URL was correct —
+ * which is exactly the "nothing was pre-filled" report. Passing an argv array to
+ * execFile does not help, because the mangling happens inside cmd.
+ *
+ * `rundll32 url.dll,FileProtocolHandler` is handed the URL by CreateProcess and
+ * spawns the browser through ShellExecute, so no shell ever parses it.
  */
 export async function openUrl(url) {
   const { execFile } = await import('node:child_process')
   const [command, args] =
     process.platform === 'win32'
-      ? ['cmd', ['/c', 'start', '', url]]
+      ? ['rundll32.exe', ['url.dll,FileProtocolHandler', url]]
       : process.platform === 'darwin'
         ? ['open', [url]]
         : ['xdg-open', [url]]
