@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { requireAuth } from '../middleware'
+import { resolveStorage } from '../storage'
 import { getHookSystem } from '../plugins/hooks-singleton'
 import { HOOKS } from '../types'
 import type { Bindings, Variables } from '../app'
@@ -34,6 +35,52 @@ const fileValidationSchema = z.object({
 })
 
 export const apiMediaRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+/**
+ * Public URL for a stored object.
+ *
+ * An explicit MEDIA_DOMAIN wins (a CDN, or a public bucket domain). Otherwise
+ * the CMS serves the object itself, which is what makes a PRIVATE bucket usable:
+ * no direct link to it would resolve. Set MEDIA_DOMAIN to move this traffic off
+ * the Worker.
+ */
+const publicMediaUrl = (c: any, key: string): string => {
+  const domain = typeof c.env?.MEDIA_DOMAIN === 'string' ? c.env.MEDIA_DOMAIN.trim() : ''
+  if (domain) {
+    return `https://${domain.replace(/^https?:\/\//, '').replace(/\/+$/, '')}/${key}`
+  }
+  try {
+    return `${new URL(c.req.url).origin}/api/media/file/${key}`
+  } catch {
+    return `/api/media/file/${key}`
+  }
+}
+
+// Serve stored media publicly. Registered BEFORE the auth middleware below so it
+// needs no session; only object bytes are exposed and keys that try to escape the
+// bucket are rejected.
+apiMediaRoutes.get('/file/*', async (c) => {
+  const key = c.req.path.replace(/^\/api\/media\/file\//, '')
+  if (!key || key.includes('..')) return c.notFound()
+  const { bucket, info } = resolveStorage(c.env as any)
+  if (!bucket) {
+    return c.json({ error: `storage backend "${info.provider}" is not configured` }, 503)
+  }
+  try {
+    const object = await (bucket as any).get(key)
+    if (!object) return c.notFound()
+    const headers = new Headers()
+    const contentType = object.httpMetadata?.contentType
+    if (contentType) headers.set('Content-Type', contentType)
+    if (object.httpMetadata?.contentDisposition) headers.set('Content-Disposition', object.httpMetadata.contentDisposition)
+    if (object.httpEtag) headers.set('ETag', object.httpEtag)
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+    return new Response(object.body as any, { headers })
+  } catch (error) {
+    console.error('Error serving media:', error)
+    return c.notFound()
+  }
+})
 
 // Apply auth middleware to all routes
 apiMediaRoutes.use('*', requireAuth())
@@ -102,9 +149,7 @@ apiMediaRoutes.post('/upload', async (c) => {
       return c.json({ error: 'Failed to upload file to storage' }, 500)
     }
 
-    // Generate public URL using custom media domain
-    const mediaDomain = c.env.MEDIA_DOMAIN || 'images.flarecms.dev'
-    const publicUrl = `https://${mediaDomain}/${r2Key}`
+    const publicUrl = publicMediaUrl(c, r2Key)
 
     // Extract image dimensions if it's an image (arrayBuffer is populated for images)
     let width: number | undefined
