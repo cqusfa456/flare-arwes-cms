@@ -193,56 +193,20 @@ jobs:
       # an hour. On that path either a scoped token is minted or the Worker is
       # left without one (and any credential from an earlier run is removed),
       # because a credential that dies in an hour is worse than none.
-      - name: Set Cloudflare API worker secrets
+      # Hand the deployed CMS a runtime credential it can use to drive Cloudflare
+      # (custom domains, Workers Builds, Pages). scripts/ci-runtime-credential.sh
+      # verifies the token on record, rotates it only when it is invalid or close
+      # to expiry, deletes the token it replaces, and installs the result — so the
+      # credential cannot lapse silently, and tokens do not pile up in the account.
+      # A rotation also runs monthly from rotate-runtime-token.yml.
+      - name: Ensure the CMS runtime credential
         working-directory: cms/packages/cms
         env:
-          # wrangler authenticates with these two; the step below is the one
-          # that writes the *value* of CF_API_TOKEN onto the Worker.
-          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
+          CF_BOOTSTRAP_TOKEN: ${{ secrets.CF_BOOTSTRAP_TOKEN }}
+          CF_SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CREDENTIAL_SOURCE: ${{ env.CF_CREDENTIAL_SOURCE }}
-          CI_API_TOKEN: ${{ env.CF_CREDENTIAL }}
-          # The minted deploy token deliberately has no "API Tokens: Write", so
-          # the bootstrap token (which exists precisely to mint tokens) is the
-          # right minter when it is available.
-          BOOTSTRAP_TOKEN: ${{ secrets.CF_BOOTSTRAP_TOKEN }}
-          SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
-          ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-
-          RUNTIME_TOKEN="${SITES_API_TOKEN}"
-          MINTER="${BOOTSTRAP_TOKEN:-$CI_API_TOKEN}"
-          if [ -z "$RUNTIME_TOKEN" ] && [ -n "$MINTER" ]; then
-            echo "::group::Minting a scoped runtime token"
-            # --print-token makes the value the only __TOKEN__ line, so nothing
-            # else in the log can be captured by mistake.
-            RUNTIME_TOKEN=$(CF_BOOTSTRAP_TOKEN="$MINTER" \
-              node "${{ github.workspace }}/scripts/create-cf-token.mjs" runtime --print-token --ttl-days 365 \
-              | sed -n 's/^__TOKEN__//p' | tail -1) || RUNTIME_TOKEN=""
-            echo "::endgroup::"
-          fi
-
-          if [ -z "$RUNTIME_TOKEN" ] && [ "$CREDENTIAL_SOURCE" = "CF_API_TOKEN" ]; then
-            echo "::warning::Could not mint a runtime token; using the long-lived CI token for the CMS runtime, which is broader than the CMS needs."
-            RUNTIME_TOKEN="$CI_API_TOKEN"
-          fi
-
-          if [ -n "$RUNTIME_TOKEN" ]; then
-            printf '%s' "$RUNTIME_TOKEN" | npx wrangler secret put CF_API_TOKEN --env production
-          else
-            echo "::warning::No Cloudflare runtime credential installed: the CMS cannot manage domains or builds until one exists. Fix by giving CF_API_TOKEN 'API Tokens: Write' so this step can mint a scoped token, or set CF_SITES_API_TOKEN (node scripts/set-cf-token.mjs runtime)."
-            # Do not leave a stale/expiring credential behind.
-            npx wrangler secret delete CF_API_TOKEN --env production \
-              || echo "  (no CF_API_TOKEN secret present on the Worker)"
-          fi
-
-          if [ -n "$ACCOUNT_ID" ]; then
-            printf '%s' "$ACCOUNT_ID" | npx wrangler secret put CF_ACCOUNT_ID --env production
-          else
-            echo "::warning::CF_ACCOUNT_ID is not set; the CMS will need the account id saved from Admin → Sites."
-          fi
-
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
+        run: bash "${{ github.workspace }}/scripts/ci-runtime-credential.sh"
 # NOTE: this workflow deploys ONLY the CMS Worker.
 #
 # Site builds are owned by the CMS itself: each site is registered in

@@ -1,0 +1,62 @@
+name: Rotate CMS runtime token
+
+# Safety net for the credential the CMS Worker uses to drive Cloudflare (custom
+# domains, Workers Builds, Pages). That credential must not lapse while nobody
+# deploys, and minting a fresh one on every deploy used to accumulate tokens in
+# the account. This runs monthly: it verifies the token on record, rotates only
+# when the token is invalid or within 30 days of expiry, and deletes the token it
+# replaces.
+#
+# Deploys run the same script (scripts/ci-runtime-credential.sh), so a scheduled
+# rotation and a deploy can never disagree about what the Worker holds.
+#
+# Known edge: when the token on record has already been revoked, Cloudflare
+# returns no id for it, so the superseded token cannot be deleted and a later run
+# would mint again. Give CI a PAT-based secret if you want the replacement stored
+# back into CF_SITES_API_TOKEN automatically; otherwise prefer minting once with
+# `node scripts/create-cf-token.mjs runtime --no-expiry`, which this workflow then
+# simply re-verifies forever.
+
+on:
+  schedule:
+    # 04:17 UTC on the first of each month.
+    - cron: '17 4 1 * *'
+  workflow_dispatch:
+
+jobs:
+  rotate:
+    name: Verify or rotate the runtime credential
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: cms/pnpm-lock.yaml
+
+      # wrangler needs a credential of its own to install worker secrets.
+      - name: Resolve the Cloudflare credential
+        env:
+          CF_BOOTSTRAP_TOKEN: ${{ secrets.CF_BOOTSTRAP_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_REFRESH_TOKEN: ${{ secrets.CF_REFRESH_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: bash scripts/ci-cf-credential.sh
+
+      - name: Install CMS dependencies
+        working-directory: cms
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Verify or rotate the runtime credential
+        env:
+          CF_BOOTSTRAP_TOKEN: ${{ secrets.CF_BOOTSTRAP_TOKEN }}
+          CF_SITES_API_TOKEN: ${{ secrets.CF_SITES_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ env.CF_CREDENTIAL }}
+        run: bash scripts/ci-runtime-credential.sh
