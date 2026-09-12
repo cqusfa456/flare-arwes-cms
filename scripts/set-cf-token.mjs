@@ -147,7 +147,12 @@ console.log('\n[1/3] 验证 Cloudflare token ...')
 const verified =
   TEMPLATE_ID === 'bootstrap'
     ? await (async () => {
-        const acct = resolvedAccountId || (process.env.CF_ACCOUNT_ID || '').trim()
+        // resolvedAccountId is only computed later in this file (it is used to write
+        // CF_ACCOUNT_ID), so it must NOT be read here: doing so threw a
+        // temporal-dead-zone ReferenceError. Read the environment instead; when the id
+        // is unknown we skip verification rather than crash, and CI supplies
+        // CF_ACCOUNT_ID from its secret anyway.
+        const acct = (process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || '').trim()
         if (!acct) {
           return { ok: true, status: 'unknown', httpStatus: 0, errors: [] }
         }
