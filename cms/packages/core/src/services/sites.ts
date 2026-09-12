@@ -1084,6 +1084,28 @@ export class SitesService {
     const target = this.requireTarget(site)
 
     if (site.provider === 'cloudflare-worker') {
+      // A Worker deployed by direct upload (a dispatched GitHub Actions run, or
+      // wrangler from a laptop) has no Workers Builds builds: what actually
+      // exists is the Worker's own deployment history. Reading that is the
+      // honest answer — asking the Builds API would report a missing trigger.
+      if (this.effectiveDeployMode(site) !== 'workers-builds') {
+        const { accountId } = await this.requireCredentials()
+        const result = await this.cf<
+          Array<Record<string, unknown>> | { deployments?: Array<Record<string, unknown>> }
+        >(`/accounts/${accountId}/workers/scripts/${encodeURIComponent(target)}/deployments`)
+
+        const deployments = Array.isArray(result) ? result : result?.deployments ?? []
+        return deployments.slice(0, limit).map((deployment) => ({
+          id: String(deployment.id ?? ''),
+          url: `https://dash.cloudflare.com/?to=/:account/workers/services/view/${encodeURIComponent(target)}/production`,
+          environment: 'production',
+          stage: (deployment.source as string | null) ?? (deployment.strategy as string | null) ?? null,
+          // A recorded deployment is the live one; Workers keeps the history.
+          status: 'deployed',
+          createdAt: (deployment.created_on as string | null) ?? null
+        }))
+      }
+
       // Workers Builds: builds are addressed through the Worker's tag.
       const tag = await this.resolveWorkerTag(site)
       const { accountId } = await this.requireCredentials()
