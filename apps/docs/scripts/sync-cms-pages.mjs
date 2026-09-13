@@ -25,6 +25,7 @@ import { SciFiClient, SciFiD1Client } from '@sci-fi-cms/astro'
 
 const APP_DIR = resolve(import.meta.dirname ?? '.', '..')
 const PAGES_DIR = join(APP_DIR, 'src', 'pages')
+const LAYOUTS_DIR = join(APP_DIR, 'src', 'cms-layouts')
 const MANIFEST = join(APP_DIR, '.cms-pages.json')
 
 const verbose = process.argv.includes('--verbose')
@@ -158,7 +159,11 @@ const run = async () => {
     }
 
     const file = fileForPath(path)
-    if (existsSync(file) && !previouslyGenerated.has(path)) {
+    // A file this script wrote before (its header says so) may be replaced even if
+    // the manifest was lost; a hand-written page file never is.
+    const isGeneratedFile =
+      existsSync(file) && readFileSync(file, 'utf-8').includes('Generated from the CMS page')
+    if (existsSync(file) && !previouslyGenerated.has(path) && !isGeneratedFile) {
       console.warn(
         `  [pages] "${path}" is served by a page file already in the repository; the CMS page was not written`
       )
