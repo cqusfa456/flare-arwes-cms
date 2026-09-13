@@ -15,7 +15,9 @@
  * It renders nothing when the CMS defines no menu, so a layout can include it
  * unconditionally.
  */
+import { getSiteRouting } from '@/lib/cms-collections'
 import { getNavigation } from '@/lib/site-content'
+import { isRoute } from '@/router/routes'
 
 interface Props {
   /** Menu key; the site rule picks one when omitted. */
@@ -28,6 +30,21 @@ interface Props {
 const { navKey, key, class: className } = Astro.props
 const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/'
 const items = await getNavigation(pathname, navKey ?? key)
+
+// On a content-only host (a blog subdomain) the app's own routes are published by
+// the main site, so a menu link to one has to be absolute or it would ask this host
+// for a page it does not have. The root stays local: there it is the collection's
+// own index. This is the same rule the client router applies (src/router/Link.tsx).
+const routing = await getSiteRouting()
+const appBase = routing.appBaseUrl ? routing.appBaseUrl.replace(/\/+$/, '') : null
+
+const resolveHref = (href: string): string => {
+  if (!appBase || !href.startsWith('/') || href.startsWith('//')) {
+    return href
+  }
+  const clean = href.replace(/\/+$/, '') || '/'
+  return clean !== '/' && isRoute(clean) ? `${appBase}${href}` : href
+}
 ---
 
 {
@@ -39,6 +56,7 @@ const items = await getNavigation(pathname, navKey ?? key)
       ]}
     >
       {items.map((item) => {
+        const href = resolveHref(item.href)
         const target = item.href.replace(/\/+$/, '') || '/'
         const active = pathname === target || pathname.startsWith(`${target}/`)
         return (
@@ -49,7 +67,7 @@ const items = await getNavigation(pathname, navKey ?? key)
                 ? 'text-secondary-main-5 hover:text-secondary-high-2'
                 : 'text-primary-main-5 hover:text-primary-high-2'
             ]}
-            href={item.href}
+            href={href}
           >
             {item.label}
           </a>

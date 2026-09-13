@@ -8,20 +8,55 @@
 cms/                    Sci-Fi CMS 后端 (Cloudflare Worker)
   packages/core/        @sci-fi-cms/core — 引擎 (schema, services, routes)
   packages/cms/         @sci-fi-cms/cms — Cloudflare Worker 应用
+  packages/cms/content/ 站点 chrome 在仓库里的初始副本 (components/ layouts/ navigation/ pages/)
   packages/astro/       @sci-fi-cms/astro — Astro Content Layer loader
 
 apps/docs/              Astro 前端
-  src/content.config.ts 定义 pages 集合，构建时从 CMS 拉取内容
+  src/content.config.ts 定义集合，构建时从 CMS 拉取内容
   src/pages/[...path].astro 生成静态页面 (应用路由 + CMS 页面)
+  scripts/sync-cms-pages.mjs 把 CMS 的页面/布局/组件写成真实 .astro 文件
+  src/layouts/Layout.astro 所有页面统一注入 layout 的唯一入口
   src/cms/CmsPage.tsx   CMS 页面渲染组件
+```
+
+## 站点外观由 CMS 管理
+
+公共部分放在 CMS 里，页面只管内容：
+
+- **components**（Admin → Content → Components）：导航栏 `nav`、页脚栏 `footer` 等共享组件，
+  写成 `.astro`；布局用 `<CmsComponent name="nav" navKey={navKey} />` 引用。
+- **navigation**（… → Navigation）：组件渲染的菜单数据（`home` / `default` / `footer`），
+  `items` 是 `{"label":"Docs","href":"/docs/"}` 的 JSON 数组。
+- **layouts**（… → Layouts）：页面框架，组合上面的组件并渲染 `<slot />`。可以有多个版本
+  （`default` 中性框架：导航 + 内容 + 页脚；`article` 居中文章栏），每个页面用自己的
+  `layout` 字段选择其中一个。
+- **pages**（… → Pages）：页面内容。`astro` 字段里是 Astro 源码（`astro-editor` 插件编辑），
+  只写内容；`layout` 选择框架版本，`nav` 选择菜单。
+
+构建时 `scripts/sync-cms-pages.mjs` 把布局与组件写成 `src/cms-layouts/*.astro`、
+`src/cms-components/*.astro`，页面写成 `src/pages/*.astro`；`Layout.astro` 再按 `layout`
+字段统一注入框架，所以应用路由、markdown 页面与 CMS 页面都长在同一个框架里。布局渲染了
+CMS 菜单时，站点自带 header 的菜单会自动让位，不会出现两个菜单。
+
+仓库里的初始副本在 `cms/packages/cms/content/{components,layouts,navigation,pages}/`：
+
+```bash
+# 上传组件、布局与菜单（幂等，已存在的就地更新）
+SCIFI_ADMIN_PASSWORD=... node scripts/seed-cms-chrome.mjs <base-url> --confirm-production
+
+# 上传某个页面的 Astro 源码，并选择框架与菜单
+SCIFI_ADMIN_PASSWORD=... node scripts/set-page-astro.mjs <base-url> \
+  --slug index --title "..." --file cms/packages/cms/content/pages/home.astro \
+  --layout article --nav home --confirm-production
 ```
 
 ## 工作流程
 
-1. **内容管理**：在 Sci-Fi CMS Admin (`http://localhost:8787/admin`) 中创建/编辑页面
-2. **构建**：`astro build` 时 `sciFiLoader` 从 CMS API 拉取 `pages` 集合内容
-3. **渲染**：CMS 页面的 markdown 内容在构建时渲染为 HTML，生成静态页面
-4. **导航**：CMS 页面不在客户端路由表中，点击时整页跳转（内容仅 SSR 可用）
+1. **内容管理**：在 Sci-Fi CMS Admin 中编辑页面、菜单、布局与组件
+2. **构建**：`astro build` 前先跑 `scripts/sync-cms-pages.mjs`（把 CMS 的页面/布局/组件落成
+   真实文件），再由 `sciFiLoader` 拉取集合内容
+3. **渲染**：CMS 页面的 markdown 在构建时渲染为 HTML；Astro 源码页面由 Astro 直接编译
+4. **导航**：菜单来自 CMS；跨站链接与内容型站点（blog 子域）由 `content_routes` 决定
 
 ## 本地开发
 
