@@ -36,7 +36,12 @@ export async function getStaticPaths() {
         title: page.data.title,
         contentHtml: md.render(String(page.data.content ?? '')),
         metaDescription: page.data.meta_description,
-        publishedAt: page.data.published_at
+        // The loader exposes the publish date as the `_publishedAt` system
+        // field (`published_at` never reached the page: the API transform
+        // dropped the column and Astro strips undeclared schema keys).
+        publishedAt: page.data._publishedAt
+          ? new Date(page.data._publishedAt).toISOString().slice(0, 10)
+          : undefined
       }
     }
   }))
@@ -44,17 +49,27 @@ export async function getStaticPaths() {
   // Sidebar data: sections for the headings, docs for the links. A page
   // whose section is not in the CMS section list still appears (unlabelled),
   // so content cannot become unreachable.
-  const navSections = (await getCollection('docsSections')).map((section: any) => ({
+  //
+  // A doc's `section` field holds the *entry id* of its section (a UUID), not
+  // the section slug, so it has to be translated. Grouping by the raw value
+  // matched nothing and silently flattened every link into one unlabelled list.
+  const cmsSections = await getCollection('docsSections')
+  const sectionSlugById = new Map(cmsSections.map((section: any) => [section.id, section.data.slug]))
+
+  const navSections = cmsSections.map((section: any) => ({
     slug: section.data.slug,
     name: section.data.name,
     order: section.data.order
   }))
-  const navDocs = cmsDocs.map((doc: any) => ({
-    slug: doc.data.slug,
-    title: doc.data.title,
-    section: doc.data.section ?? doc.data.sectionSlug,
-    order: doc.data.order
-  }))
+  const navDocs = cmsDocs.map((doc: any) => {
+    const ref = doc.data.section ?? doc.data.sectionSlug
+    return {
+      slug: doc.data.slug,
+      title: doc.data.title,
+      section: sectionSlugById.get(ref) ?? ref,
+      order: doc.data.order
+    }
+  })
 
   const docsPaths = cmsDocs.map((doc) => ({
     params: { path: `docs/${doc.data.slug}` },
@@ -73,11 +88,16 @@ export async function getStaticPaths() {
   return [...appPaths, ...cmsPaths, ...docsPaths]
 }
 
-const { pathname, cmsPage, docs, blog } = Astro.props
+const { pathname, cmsPage, docs, blog, navData } = Astro.props
 ---
 
 <Layout title={cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname)} pathname={pathname}>
-  {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} />}
+  {/*
+    `navData` must be passed explicitly: `{...cmsPage}` only spreads the page
+    fields, so spreading alone left the island with title/contentHtml only and
+    rendered an empty sidebar with no error.
+  */}
+  {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} navData={navData} />}
   {!docs && !blog && cmsPage && <CmsPage client:load {...cmsPage} />}
   {blog && cmsPage && <BlogPostPage client:load {...cmsPage} />}
 </Layout>

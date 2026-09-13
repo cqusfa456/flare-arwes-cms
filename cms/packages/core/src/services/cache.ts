@@ -171,15 +171,20 @@ export class CacheService {
    * Invalidate cache keys matching a pattern (both tiers)
    */
   async invalidate(pattern: string): Promise<void> {
-    // Convert glob pattern to regex
-    const regexPattern = pattern
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.')
-    const regex = new RegExp(`^${regexPattern}$`)
+    // Callers write a pattern relative to this namespace ("content:list:*"),
+    // but a stored key carries the namespace prefix ("api:content:list:...").
+    // Matching the pattern against the full key alone therefore hit nothing, so
+    // every invalidation was a silent no-op and the public content API kept
+    // serving a pre-publish response until its TTL expired. Both spellings are
+    // accepted now.
+    const toRegex = (value: string): RegExp =>
+      new RegExp(`^${value.replace(/\*/g, '.*').replace(/\?/g, '.')}$`)
+    const patterns = [toRegex(pattern), toRegex(`${this.config.keyPrefix}:${pattern}`)]
+    const matches = (key: string): boolean => patterns.some((regex) => regex.test(key))
 
     // Tier 1: Memory
     for (const key of this.memoryCache.keys()) {
-      if (regex.test(key)) {
+      if (matches(key)) {
         this.memoryCache.delete(key)
       }
     }
@@ -190,7 +195,7 @@ export class CacheService {
         const prefix = this.config.keyPrefix + ':'
         const list = await globalKVNamespace.list({ prefix })
         for (const kvKey of list.keys) {
-          if (regex.test(kvKey.name)) {
+          if (matches(kvKey.name)) {
             await globalKVNamespace.delete(kvKey.name)
           }
         }

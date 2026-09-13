@@ -91,6 +91,9 @@ export function sciFiSchemaToZod(schema: CollectionSchema): z.ZodObject<any> {
   shape._status = z.string().optional()
   shape._createdAt = safeDate().optional()
   shape._updatedAt = safeDate().optional()
+  // Astro's content schema strips undeclared keys, so a system field that is
+  // not listed here is silently dropped before the page ever sees it.
+  shape._publishedAt = safeDate().optional()
 
   return z.object(shape)
 }

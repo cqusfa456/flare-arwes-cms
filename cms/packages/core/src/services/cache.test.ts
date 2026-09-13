@@ -222,6 +222,26 @@ describe('CacheService', () => {
       expect(await cacheService.get('api:users:123')).toBeNull()
       expect(await cacheService.get('api:posts:list')).toBe('posts')
     })
+
+    it('should invalidate namespaced keys from a pattern written without the prefix', async () => {
+      // The public content API stores "test:content-filtered:pages:<json>" while
+      // the content writers invalidate "content-filtered:*". Matching the
+      // pattern against the full key only made that a silent no-op, so a build
+      // started right after a publish still read the pre-publish response.
+      const staleKey = cacheService.generateKey('content-filtered', 'pages:{"limit":50}')
+      const otherKey = cacheService.generateKey('content-filtered', 'docs:{}')
+      const untouchedKey = cacheService.generateKey('other', 'pages')
+
+      await cacheService.set(staleKey, 'stale')
+      await cacheService.set(otherKey, 'docs')
+      await cacheService.set(untouchedKey, 'other')
+
+      await cacheService.invalidate('content-filtered:*')
+
+      expect(await cacheService.get(staleKey)).toBeNull()
+      expect(await cacheService.get(otherKey)).toBeNull()
+      expect(await cacheService.get(untouchedKey)).toBe('other')
+    })
   })
 
   describe('clear', () => {

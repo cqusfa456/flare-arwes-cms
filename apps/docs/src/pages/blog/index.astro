@@ -6,8 +6,12 @@ import { settings } from '@/config/settings'
 
 // Blog index: CMS *pages*, newest first. Posts live at /blog/<slug> (see
 // [...path].astro); this page only lists them.
-const posts = (await getCollection('pages')).sort((a, b) =>
-  String(b.data.published_at ?? '').localeCompare(String(a.data.published_at ?? ''))
+//
+// `_publishedAt` is the loader's publish-date system field, and a CMS page
+// carries `meta_description` rather than an `excerpt`, which is the `docs`
+// collection's field.
+const posts = (await getCollection('pages')).sort(
+  (a, b) => (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0)
 )
 ---
 
@@ -23,7 +27,14 @@ const posts = (await getCollection('pages')).sort((a, b) =>
               <a href={`/blog/${post.data.slug}/`} class="text-lg font-medium underline">
                 {post.data.title}
               </a>
-              {post.data.excerpt && <p class="opacity-70 text-sm">{post.data.excerpt}</p>}
+              {post.data._publishedAt && (
+                <time class="opacity-60 text-sm" datetime={post.data._publishedAt.toISOString()}>
+                  {post.data._publishedAt.toISOString().slice(0, 10)}
+                </time>
+              )}
+              {post.data.meta_description && (
+                <p class="opacity-70 text-sm">{post.data.meta_description}</p>
+              )}
             </li>
           ))
         }

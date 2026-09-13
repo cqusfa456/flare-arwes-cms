@@ -738,7 +738,11 @@ apiRoutes.get('/content', async (c) => {
       siteId: row.site_id ?? null,
       data: row.data ? JSON.parse(row.data) : {},
       created_at: row.created_at,
-      updated_at: row.updated_at
+      updated_at: row.updated_at,
+      // Exposed so a blog build can order and date posts. The column has always
+      // existed; it was simply dropped by this transform, which left every
+      // Astro build with no publish date at all.
+      published_at: row.published_at ?? null
     }))
 
     const responseData = {
@@ -845,7 +849,11 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
     // Generate cache key
     const cacheEnabled = c.get('cacheEnabled')
     const cache = getCacheService(CACHE_CONFIGS.api!)
-    const cacheKey = cache.generateKey('collection-content-filtered', `${collection}:${JSON.stringify({ filter, query: queryResult.sql })}`)
+    // The type name is load-bearing: content writers invalidate
+    // `content-filtered:*` (see api-content-crud.ts), so a key filed under any
+    // other name survives a publish and the public API keeps serving the old
+    // response until the TTL expires.
+    const cacheKey = cache.generateKey('content-filtered', `${collection}:${JSON.stringify({ filter, query: queryResult.sql })}`)
 
     // Only check cache if plugin is enabled
     if (cacheEnabled) {
@@ -897,7 +905,11 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
       siteId: row.site_id ?? null,
       data: row.data ? JSON.parse(row.data) : {},
       created_at: row.created_at,
-      updated_at: row.updated_at
+      updated_at: row.updated_at,
+      // Exposed so a blog build can order and date posts. The column has always
+      // existed; it was simply dropped by this transform, which left every
+      // Astro build with no publish date at all.
+      published_at: row.published_at ?? null
     }))
 
     const responseData = {

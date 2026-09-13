@@ -47,6 +47,8 @@ export interface SciFiContentItem {
   data: Record<string, unknown>
   created_at: number
   updated_at: number
+  /** Publish timestamp (ms), or null when the item is not published. */
+  published_at?: number | null
 }
 
 /**

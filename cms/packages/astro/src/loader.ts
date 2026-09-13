@@ -80,6 +80,9 @@ export function sciFiLoader(options: SciFiLoaderOptions): Loader {
           _status: item.status,
           _createdAt: new Date(item.created_at),
           _updatedAt: new Date(item.updated_at),
+          // Publish date (undefined while unpublished). Declared as a system
+          // field because a CMS collection schema cannot declare it.
+          _publishedAt: item.published_at ? new Date(item.published_at) : undefined,
         }
 
         // Sanitize invalid dates — CMS may store empty strings for date fields
@@ -142,6 +145,7 @@ export function sciFiLoader(options: SciFiLoaderOptions): Loader {
         _status: z.string().optional(),
         _createdAt: safeDate.optional(),
         _updatedAt: safeDate.optional(),
+        _publishedAt: safeDate.optional(),
       }).passthrough()
     },
   }
