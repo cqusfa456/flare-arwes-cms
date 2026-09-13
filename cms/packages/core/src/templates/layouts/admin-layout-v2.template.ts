@@ -286,7 +286,7 @@ export function adminLayoutV2(data: AdminLayoutData): string {
   <!-- Main container -->
   <div class="relative z-10 min-h-screen">
     <!-- Header -->
-    ${renderTopBar(data.pageTitle || t("Dashboard"), data.user, data.currentPath)}
+    ${renderTopBar(data.pageTitle ? t(data.pageTitle) : t("Dashboard"), data.user, data.currentPath)}
 
     <!-- Main content area -->
     <div class="px-4 sm:px-6 lg:px-8 py-8">
