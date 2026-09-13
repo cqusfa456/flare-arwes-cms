@@ -34,6 +34,8 @@ const FIELD_TYPE_MAP: Record<string, () => z.ZodTypeAny> = {
   quill: () => z.string(),
   tinymce: () => z.string(),
   mdxeditor: () => z.string(),
+  // A whole `.astro` file's source, written to a real page file by the build.
+  astro: () => z.string(),
   textarea: () => z.string(),
   json: () => z.unknown(),
   select: () => z.string(),

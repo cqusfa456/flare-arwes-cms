@@ -1,4 +1,6 @@
 ---
+import { readFileSync } from 'node:fs'
+
 import { getCollection } from 'astro:content'
 import MarkdownIt from 'markdown-it'
 
@@ -67,6 +69,23 @@ export async function getStaticPaths() {
     }
     claimed.add(key)
     return true
+  }
+
+  // Pages authored in the CMS as Astro source are written to real page files by
+  // scripts/sync-cms-pages.mjs, so Astro owns those paths and this route has to
+  // keep out of their way (a page can own an app route, the front page most
+  // often).
+  let generatedPages: string[] = []
+  try {
+    const manifest = JSON.parse(
+      readFileSync(new URL('../../.cms-pages.json', import.meta.url), 'utf-8')
+    )
+    generatedPages = Array.isArray(manifest.generated) ? manifest.generated : []
+  } catch {
+    generatedPages = []
+  }
+  for (const path of generatedPages) {
+    claim(path)
   }
 
   const cmsPageProps = (page: { data: Record<string, any> }): Record<string, unknown> => ({

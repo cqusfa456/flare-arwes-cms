@@ -1,0 +1,50 @@
+---
+/**
+ * The front page, authored in the CMS as an Astro file.
+ *
+ * This is the source stored in the `pages` entry with slug `index`. The build
+ * copies it to `src/pages/index.astro` (see apps/docs/scripts/sync-cms-pages.mjs)
+ * and Astro compiles it like any other page, so it can use the site layout,
+ * components and expressions.
+ */
+import Layout from '@/layouts/Layout.astro'
+
+const highlights = [
+  { href: '/docs/', label: 'Documentation', hint: 'Guides, fundamentals and package references' },
+  { href: '/demos', label: 'Demos', hint: 'Example projects built with ARWES' },
+  { href: 'https://arwes-blog.pages.dev/', label: 'Blog', hint: 'Notes on how this site and its CMS work' }
+]
+---
+
+<Layout title="Futuristic Sci-Fi UI Web Framework | ARWES" pathname="/">
+  <div class="flex-1 overflow-y-auto p-4 min-w-0 min-h-0 md:p-8">
+    <div class="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg">
+      <h1 class="font-header text-size-2 text-primary-main-3">
+        Futuristic Sci-Fi UI Web Framework
+      </h1>
+
+      <p class="text-primary-low-2">
+        ARWES is a web framework to build user interfaces based on futuristic science fiction
+        designs, animations, and sound effects. The concepts behind are opinionated with influences
+        from Cyberprep and productions like Star Citizen, Halo, NIKKE, and Mecha Break.
+      </p>
+
+      <ul class="flex flex-col gap-3">
+        {
+          highlights.map((item) => (
+            <li class="flex flex-col">
+              <a class="text-secondary-low-2 hover:text-secondary-high-3" href={item.href}>
+                {item.label}
+              </a>
+              <span class="text-primary-low-2 text-size-9">{item.hint}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="text-primary-low-2 text-size-9">
+        This page is a CMS entry written as Astro. Edit it in Admin → Content → Pages.
+      </p>
+    </div>
+  </div>
+</Layout>
