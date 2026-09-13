@@ -18,7 +18,9 @@ import { basename, resolve } from 'path'
  */
 
 const CONTENT_DIR = resolve(import.meta.dirname ?? '.', '..', 'content', 'blog')
-const COLLECTION = 'pages'
+// The CMS's built-in blog collection. Its URL prefix (Admin → Collections)
+// decides where the site publishes these entries.
+const COLLECTION = 'blog-posts'
 
 function log(msg: string) {
   console.log(`  ${msg}`)
@@ -118,7 +120,10 @@ async function seed(baseUrl: string, jwt: string) {
         title,
         slug,
         content: normalizeContent(parsed.content),
-        meta_description: parsed.data.meta_description ?? '',
+        // `excerpt` is the summary field of the CMS's blog collection (the older
+        // pages collection used `meta_description`); both frontmatter keys are
+        // accepted so existing files keep working.
+        excerpt: parsed.data.excerpt ?? parsed.data.meta_description ?? '',
         ...(parsed.data.featured_image ? { featured_image: parsed.data.featured_image } : {})
       }
     }

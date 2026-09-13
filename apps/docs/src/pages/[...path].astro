@@ -61,7 +61,9 @@ export async function getStaticPaths() {
           cmsPage: {
             title: page.data.title,
             contentHtml: md.render(String(page.data.content ?? '')),
-            metaDescription: page.data.meta_description
+            // `excerpt` is the summary field of the CMS's built-in collections;
+            // `meta_description` is what pages created earlier carry.
+            metaDescription: page.data.excerpt ?? page.data.meta_description
           }
         }
       }
@@ -83,7 +85,7 @@ export async function getStaticPaths() {
           cmsPage: {
             title: post.data.title,
             contentHtml: md.render(String(post.data.content ?? '')),
-            metaDescription: post.data.meta_description,
+            metaDescription: post.data.excerpt ?? post.data.meta_description,
             // The loader exposes the publish date as the `_publishedAt` system
             // field (`published_at` never reaches the page: the API transform
             // dropped the column and Astro strips undeclared schema keys).
@@ -160,7 +162,7 @@ export async function getStaticPaths() {
                 publishedAt: post.data._publishedAt
                   ? new Date(post.data._publishedAt).toISOString().slice(0, 10)
                   : undefined,
-                summary: post.data.meta_description
+                summary: post.data.excerpt ?? post.data.meta_description
               }))
           }
         }
