@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface DesignPageData {
@@ -28,7 +29,7 @@ export function renderDesignPage(data: DesignPageData): string {
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Documentation
+            ${t('Documentation')}
           </a>
         </div>
       </div>
@@ -49,15 +50,15 @@ export function renderDesignPage(data: DesignPageData): string {
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <a href="#modern" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Modern Patterns</a>
-          <a href="#typography" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Typography</a>
+          <a href="#typography" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Typography')}</a>
           <a href="#colors" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Colors</a>
-          <a href="#buttons" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Buttons</a>
-          <a href="#forms" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Forms</a>
-          <a href="#checkboxes" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Checkboxes</a>
-          <a href="#tables" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Tables</a>
-          <a href="#alerts" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Alerts</a>
-          <a href="#badges" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Badges</a>
-          <a href="#cards" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Cards</a>
+          <a href="#buttons" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Buttons')}</a>
+          <a href="#forms" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Forms')}</a>
+          <a href="#checkboxes" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Checkboxes')}</a>
+          <a href="#tables" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Tables')}</a>
+          <a href="#alerts" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Alerts')}</a>
+          <a href="#badges" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Badges')}</a>
+          <a href="#cards" class="text-sm font-medium text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">${t('Cards')}</a>
         </div>
       </div>
 
@@ -90,7 +91,7 @@ export function renderDesignPage(data: DesignPageData): string {
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                       </svg>
-                      Refresh
+                      ${t('Refresh')}
                     </button>
                   </div>
                 </div>
@@ -113,7 +114,7 @@ export function renderDesignPage(data: DesignPageData): string {
                   Interactive
                 </span>
                 <span class="inline-flex items-center rounded-full bg-slate-50 dark:bg-slate-500/10 px-2.5 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 ring-1 ring-inset ring-slate-700/10 dark:ring-slate-400/20">
-                  Category
+                  ${t('Category')}
                 </span>
               </div>
             </div>
@@ -126,9 +127,9 @@ export function renderDesignPage(data: DesignPageData): string {
               <table class="min-w-full">
                 <thead class="bg-zinc-50 dark:bg-zinc-800/50">
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Type</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">${t('Name')}</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">${t('Type')}</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">${t('Status')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,12 +137,12 @@ export function renderDesignPage(data: DesignPageData): string {
                     <td class="px-6 py-4 text-sm font-medium text-zinc-950 dark:text-white">Example Item</td>
                     <td class="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                       <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-700/10 dark:ring-emerald-400/20">
-                        Collection
+                        ${t('Collection')}
                       </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                       <span class="inline-flex items-center rounded-full bg-green-50 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20">
-                        Active
+                        ${t('Active')}
                       </span>
                     </td>
                   </tr>
@@ -149,12 +150,12 @@ export function renderDesignPage(data: DesignPageData): string {
                     <td class="px-6 py-4 text-sm font-medium text-zinc-950 dark:text-white">Another Item</td>
                     <td class="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                       <span class="inline-flex items-center rounded-full bg-red-50 dark:bg-red-500/10 px-2.5 py-1 text-sm font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-700/10 dark:ring-red-400/20">
-                        Content
+                        ${t('Content')}
                       </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                       <span class="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20 dark:ring-amber-500/20">
-                        Draft
+                        ${t('Draft')}
                       </span>
                     </td>
                   </tr>
@@ -167,7 +168,7 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Typography Section -->
       <div id="typography">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Typography</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Typography')}</h2>
 
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
           <div class="space-y-8">
@@ -375,13 +376,13 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Buttons Section -->
       <div id="buttons">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Buttons</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Buttons')}</h2>
 
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
           <div class="space-y-8">
             <!-- Primary Buttons -->
             <div>
-              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Primary</h3>
+              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('Primary')}</h3>
               <div class="flex flex-wrap gap-3">
                 <button class="inline-flex items-center gap-x-2 rounded-lg bg-zinc-950 dark:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,23 +391,23 @@ export function renderDesignPage(data: DesignPageData): string {
                   Create New
                 </button>
                 <button class="rounded-lg bg-zinc-950 dark:bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors">
-                  Save Changes
+                  ${t('Save Changes')}
                 </button>
               </div>
             </div>
 
             <!-- Secondary Buttons -->
             <div>
-              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Secondary</h3>
+              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('Secondary')}</h3>
               <div class="flex flex-wrap gap-3">
                 <button class="inline-flex items-center gap-x-2 rounded-lg bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
-                  Edit
+                  ${t('Edit')}
                 </button>
                 <button class="rounded-lg bg-white dark:bg-zinc-800 px-5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                  Cancel
+                  ${t('Cancel')}
                 </button>
               </div>
             </div>
@@ -419,7 +420,7 @@ export function renderDesignPage(data: DesignPageData): string {
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
-                  Delete
+                  ${t('Delete')}
                 </button>
               </div>
             </div>
@@ -521,7 +522,7 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Checkboxes Section -->
       <div id="checkboxes">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Checkboxes</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Checkboxes')}</h2>
 
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
           <div class="space-y-8">
@@ -583,7 +584,7 @@ export function renderDesignPage(data: DesignPageData): string {
             <div>
               <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">With Descriptions</h3>
               <fieldset>
-                <legend class="sr-only">Notifications</legend>
+                <legend class="sr-only">${t('Notifications')}</legend>
                 <div class="space-y-5">
                   <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
@@ -595,7 +596,7 @@ export function renderDesignPage(data: DesignPageData): string {
                       </div>
                     </div>
                     <div class="text-sm/6">
-                      <label for="email-notif" class="font-medium text-zinc-950 dark:text-white">Email notifications</label>
+                      <label for="email-notif" class="font-medium text-zinc-950 dark:text-white">${t('Email notifications')}</label>
                       <p id="email-desc" class="text-zinc-500 dark:text-zinc-400">Receive email updates about new features and product announcements.</p>
                     </div>
                   </div>
@@ -636,23 +637,23 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Tables Section -->
       <div id="tables">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Tables</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Tables')}</h2>
 
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 overflow-hidden">
           <table class="min-w-full divide-y divide-zinc-950/5 dark:divide-white/5">
             <thead class="bg-zinc-50 dark:bg-zinc-800/50">
               <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Name
+                  ${t('Name')}
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Status
+                  ${t('Status')}
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Created
+                  ${t('Created')}
                 </th>
                 <th scope="col" class="relative px-6 py-3">
-                  <span class="sr-only">Actions</span>
+                  <span class="sr-only">${t('Actions')}</span>
                 </th>
               </tr>
             </thead>
@@ -663,7 +664,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 </td>
                 <td class="whitespace-nowrap px-6 py-4">
                   <span class="inline-flex items-center rounded-full bg-green-50 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20">
-                    Published
+                    ${t('Published')}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -672,10 +673,10 @@ export function renderDesignPage(data: DesignPageData): string {
                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                   <div class="flex justify-end gap-x-2">
                     <a href="#" class="text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-                      Edit
+                      ${t('Edit')}
                     </a>
                     <a href="#" class="text-red-600 hover:text-red-700 dark:hover:text-red-500 transition-colors">
-                      Delete
+                      ${t('Delete')}
                     </a>
                   </div>
                 </td>
@@ -686,7 +687,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 </td>
                 <td class="whitespace-nowrap px-6 py-4">
                   <span class="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20 dark:ring-amber-500/20">
-                    Draft
+                    ${t('Draft')}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -695,10 +696,10 @@ export function renderDesignPage(data: DesignPageData): string {
                 <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                   <div class="flex justify-end gap-x-2">
                     <a href="#" class="text-zinc-950 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-                      Edit
+                      ${t('Edit')}
                     </a>
                     <a href="#" class="text-red-600 hover:text-red-700 dark:hover:text-red-500 transition-colors">
-                      Delete
+                      ${t('Delete')}
                     </a>
                   </div>
                 </td>
@@ -710,7 +711,7 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Alerts Section -->
       <div id="alerts">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Alerts</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Alerts')}</h2>
 
         <div class="space-y-4">
           <!-- Success Alert -->
@@ -720,7 +721,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <div>
-                <h3 class="text-sm font-semibold text-green-900 dark:text-green-300">Success</h3>
+                <h3 class="text-sm font-semibold text-green-900 dark:text-green-300">${t('Success')}</h3>
                 <p class="mt-1 text-sm text-green-700 dark:text-green-400">Your changes have been saved successfully.</p>
               </div>
             </div>
@@ -733,7 +734,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <div>
-                <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">Error</h3>
+                <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">${t('Error')}</h3>
                 <p class="mt-1 text-sm text-red-700 dark:text-red-400">There was a problem with your request.</p>
               </div>
             </div>
@@ -746,7 +747,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.865-.833-2.632 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
               </svg>
               <div>
-                <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-300">Warning</h3>
+                <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-300">${t('Warning')}</h3>
                 <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">Please review your changes before continuing.</p>
               </div>
             </div>
@@ -769,7 +770,7 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Badges Section -->
       <div id="badges">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Badges</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Badges')}</h2>
 
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
           <div class="flex flex-wrap gap-2">
@@ -777,16 +778,16 @@ export function renderDesignPage(data: DesignPageData): string {
               Default
             </span>
             <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
-              Info
+              ${t('Info')}
             </span>
             <span class="inline-flex items-center rounded-full bg-green-50 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20">
-              Success
+              ${t('Success')}
             </span>
             <span class="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20 dark:ring-amber-500/20">
-              Warning
+              ${t('Warning')}
             </span>
             <span class="inline-flex items-center rounded-full bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/20 dark:ring-red-500/20">
-              Error
+              ${t('Error')}
             </span>
           </div>
         </div>
@@ -794,7 +795,7 @@ export function renderDesignPage(data: DesignPageData): string {
 
       <!-- Cards Section -->
       <div id="cards">
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">Cards</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-6">${t('Cards')}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Basic Card -->

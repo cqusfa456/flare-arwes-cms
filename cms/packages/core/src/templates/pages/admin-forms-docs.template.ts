@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface FormsDocsPageData {
@@ -171,8 +172,8 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
       <aside class="docs-sidebar">
         <h3>Quick Start</h3>
         <ul class="docs-nav">
-          <li><a href="#overview" class="doc-link active">Overview</a></li>
-          <li><a href="#getting-started" class="doc-link">Getting Started</a></li>
+          <li><a href="#overview" class="doc-link active">${t('Overview')}</a></li>
+          <li><a href="#getting-started" class="doc-link">${t('Getting Started')}</a></li>
         </ul>
         
         <h3>Basic Fields</h3>
@@ -180,8 +181,8 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           <li><a href="#textfield" class="doc-link">Text Field</a></li>
           <li><a href="#textarea" class="doc-link">Text Area</a></li>
           <li><a href="#number" class="doc-link">Number</a></li>
-          <li><a href="#password" class="doc-link">Password</a></li>
-          <li><a href="#email" class="doc-link">Email</a></li>
+          <li><a href="#password" class="doc-link">${t('Password')}</a></li>
+          <li><a href="#email" class="doc-link">${t('Email')}</a></li>
           <li><a href="#url" class="doc-link">URL</a></li>
           <li><a href="#phonenumber" class="doc-link">Phone Number</a></li>
         </ul>
@@ -204,8 +205,8 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         <h3>Advanced Fields</h3>
         <ul class="docs-nav">
           <li><a href="#currency" class="doc-link">Currency</a></li>
-          <li><a href="#tags" class="doc-link">Tags</a></li>
-          <li><a href="#survey" class="doc-link">Survey</a></li>
+          <li><a href="#tags" class="doc-link">${t('Tags')}</a></li>
+          <li><a href="#survey" class="doc-link">${t('Survey')}</a></li>
           <li><a href="#signature" class="doc-link">Signature</a></li>
           <li><a href="#file" class="doc-link">File Upload</a></li>
           <li><a href="#address" class="doc-link">Address</a></li>
@@ -214,9 +215,9 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         
         <h3>Layout Components</h3>
         <ul class="docs-nav">
-          <li><a href="#panel" class="doc-link">Panel</a></li>
+          <li><a href="#panel" class="doc-link">${t('Panel')}</a></li>
           <li><a href="#columns" class="doc-link">Columns</a></li>
-          <li><a href="#tabs" class="doc-link">Tabs</a></li>
+          <li><a href="#tabs" class="doc-link">${t('Tabs')}</a></li>
           <li><a href="#table" class="doc-link">Table</a></li>
           <li><a href="#fieldset" class="doc-link">Fieldset</a></li>
         </ul>
@@ -231,8 +232,8 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         <ul class="docs-nav">
           <li><a href="#wizard" class="doc-link">Multi-Page Wizards</a></li>
           <li><a href="#embedding" class="doc-link">Embedding Forms</a></li>
-          <li><a href="#validation" class="doc-link">Validation</a></li>
-          <li><a href="#conditional" class="doc-link">Conditional Logic</a></li>
+          <li><a href="#validation" class="doc-link">${t('Validation')}</a></li>
+          <li><a href="#conditional" class="doc-link">${t('Conditional Logic')}</a></li>
         </ul>
       </aside>
 

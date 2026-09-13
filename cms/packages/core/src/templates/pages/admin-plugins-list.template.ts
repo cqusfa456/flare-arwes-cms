@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 
@@ -78,7 +79,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Plugins</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Plugins')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage and extend functionality with plugins</p>
         </div>
       </div>
@@ -110,7 +111,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
         <aside class="w-full lg:w-48 flex-shrink-0 space-y-8 lg:sticky lg:top-6 lg:self-start">
           <!-- Categories Filter -->
           <div>
-            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">Categories</h3>
+            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">${t('Categories')}</h3>
             <div class="space-y-3">
               ${categories.map(cat => {
                 const count = categoryCounts[cat.value] || 0;
@@ -138,7 +139,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
 
           <!-- Status Filter -->
           <div>
-            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">Status</h3>
+            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white mb-4">${t('Status')}</h3>
             <div class="space-y-3">
               ${statuses.map(status => {
                 const count = statusCounts[status.value] || 0;
@@ -203,11 +204,11 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
           <!-- Stats Row (Compact) -->
           <div class="flex flex-wrap gap-4 mb-6">
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('Total')}</div>
               <div class="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">${data.stats?.total || 0}</div>
             </div>
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">
-              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Active</div>
+              <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('Active')}</div>
               <div class="mt-1 text-lg font-semibold text-emerald-600 dark:text-emerald-400">${data.stats?.active || 0}</div>
             </div>
             <div class="min-w-[140px] rounded-lg bg-zinc-50 dark:bg-zinc-800/50 p-3 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/5">

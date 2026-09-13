@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { html } from 'hono/html'
 import { adminLayoutV2 } from '../layouts/admin-layout-v2.template'
 import { LogEntry } from './admin-logs-list.template'
@@ -55,7 +56,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
             </div>
             
             <div>
-              <dt class="text-sm font-medium text-gray-500">Timestamp</dt>
+              <dt class="text-sm font-medium text-gray-500">${t('Timestamp')}</dt>
               <dd class="mt-1 text-sm text-gray-900">${log.formattedDate}</dd>
             </div>
             
@@ -69,7 +70,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
             </div>
             
             <div>
-              <dt class="text-sm font-medium text-gray-500">Category</dt>
+              <dt class="text-sm font-medium text-gray-500">${t('Category')}</dt>
               <dd class="mt-1">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.categoryClass}">
                   ${log.category}
@@ -155,7 +156,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
       ${log.tags && log.tags.length > 0 ? html`
         <div class="mt-6 bg-white shadow rounded-lg overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Tags</h3>
+            <h3 class="text-lg font-medium text-gray-900">${t('Tags')}</h3>
           </div>
           <div class="px-6 py-4">
             <div class="flex flex-wrap gap-2">

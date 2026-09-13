@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../alert.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
@@ -69,14 +70,14 @@ export function renderUserEditPage(data: UserEditPageData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            Save Changes
+            ${t('Save Changes')}
           </button>
           <a
             href="/admin/users"
             class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
-          >
-            Cancel
-          </a>
+  >
+            ${t('Cancel')}
+          <       </a>
         </div>
       </div>
 
@@ -95,7 +96,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
 
               <!-- Basic Information -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Basic Information</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:>${t('Basic Information')}<sic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">First Name</label>
@@ -120,7 +121,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Username</label>
+                    <label class="block text-sm font-medium text-zinc-9>${t('Username')}<xt-white mb-2">Username</label>
                     <input
                       type="text"
                       name="username"
@@ -131,7 +132,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Email</label>
+                    <label class="block text-sm font-medium tex>${t('Email')}<950 dark:text-white mb-2">Email</label>
                     <input
                       type="email"
                       name="email"
@@ -152,7 +153,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label for="role" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Role</label>
+                    <label for="role" class="block text-sm/6 fo>${t('Role')}<ium text-zinc-950 dark:text-white">Role</label>
                     <div class="mt-2 grid grid-cols-1">
                       <select
                         id="role"
@@ -243,7 +244,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 </div>
 
                 <div class="mt-6">
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Bio</label>
+                  <label class="block text-sm>${t('Bio')}<-medium text-zinc-950 dark:text-white mb-2">Bio</label>
                   <textarea
                     name="profile_bio"
                     rows="3"
@@ -320,7 +321,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 <dd class="mt-1 text-zinc-950 dark:text-white font-mono text-xs">${data.userToEdit.id}</dd>
               </div>
               <div>
-                <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
+    >${t('Created')}<   <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
                 <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.userToEdit.createdAt).toLocaleDateString()}</dd>
               </div>
               ${data.userToEdit.lastLoginAt ? `
@@ -329,8 +330,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.userToEdit.lastLoginAt).toLocaleDateString()}</dd>
                 </div>
               ` : ''}
-              <div>
-                <dt class="text-zinc-500 dark:text-zinc-400">Status</dt>
+              <di>${t('Status')}<            <dt class="text-zinc-500 dark:text-zinc-400">Status</dt>
                 <dd class="mt-1">
                   ${data.userToEdit.isActive
                     ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-700/10 dark:ring-emerald-400/20">Active</span>'
@@ -339,8 +339,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 </dd>
               </div>
               ${data.userToEdit.twoFactorEnabled ? `
-                <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Security</dt>
+             >${t('Security')}<                  <dt class="text-zinc-500 dark:text-zinc-400">Security</dt>
                   <dd class="mt-1">
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-500/20">2FA Enabled</span>
                   </dd>

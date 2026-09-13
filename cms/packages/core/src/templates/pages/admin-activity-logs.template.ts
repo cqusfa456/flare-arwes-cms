@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
 
 export interface ActivityLog {
@@ -42,7 +43,7 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl font-semibold text-white">Activity Logs</h1>
+          <h1 class="text-2xl font-semibold text-white">${t('Activity Logs')}</h1>
           <p class="mt-2 text-sm text-gray-300">Monitor user actions and system activity</p>
         </div>
       </div>
@@ -61,18 +62,18 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
             <svg class="h-5 w-5 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm font-medium text-gray-200">Activity Logs</span>
+            <span class="text-sm font-medium text-gray-200">${t('Activity Logs')}</span>
           </li>
         </ol>
       </nav>
 
       <!-- Filters -->
       <div class="backdrop-blur-xl bg-white/10 rounded-xl border border-white/20 shadow-2xl p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Filters</h3>
+        <h3 class="text-lg font-semibold text-white mb-4">${t('Filters')}</h3>
         
         <form method="GET" action="/admin/activity-logs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">Action</label>
+            <label class="block text-sm font-medium text-gray-300 mb-2">${t('Action')}</label>
             <select name="action" class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30">
               <option value="">All Actions</option>
               <option value="user.login" ${data.filters.action === 'user.login' ? 'selected' : ''}>User Login</option>
@@ -93,11 +94,11 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
             <label class="block text-sm font-medium text-gray-300 mb-2">Resource Type</label>
             <select name="resource_type" class="w-full px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white focus:outline-none focus:bg-white/10 focus:border-white/30">
               <option value="">All Resources</option>
-              <option value="users" ${data.filters.resource_type === 'users' ? 'selected' : ''}>Users</option>
-              <option value="content" ${data.filters.resource_type === 'content' ? 'selected' : ''}>Content</option>
-              <option value="collections" ${data.filters.resource_type === 'collections' ? 'selected' : ''}>Collections</option>
-              <option value="media" ${data.filters.resource_type === 'media' ? 'selected' : ''}>Media</option>
-              <option value="settings" ${data.filters.resource_type === 'settings' ? 'selected' : ''}>Settings</option>
+              <option value="users" ${data.filters.resource_type === 'users' ? 'selected' : ''}>${t('Users')}</option>
+              <option value="content" ${data.filters.resource_type === 'content' ? 'selected' : ''}>${t('Content')}</option>
+              <option value="collections" ${data.filters.resource_type === 'collections' ? 'selected' : ''}>${t('Collections')}</option>
+              <option value="media" ${data.filters.resource_type === 'media' ? 'selected' : ''}>${t('Media')}</option>
+              <option value="settings" ${data.filters.resource_type === 'settings' ? 'selected' : ''}>${t('Settings')}</option>
             </select>
           </div>
 
@@ -154,12 +155,12 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
           <table class="w-full">
             <thead class="bg-white/5">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Timestamp</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Timestamp')}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('User')}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Action')}</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Resource</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">IP Address</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Details')}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-white/10">
@@ -220,13 +221,13 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
               ${data.pagination.page > 1 ? `
                 <a href="?page=${data.pagination.page - 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}" 
                    class="px-3 py-1 bg-white/10 text-white rounded-lg border border-white/20 hover:bg-white/20 transition-all">
-                  Previous
+                  ${t('Previous')}
                 </a>
               ` : ''}
               ${data.pagination.page < data.pagination.pages ? `
                 <a href="?page=${data.pagination.page + 1}&${new URLSearchParams(data.filters as Record<string, string>).toString()}" 
                    class="px-3 py-1 bg-white/10 text-white rounded-lg border border-white/20 hover:bg-white/20 transition-all">
-                  Next
+                  ${t('Next')}
                 </a>
               ` : ''}
             </div>

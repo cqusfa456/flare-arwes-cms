@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { MediaFile } from './media-grid.template'
 
 export interface MediaFileDetailsData {
@@ -65,11 +66,11 @@ export function renderMediaFileDetails(data: MediaFileDetailsData): string {
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">Size</label>
+            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">${t('Size')}</label>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">${file.fileSize}</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">Type</label>
+            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">${t('Type')}</label>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">${file.mime_type}</p>
           </div>
         </div>
@@ -121,7 +122,7 @@ export function renderMediaFileDetails(data: MediaFileDetailsData): string {
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">Tags</label>
+            <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-1">${t('Tags')}</label>
             <input
               type="text"
               name="tags"
@@ -136,7 +137,7 @@ export function renderMediaFileDetails(data: MediaFileDetailsData): string {
               type="submit"
               class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
             >
-              Save Changes
+              ${t('Save Changes')}
             </button>
             <button
               type="button"

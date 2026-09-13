@@ -111,7 +111,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                 <!-- Username -->
                 <div>
                   <label for="username" class="block text-sm font-medium text-zinc-300 mb-2">
-                    Username
+                    ${t('Username')}
                   </label>
                   <input
                     id="username"

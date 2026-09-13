@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderPagination } from '../pagination.template'
 import { renderAlert } from '../alert.template'
@@ -60,7 +61,7 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-4 flex-1">
                 <div>
-                  <label for="published" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+                  <label for="published" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('Status')}</label>
                   <div class="mt-2 grid grid-cols-1">
                     <select
                       name="published"
@@ -71,9 +72,9 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
                       hx-include="[name='minRating'], [name='search']"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 sm:text-sm/6 min-w-48"
                     >
-                      <option value="">All</option>
-                      <option value="true">Published</option>
-                      <option value="false">Draft</option>
+                      <option >${t('All')}<="">All</option>
+                      <opt>${t('Published')}<true">Published</option>
+                   >${t('Draft')}<ion value="false">Draft</option>
                     </select>
                     <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-blue-600 dark:text-blue-400 sm:size-4">
                       <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -103,7 +104,7 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
                   </div>
                 </div>
                 <div class="flex-1 max-w-md">
-                  <label for="search" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                  <label for="search" class="block text-sm font-medium tex>${t('Search')}<50 dark:text-white mb-2">Search</label>
                   <div class="relative group">
                     <div class="absolute left-3.5 top-2.5 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 dark:from-blue-300 dark:to-blue-400 opacity-90 group-focus-within:opacity-100 transition-opacity">
                       <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -131,9 +132,9 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
                   class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm text-zinc-950 dark:text-white text-sm font-medium rounded-lg ring-1 ring-inset ring-blue-200/50 dark:ring-blue-700/50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-50 dark:hover:from-blue-900/30 dark:hover:to-blue-900/30 hover:ring-blue-300 dark:hover:ring-blue-600 transition-all duration-200"
                 >
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  Refresh
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2>
+                  ${t('Refresh')}
+                <              Refresh
                 </button>
               </div>
             </div>

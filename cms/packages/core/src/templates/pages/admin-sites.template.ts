@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 /**
  * Admin → Sites pages.
  *
@@ -103,10 +104,10 @@ const buildBadge = (site: Site): string => {
 
 const domainBadge = (status: string): string => {
   if (status === 'active') {
-    return `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">Active</span>`
+    return `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">${t('Active')}</span>`
   }
   if (status === 'error') {
-    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">Error</span>`
+    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text->${t('Error')}<">Error</span>`
   }
   if (status === 'removed') {
     return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Removed</span>`
@@ -367,7 +368,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
     <div class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Sites</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-whi>${t('Sites')}<ext-xl/8">Sites</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">One control plane for every website: builds, domain bindings and content.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -538,7 +539,7 @@ export function renderSiteNewPage(data: {
               <option value="">— Blank site —</option>
               ${presetOptions}
             </select>
-            <button onclick="applyPreset()" class="${SECONDARY_BTN}">Apply</button>
+            <button onclick="applyPreset()" >${t('Apply')}<${SECONDARY_BTN}">Apply</button>
           </div>
           <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             A preset fills in the monorepo's build contract — <code>{{slug}}</code> in a command is replaced with the site slug you enter below.
@@ -549,12 +550,11 @@ export function renderSiteNewPage(data: {
       <div class="${CARD} p-6 space-y-5">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label class="${LABEL}">Name</label>
+   >${t('Name')}<   <label class="${LABEL}">Name</label>
             <input id="site-name" class="${INPUT}" placeholder="ARWES Docs" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Human readable label shown in the admin.</p>
           </div>
-          <div>
-            <label class="${LABEL}">Slug</label>
+          <d>${t('Slug')}<           <label class="${LABEL}">Slug</label>
             <input id="site-slug" class="${INPUT}" placeholder="docs" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">URL-safe identifier, generated from the name when left blank.</p>
           </div>
@@ -566,8 +566,7 @@ export function renderSiteNewPage(data: {
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
           </div>
-          <div class="sm:col-span-2">
-            <label class="${LABEL}">Deploy mode</label>
+          <div class="sm:c>${t('Deploy mode')}<            <label class="${LABEL}">Deploy mode</label>
             <select id="site-deploy-mode" class="${INPUT}">
               ${deployModeOptions(data.deployModes, '')}
             </select>
@@ -634,17 +633,14 @@ export function renderSiteNewPage(data: {
             (<code>""</code> = that host's root, so <code>{"blog-posts": ""}</code> serves the blog index at the domain root and posts at <code>/&lt;slug&gt;</code>;
             <code>{"blog-posts": "/blog"}</code> keeps them under <code>/blog</code>).
           </p>
-        </div>
-
-        <div>
+        </>${t('Description')}<   <div>
           <label class="${LABEL}">Description</label>
           <input id="site-description" class="${INPUT}" placeholder="Documentation site" />
         </div>
 
         <div class="flex items-center justify-between pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="create-result" class="text-sm"></div>
-          <div class="flex items-center gap-2">
-            <a href="/admin/sites" class="${SECONDARY_BTN}">Cancel</a>
+          <div class="flex items-center gap->${t('Cancel')}<         <a href="/admin/sites" class="${SECONDARY_BTN}">Cancel</a>
             <button onclick="createSite()" class="${PRIMARY_BTN}">Register site</button>
           </div>
         </div>
@@ -934,7 +930,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <a href="/admin/sites" class="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Sites</a>
+            <a href="/admin/sites" class="text-sm tex>${t('Sites')}<500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Sites</a>
             <span class="text-zinc-300 dark:text-zinc-600">/</span>
             <h1 class="text-xl font-semibold text-zinc-950 dark:text-white">${escapeHtml(site.name)}</h1>
             ${providerBadge(site.provider)}
@@ -967,8 +963,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         </div>
         <dl class="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2 text-xs">
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Last triggered</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
-          <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Status</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
-          <div class="flex items-center justify-between gap-4">
+          <div>${t('Status')}<flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Status</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
+          <div class="flex items->${t('Deploy mode')}<y-between gap-4">
             <dt class="text-zinc-500 dark:text-zinc-400">Deploy mode</dt>
             <dd>
               <span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">${escapeHtml(deployModeLabel)}</span>
@@ -996,7 +992,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <div class="mt-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
-              <tr><th class="px-4 py-2 font-medium">Hostname</th><th class="px-4 py-2 font-medium">Status</th><th class="px-4 py-2 font-medium">Validation</th><th class="px-4 py-2"></th></tr>
+  >${t('Status')}<    <tr><th class="px-4 py-2 >${t('Validation')}<>Hostname</th><th class="px-4 py-2 font-medium">Status</th><th class="px-4 py-2 font-medium">Validation</th><th class="px-4 py-2"></th></tr>
             </thead>
             <tbody>${domainRows}</tbody>
           </table>
@@ -1013,9 +1009,9 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
 
       <!-- Settings -->
       <div class="${CARD} p-6 space-y-5">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Site settings</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Site se>${t('Name')}<</h2>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div><label class="${LABEL}">Name</label><input id="s-name" class="${INPUT}" value="${escapeHtml(site.name)}" /></div>
+          <div><label class="${LABEL}">Name</lab>${t('Slug')}<put id="s-name" class="${INPUT}" value="${escapeHtml(site.name)}" /></div>
           <div><label class="${LABEL}">Slug</label><input id="s-slug" class="${INPUT}" value="${escapeHtml(site.slug)}" /></div>
           <div class="sm:col-span-2">
             <label class="${LABEL}">Hosting provider</label>
@@ -1025,7 +1021,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.
+              Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrate>${t('Deploy mode')}<ly.
             </p>
           </div>
           <div class="sm:col-span-2">
@@ -1074,9 +1070,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           </div>
         </div>
         <p class="text-xs text-zinc-500 dark:text-zinc-400">Build config was last pushed ${escapeHtml(fmtTime(site.buildConfigSyncedAt))}.</p>
-      </div>
-
-      <!-- Content -->
+      </>${t('Content')}<     <!-- Content -->
       <div class="${CARD} p-6">
         <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Content</h2>
         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">

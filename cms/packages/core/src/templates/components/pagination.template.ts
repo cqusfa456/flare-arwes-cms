@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 export interface PaginationData {
   currentPage: number
   totalPages: number
@@ -64,18 +65,18 @@ export function renderPagination(data: PaginationData): string {
         <div class="flex-1 flex justify-between sm:hidden">
           ${data.currentPage > 1 ? `
             <a href="${buildUrl(data.currentPage - 1)}" class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Previous
+              ${t('Previous')}
             </a>
           ` : `
-            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">Previous</span>
+            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">${t('Previous')}</span>
           `}
 
           ${data.currentPage < data.totalPages ? `
             <a href="${buildUrl(data.currentPage + 1)}" class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Next
+              ${t('Next')}
             </a>
           ` : `
-            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">Next</span>
+            <span class="inline-flex items-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-400 dark:text-zinc-600 shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 opacity-50 cursor-not-allowed">${t('Next')}</span>
           `}
         </div>
       ` : ''}
@@ -90,7 +91,7 @@ export function renderPagination(data: PaginationData): string {
           </p>
           ${data.showPageSizeSelector !== false ? `
             <div class="flex items-center gap-2">
-              <label for="page-size" class="text-sm text-zinc-500 dark:text-zinc-400">Per page:</label>
+              <label for="page-size" class="text-sm text-zinc-500 dark:text-zinc-400">${t('Per page:')}</label>
               <div class="grid grid-cols-1">
                 <select
                   id="page-size"
@@ -117,7 +118,7 @@ export function renderPagination(data: PaginationData): string {
             ${data.currentPage > 1 ? `
             <a href="${buildUrl(data.currentPage - 1)}"
                class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Previous
+              ${t('Previous')}
             </a>
           ` : ''}
 
@@ -172,7 +173,7 @@ export function renderPagination(data: PaginationData): string {
           ${data.currentPage < data.totalPages ? `
             <a href="${buildUrl(data.currentPage + 1)}"
                class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-              Next
+              ${t('Next')}
             </a>
           ` : ''}
           </div>

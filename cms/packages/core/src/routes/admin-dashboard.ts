@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types'
 import { requireAuth } from '../middleware'
@@ -270,7 +271,7 @@ router.get('/system-status', async (c) => {
           <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-red-500/20 dark:from-purple-500/10 dark:to-red-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div class="relative bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-5 border border-zinc-200/50 dark:border-zinc-700/50">
             <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Database</span>
+              <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">${t('Database')}</span>
               <svg class="w-6 h-6 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
               </svg>

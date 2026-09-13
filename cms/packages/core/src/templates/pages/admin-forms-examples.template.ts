@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface FormsExamplesPageData {
@@ -215,7 +216,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
     <div class="examples-container">
       <!-- Sidebar Navigation -->
       <aside class="examples-sidebar">
-        <h3>Getting Started</h3>
+        <h3>${t('Getting Started')}</h3>
         <ul class="examples-nav">
           <li><a href="#kitchen-sink" class="example-link active">Kitchen Sink</a></li>
           <li><a href="#simple-contact" class="example-link">Simple Contact Form</a></li>
@@ -225,7 +226,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
         <h3>Advanced Forms</h3>
         <ul class="examples-nav">
           <li><a href="#wizard-form" class="example-link">Multi-Page Wizard</a></li>
-          <li><a href="#conditional-logic" class="example-link">Conditional Logic</a></li>
+          <li><a href="#conditional-logic" class="example-link">${t('Conditional Logic')}</a></li>
           <li><a href="#file-upload" class="example-link">File Upload</a></li>
         </ul>
         
@@ -253,8 +254,8 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           </div>
           
           <div class="code-header">
-            <h3>Form Schema (JSON)</h3>
-            <button class="copy-btn" onclick="copyCode('kitchen-sink-code')">Copy Code</button>
+            <h3>${t('Form Schema (JSON)')}</h3>
+            <button class="copy-btn" onclick="copyCode('kitchen-sink-code')">${t('Copy Code')}</button>
           </div>
           <pre class="example-code" id="kitchen-sink-code">{
   "display": "form",
@@ -303,8 +304,8 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           </div>
           
           <div class="code-header">
-            <h3>Form Schema (JSON)</h3>
-            <button class="copy-btn" onclick="copyCode('contact-code')">Copy Code</button>
+            <h3>${t('Form Schema (JSON)')}</h3>
+            <button class="copy-btn" onclick="copyCode('contact-code')">${t('Copy Code')}</button>
           </div>
           <pre class="example-code" id="contact-code">{
   "display": "form",
@@ -348,8 +349,8 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           </div>
           
           <div class="code-header">
-            <h3>Form Schema (JSON)</h3>
-            <button class="copy-btn" onclick="copyCode('thankyou-schema-code')">Copy Code</button>
+            <h3>${t('Form Schema (JSON)')}</h3>
+            <button class="copy-btn" onclick="copyCode('thankyou-schema-code')">${t('Copy Code')}</button>
           </div>
           <pre class="example-code" id="thankyou-schema-code">{
   "display": "form",
@@ -369,7 +370,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           
           <div class="code-header">
             <h3>JavaScript Code</h3>
-            <button class="copy-btn" onclick="copyCode('thankyou-code')">Copy Code</button>
+            <button class="copy-btn" onclick="copyCode('thankyou-code')">${t('Copy Code')}</button>
           </div>
           <pre class="example-code" id="thankyou-code">Formio.createForm(document.getElementById('formio'), formSchema)
   .then(function(form) {
@@ -399,8 +400,8 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           </div>
           
           <div class="code-header">
-            <h3>Form Schema (JSON)</h3>
-            <button class="copy-btn" onclick="copyCode('wizard-code')">Copy Code</button>
+            <h3>${t('Form Schema (JSON)')}</h3>
+            <button class="copy-btn" onclick="copyCode('wizard-code')">${t('Copy Code')}</button>
           </div>
           <pre class="example-code" id="wizard-code">{
   "display": "wizard",

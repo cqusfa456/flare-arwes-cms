@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
 import { renderAlert } from '../alert.template'
 
@@ -58,12 +59,12 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
           <!-- Basic Information Section -->
           <div>
-            <h2 class="text-lg font-medium text-white mb-4">Basic Information</h2>
+            <h2 class="text-lg font-medium text-white mb-4">${t('Basic Information')}</h2>
 
             <!-- Title -->
             <div class="mb-4">
               <label for="title" class="block text-sm font-medium text-white">
-                Title <span class="text-red-400">*</span>
+                ${t('Title')} <span class="text-red-400">*</span>
               </label>
               <div class="mt-1">
                 <input type="text"
@@ -86,7 +87,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
             <!-- Description -->
             <div class="mb-4">
-              <label for="description" class="block text-sm font-medium text-white">Description</label>
+              <label for="description" class="block text-sm font-medium text-white">${t('Description')}</label>
               <div class="mt-1">
                 <textarea name="description"
                           id="description"
@@ -111,7 +112,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
               <!-- Language -->
               <div>
                 <label for="language" class="block text-sm font-medium text-white">
-                  Language <span class="text-red-400">*</span>
+                  ${t('Language')} <span class="text-red-400">*</span>
                 </label>
                 <div class="mt-1">
                   <select name="language"
@@ -141,7 +142,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
               <!-- Category -->
               <div>
-                <label for="category" class="block text-sm font-medium text-white">Category</label>
+                <label for="category" class="block text-sm font-medium text-white">${t('Category')}</label>
                 <div class="mt-1">
                   <input type="text"
                          name="category"
@@ -162,7 +163,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
               <!-- Tags -->
               <div>
-                <label for="tags" class="block text-sm font-medium text-white">Tags</label>
+                <label for="tags" class="block text-sm font-medium text-white">${t('Tags')}</label>
                 <div class="mt-1">
                   <input type="text"
                          name="tags"
@@ -218,7 +219,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Published Status -->
             <div>
-              <label class="block text-sm font-medium text-white">Status</label>
+              <label class="block text-sm font-medium text-white">${t('Status')}</label>
               <div class="mt-2 space-y-2">
                 <div class="flex items-center">
                   <input id="published"
@@ -228,7 +229,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
                          ${!codeExample || codeExample.isPublished ? 'checked' : ''}
                          class="h-4 w-4 text-slate-600 focus:ring-slate-600 border-gray-600 bg-gray-700">
                   <label for="published" class="ml-2 block text-sm text-white">
-                    Published <span class="text-gray-300">(visible to users)</span>
+                    ${t('Published')} <span class="text-gray-300">(visible to users)</span>
                   </label>
                 </div>
                 <div class="flex items-center">
@@ -239,7 +240,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
                          ${codeExample && !codeExample.isPublished ? 'checked' : ''}
                          class="h-4 w-4 text-slate-600 focus:ring-slate-600 border-gray-600 bg-gray-700">
                   <label for="draft" class="ml-2 block text-sm text-white">
-                    Draft <span class="text-gray-300">(not visible to users)</span>
+                    ${t('Draft')} <span class="text-gray-300">(not visible to users)</span>
                   </label>
                 </div>
               </div>
@@ -247,7 +248,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
             <!-- Sort Order -->
             <div>
-              <label for="sortOrder" class="block text-sm font-medium text-white">Sort Order</label>
+              <label for="sortOrder" class="block text-sm font-medium text-white">${t('Sort Order')}</label>
               <div class="mt-1">
                 <input type="number"
                        name="sortOrder"
@@ -272,7 +273,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
           <div class="flex items-center justify-end space-x-3 pt-6 border-t border-white/20">
             <a href="/admin/code-examples"
                class="inline-flex items-center justify-center rounded-xl backdrop-blur-sm bg-white/10 px-4 py-2 text-sm font-semibold text-white border border-white/20 hover:bg-white/20 transition-all">
-              Cancel
+              ${t('Cancel')}
             </a>
             <button type="submit"
                     class="inline-flex items-center justify-center rounded-xl backdrop-blur-sm bg-slate-500/80 px-4 py-2 text-sm font-semibold text-white border border-white/20 hover:bg-slate-500 transition-all">

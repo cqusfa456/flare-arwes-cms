@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderForm } from '../components/form.template'
 
@@ -100,7 +101,7 @@ export function renderFormCreatePage(data: FormCreatePageData): string {
             <!-- Description -->
             <div>
               <label for="description" class="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                Description
+                ${t('Description')}
               </label>
               <textarea
                 id="description"
@@ -114,18 +115,18 @@ export function renderFormCreatePage(data: FormCreatePageData): string {
             <!-- Category -->
             <div>
               <label for="category" class="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                Category
+                ${t('Category')}
               </label>
               <select
                 id="category"
                 name="category"
                 class="block w-full rounded-lg border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
-                <option value="general" selected>General</option>
-                <option value="contact">Contact</option>
-                <option value="survey">Survey</option>
-                <option value="registration">Registration</option>
-                <option value="feedback">Feedback</option>
+                <option value="general" selected>${t('General')}</option>
+                <option value="contact">${t('Contact')}</option>
+                <option value="survey">${t('Survey')}</option>
+                <option value="registration">${t('Registration')}</option>
+                <option value="feedback">${t('Feedback')}</option>
               </select>
               <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
                 Helps organize forms in the admin panel.
@@ -139,7 +140,7 @@ export function renderFormCreatePage(data: FormCreatePageData): string {
               href="/admin/forms"
               class="inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
             >
-              Cancel
+              ${t('Cancel')}
             </a>
             <button
               type="submit"

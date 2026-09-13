@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderTable } from '../components/table.template'
 import { escapeHtml } from '../../utils/sanitize'
@@ -132,7 +133,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                   <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/>
                   <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"/>
                 </svg>
-                <span class="text-sm text-zinc-700 dark:text-zinc-300">Database</span>
+                <span class="text-sm text-zinc-700 dark:text-zinc-300">${t('Database')}</span>
               </div>
             `
           }

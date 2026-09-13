@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderConfirmationDialog, getConfirmationDialogScript } from '../components/confirmation-dialog.template'
 import { STORAGE_PROVIDERS } from '../../storage'
@@ -122,7 +123,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Settings</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Settings')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage your application settings and preferences</p>
         </div>
       </div>
@@ -714,7 +715,7 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
           </div>
 
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Timezone</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('Timezone')}</label>
             <select
               name="timezone"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
@@ -740,7 +741,7 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
           </div>
 
           <div>
-            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Language</label>
+            <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('Language')}</label>
             <select
               name="language"
               class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm/6 text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
@@ -805,7 +806,7 @@ function renderGeneralSettings(settings?: GeneralSettings): string {
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('Save Changes')}
         </button>
       </div>
     </div>
@@ -880,7 +881,7 @@ function renderAppearanceSettings(settings?: AppearanceSettings): string {
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('Save Changes')}
         </button>
       </div>
     </div>
@@ -920,7 +921,7 @@ function renderSecuritySettings(settings?: SecuritySettings): string {
 
       <!-- Session Settings -->
       <div class="rounded-xl bg-white dark:bg-zinc-800/50 p-6 ring-1 ring-zinc-950/5 dark:ring-white/10">
-        <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-1">Session</h4>
+        <h4 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-1">${t('Session')}</h4>
         <p class="text-sm/6 text-zinc-500 dark:text-zinc-400 mb-6">Control how long users stay logged in and what happens when they're inactive.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -1091,7 +1092,7 @@ function renderSecuritySettings(settings?: SecuritySettings): string {
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('Save Changes')}
         </button>
       </div>
     </div>
@@ -1184,7 +1185,7 @@ function renderNotificationSettings(settings?: NotificationSettings): string {
         <select name="emailFrequency" class="${selectClass}">
           <option value="immediate" ${settings?.emailFrequency === 'immediate' ? 'selected' : ''}>Immediate</option>
           <option value="daily" ${settings?.emailFrequency === 'daily' ? 'selected' : ''}>Daily Digest</option>
-          <option value="weekly" ${settings?.emailFrequency === 'weekly' ? 'selected' : ''}>Weekly Digest</option>
+          <option value="weekly" ${settings?.emailFrequency === 'weekly' ? 'selected' : ''}>${t('Weekly Digest')}</option>
         </select>
         <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Critical system alerts are always sent immediately regardless of this setting.</p>
       </div>
@@ -1198,7 +1199,7 @@ function renderNotificationSettings(settings?: NotificationSettings): string {
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('Save Changes')}
         </button>
       </div>
     </div>
@@ -1217,7 +1218,7 @@ function renderStorageSettings(
   const activeId = runtime?.provider ?? null
 
   const statusBadge = !runtime
-    ? `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">Unknown</span>`
+    ? `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">${t('Unknown')}</span>`
     : runtime.configured
       ? `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">Configured</span>`
       : `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">Not configured</span>`
@@ -1278,7 +1279,7 @@ function renderStorageSettings(
               <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(provider.description)}</p>
             </div>
             ${isActive
-              ? `<span class="shrink-0 inline-flex items-center rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white">Active</span>`
+              ? `<span class="shrink-0 inline-flex items-center rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white">${t('Active')}</span>`
               : ''}
           </div>
           <div class="mt-3 flex flex-wrap gap-1">
@@ -1378,7 +1379,7 @@ function renderStorageSettings(
           <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          Save Changes
+          ${t('Save Changes')}
         </button>
       </div>
     </div>
@@ -1422,7 +1423,7 @@ function renderMigrationSettings(settings?: MigrationSettings): string {
         <div class="backdrop-blur-md bg-orange-500/20 rounded-lg border border-orange-500/30 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-orange-300">Pending</p>
+              <p class="text-sm text-orange-300">${t('Pending')}</p>
               <p id="pending-migrations" class="text-2xl font-bold text-white">${settings?.pendingMigrations || '0'}</p>
             </div>
             <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

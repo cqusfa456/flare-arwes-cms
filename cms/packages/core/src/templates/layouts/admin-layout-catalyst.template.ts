@@ -725,7 +725,7 @@ export function renderAdminLayoutCatalyst(
         <div id="sync-footer" class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
           <div id="sync-status" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
           <div class="flex gap-3">
-            <button onclick="closeSyncModal()" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Cancel</button>
+            <button onclick="closeSyncModal()" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">${t('Cancel')}</button>
             <button id="sync-confirm-btn" onclick="syncAll()" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Go Live</button>
           </div>
         </div>
@@ -746,7 +746,7 @@ export function renderAdminLayoutCatalyst(
         </div>
         <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-5">This revision will be discarded. The live content will remain unchanged.</p>
         <div class="flex justify-end gap-3">
-          <button onclick="closeRejectConfirm()" class="rounded-lg bg-zinc-100 dark:bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">Cancel</button>
+          <button onclick="closeRejectConfirm()" class="rounded-lg bg-zinc-100 dark:bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">${t('Cancel')}</button>
           <button onclick="confirmReject()" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">Reject</button>
         </div>
       </div>

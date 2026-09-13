@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../alert.template'
 
@@ -43,7 +44,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
             href="/admin/users"
             class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
           >
-            Cancel
+            ${t('Cancel')}
           </a>
         </div>
       </div>
@@ -63,7 +64,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
               <!-- Basic Information -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Basic Information</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('Basic Information')}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
@@ -93,7 +94,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Username <span class="text-red-500">*</span>
+                      ${t('Username')} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -106,7 +107,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Email <span class="text-red-500">*</span>
+                      ${t('Email')} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -129,7 +130,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label for="role" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">
-                      Role <span class="text-red-500">*</span>
+                      ${t('Role')} <span class="text-red-500">*</span>
                     </label>
                     <div class="mt-2 grid grid-cols-1">
                       <select
@@ -150,7 +151,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 </div>
 
                 <div class="mt-6">
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Bio</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Bio')}</label>
                   <textarea
                     name="bio"
                     rows="3"
@@ -162,11 +163,11 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
               <!-- Password -->
               <div class="mb-8">
-                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Password</h3>
+                <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('Password')}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Password <span class="text-red-500">*</span>
+                      ${t('Password')} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="password"
@@ -275,7 +276,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 <dd class="text-zinc-500 dark:text-zinc-400">Can create and edit content</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Author</dt>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('Author')}</dt>
                 <dd class="text-zinc-500 dark:text-zinc-400">Can create own content</dd>
               </div>
               <div>

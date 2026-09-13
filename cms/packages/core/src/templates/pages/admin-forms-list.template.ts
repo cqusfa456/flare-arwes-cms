@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderTable } from '../components/table.template'
 
@@ -109,13 +110,13 @@ export function renderFormsListPage(data: FormsListPageData): string {
           if (form.is_active) {
             return `
               <span class="inline-flex items-center rounded-full bg-green-50 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300 ring-1 ring-inset ring-green-700/10 dark:ring-green-400/20">
-                Active
+                ${t('Active')}
               </span>
             `
           } else {
             return `
               <span class="inline-flex items-center rounded-full bg-gray-50 dark:bg-gray-500/10 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-gray-700/10 dark:ring-gray-400/20">
-                Inactive
+                ${t('Inactive')}
               </span>
             `
           }
@@ -165,7 +166,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Forms</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Forms')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Create and manage forms with the visual form builder</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
@@ -260,12 +261,12 @@ export function renderFormsListPage(data: FormsListPageData): string {
               name="category"
               class="block w-full h-[38px] rounded-lg border-2 border-blue-200/50 dark:border-blue-700/50 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3"
             >
-              <option value="">All Categories</option>
-              <option value="contact" ${data.category === 'contact' ? 'selected' : ''}>Contact</option>
-              <option value="survey" ${data.category === 'survey' ? 'selected' : ''}>Survey</option>
-              <option value="registration" ${data.category === 'registration' ? 'selected' : ''}>Registration</option>
-              <option value="feedback" ${data.category === 'feedback' ? 'selected' : ''}>Feedback</option>
-              <option value="general" ${data.category === 'general' ? 'selected' : ''}>General</option>
+              <option value="">${t('All Categories')}</option>
+              <option value="contact" ${data.category === 'contact' ? 'selected' : ''}>${t('Contact')}</option>
+              <option value="survey" ${data.category === 'survey' ? 'selected' : ''}>${t('Survey')}</option>
+              <option value="registration" ${data.category === 'registration' ? 'selected' : ''}>${t('Registration')}</option>
+              <option value="feedback" ${data.category === 'feedback' ? 'selected' : ''}>${t('Feedback')}</option>
+              <option value="general" ${data.category === 'general' ? 'selected' : ''}>${t('General')}</option>
             </select>
           </div>
           <button
@@ -275,14 +276,14 @@ export function renderFormsListPage(data: FormsListPageData): string {
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            Filter
+            ${t('Filter')}
           </button>
           ${data.search || data.category ? `
             <a
               href="/admin/forms"
               class="inline-flex items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
             >
-              Clear
+              ${t('Clear')}
             </a>
           ` : ''}
         </form>

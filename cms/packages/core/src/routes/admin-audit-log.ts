@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 /**
  * Admin Audit Log Routes
  *
@@ -109,7 +110,7 @@ adminAuditLogRoutes.get('/', async (c) => {
       <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">${label}</label>
       <select name="${name}" onchange="this.form.submit()"
         class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 w-full">
-        <option value="">All</option>
+        <option value="">${t('All')}</option>
         ${options.map(o => `<option value="${o}" ${o === current ? 'selected' : ''}>${o}</option>`).join('')}
       </select>
     </div>
@@ -173,7 +174,7 @@ adminAuditLogRoutes.get('/', async (c) => {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-zinc-950 dark:text-white">Audit Log</h1>
+          <h1 class="text-2xl font-bold text-zinc-950 dark:text-white">${t('Audit Log')}</h1>
           <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">${total} total entries</p>
         </div>
       </div>
@@ -188,9 +189,9 @@ adminAuditLogRoutes.get('/', async (c) => {
         <table class="w-full">
           <thead>
             <tr class="bg-zinc-50 dark:bg-zinc-800/50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              <th class="px-4 py-3">Action</th>
+              <th class="px-4 py-3">${t('Action')}</th>
               <th class="px-4 py-3">Resource</th>
-              <th class="px-4 py-3">User</th>
+              <th class="px-4 py-3">${t('User')}</th>
               <th class="px-4 py-3">When</th>
               <th class="px-4 py-3">IP</th>
             </tr>
@@ -205,8 +206,8 @@ adminAuditLogRoutes.get('/', async (c) => {
         <div class="flex items-center justify-between text-sm">
           <span class="text-zinc-500 dark:text-zinc-400">Page ${currentPage} of ${totalPages}</span>
           <div class="flex gap-2">
-            ${currentPage > 1 ? `<a href="${buildUrl({ offset: prevOffset })}" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Previous</a>` : ''}
-            ${currentPage < totalPages ? `<a href="${buildUrl({ offset: nextOffset })}" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Next</a>` : ''}
+            ${currentPage > 1 ? `<a href="${buildUrl({ offset: prevOffset })}" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">${t('Previous')}</a>` : ''}
+            ${currentPage < totalPages ? `<a href="${buildUrl({ offset: nextOffset })}" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">${t('Next')}</a>` : ''}
           </div>
         </div>
       ` : ''}

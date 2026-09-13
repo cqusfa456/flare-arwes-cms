@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface FormBuilderPageData {
@@ -146,7 +147,7 @@ function getTurnstileComponentScript(): string {
                 if (this.refs.turnstileWidget) {
                   this.refs.turnstileWidget.innerHTML = \`
                     <div class="alert alert-danger" style="padding: 10px; background: #fee; border: 1px solid #fcc; border-radius: 4px;">
-                      <strong>Error:</strong> Failed to load security verification
+                      <strong>${t('Error:')}</strong> Failed to load security verification
                     </div>
                   \`;
                 }
@@ -228,7 +229,7 @@ function getTurnstileComponentScript(): string {
             console.error('Failed to render Turnstile widget:', err);
             this.refs.turnstileWidget.innerHTML = \`
               <div class="alert alert-danger" style="padding: 10px; background: #fee; border: 1px solid #fcc; border-radius: 4px;">
-                <strong>Error:</strong> Failed to render security verification
+                <strong>${t('Error:')}</strong> Failed to render security verification
               </div>
             \`;
           }
@@ -1276,7 +1277,7 @@ export function renderFormBuilderPage(data: FormBuilderPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               </svg>
-              Preview
+              ${t('Preview')}
             </button>
 
             <button
@@ -1335,7 +1336,7 @@ export function renderFormBuilderPage(data: FormBuilderPageData): string {
           </button>
         </div>
         <span class="text-xs text-zinc-500 dark:text-zinc-400" id="wizard-hint" style="display: none;">
-          Use <strong>Panel</strong> components (Layout tab) for each page
+          Use <strong>${t('Panel')}</strong> components (Layout tab) for each page
         </span>
       </div>
 

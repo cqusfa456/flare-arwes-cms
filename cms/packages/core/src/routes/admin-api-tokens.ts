@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 /**
  * Admin API Token Management Routes
  *
@@ -49,7 +50,7 @@ adminApiTokensRoutes.get('/', async (c) => {
           const isExpired = token.expires_at !== null && token.expires_at < Date.now()
           const statusBadge = isExpired
             ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-500/10 text-red-400 ring-1 ring-inset ring-red-500/20">Expired</span>`
-            : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20">Active</span>`
+            : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20">${t('Active')}</span>`
 
           const collectionsDisplay = token.allowed_collections
             ? token.allowed_collections.map(c => `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-500/10 text-blue-300 ring-1 ring-inset ring-blue-400/20 mr-1">${c}</span>`).join('')
@@ -81,7 +82,7 @@ adminApiTokensRoutes.get('/', async (c) => {
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h1 class="text-2xl font-semibold text-white">API Tokens</h1>
+            <h1 class="text-2xl font-semibold text-white">${t('API Tokens')}</h1>
             <p class="text-sm text-zinc-400 mt-1">Read-only tokens for headless API access. Scoped to specific collections.</p>
           </div>
           <a href="/admin/api-tokens/create"
@@ -99,11 +100,11 @@ adminApiTokensRoutes.get('/', async (c) => {
             <thead>
               <tr class="border-b border-zinc-800">
                 <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">Token</th>
-                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">Collections</th>
+                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">${t('Status')}</th>
+                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">${t('Collections')}</th>
                 <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">Last Used</th>
                 <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">Expires</th>
-                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider text-right">${t('Actions')}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-zinc-800">
@@ -167,9 +168,9 @@ adminApiTokensRoutes.get('/create', async (c) => {
         <!-- Header -->
         <div class="mb-6">
           <div class="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-            <a href="/admin/api-tokens" class="hover:text-white transition-colors">API Tokens</a>
+            <a href="/admin/api-tokens" class="hover:text-white transition-colors">${t('API Tokens')}</a>
             <span>/</span>
-            <span class="text-white">Create</span>
+            <span class="text-white">${t('Create')}</span>
           </div>
           <h1 class="text-2xl font-semibold text-white">Create API Token</h1>
           <p class="text-sm text-zinc-400 mt-1">The token value will be shown once after creation. Store it securely.</p>
@@ -215,7 +216,7 @@ adminApiTokensRoutes.get('/create', async (c) => {
             </button>
             <a href="/admin/api-tokens"
                class="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">
-              Cancel
+              ${t('Cancel')}
             </a>
           </div>
         </form>
@@ -290,7 +291,7 @@ adminApiTokensRoutes.post('/', async (c) => {
         <!-- Success header -->
         <div class="mb-6">
           <div class="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-            <a href="/admin/api-tokens" class="hover:text-white transition-colors">API Tokens</a>
+            <a href="/admin/api-tokens" class="hover:text-white transition-colors">${t('API Tokens')}</a>
             <span>/</span>
             <span class="text-white">Token Created</span>
           </div>
@@ -327,7 +328,7 @@ adminApiTokensRoutes.post('/', async (c) => {
         <!-- Token details -->
         <div class="bg-zinc-900 border border-zinc-800 rounded-xl divide-y divide-zinc-800 mb-6">
           <div class="px-4 py-3 flex items-center justify-between">
-            <span class="text-sm text-zinc-400">Name</span>
+            <span class="text-sm text-zinc-400">${t('Name')}</span>
             <span class="text-sm font-medium text-white">${name}</span>
           </div>
           <div class="px-4 py-3 flex items-center justify-between">
@@ -335,7 +336,7 @@ adminApiTokensRoutes.post('/', async (c) => {
             <code class="text-sm text-zinc-300 font-mono">${result.tokenPrefix}</code>
           </div>
           <div class="px-4 py-3 flex items-center justify-between">
-            <span class="text-sm text-zinc-400">Collections</span>
+            <span class="text-sm text-zinc-400">${t('Collections')}</span>
             <div>${scopeDisplay}</div>
           </div>
           <div class="px-4 py-3 flex items-center justify-between">
@@ -343,7 +344,7 @@ adminApiTokensRoutes.post('/', async (c) => {
             <span class="text-sm text-zinc-300">${expiresDisplay}</span>
           </div>
           <div class="px-4 py-3 flex items-center justify-between">
-            <span class="text-sm text-zinc-400">Permissions</span>
+            <span class="text-sm text-zinc-400">${t('Permissions')}</span>
             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20">Read-only</span>
           </div>
         </div>

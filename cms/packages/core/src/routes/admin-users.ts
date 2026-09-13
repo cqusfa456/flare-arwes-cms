@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import { requireAuth, requireRole, logActivity, AuthManager } from '../middleware'
 import { sanitizeInput } from '../utils/sanitize'
@@ -1705,9 +1706,9 @@ userRoutes.get('/users/:id/collection-permissions', async (c) => {
         <table class="min-w-full">
           <thead>
             <tr class="border-b border-zinc-200 dark:border-zinc-700">
-              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Collection</th>
-              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Role</th>
-              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Status</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">${t('Collection')}</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">${t('Role')}</th>
+              <th class="py-3 px-4 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">${t('Status')}</th>
             </tr>
           </thead>
           <tbody>

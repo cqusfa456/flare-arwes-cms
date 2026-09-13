@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import {
   getConfirmationDialogScript,
   renderConfirmationDialog,
@@ -318,7 +319,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                     data.currentType
                   )}"
                      class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                    Previous
+                    ${t('Previous')}
                   </a>
                 `
                     : ""
@@ -332,7 +333,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                   data.currentType
                 )}"
                    class="rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                  Next
+                  ${t('Next')}
                 </a>
               </div>
             </div>
@@ -412,7 +413,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
               onclick="document.getElementById('upload-modal').classList.add('hidden')"
               class="rounded-lg bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
             >
-              Cancel
+              ${t('Cancel')}
             </button>
             <button
               type="submit"
@@ -480,7 +481,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
             onclick="closeMoveToFolderModal()"
             class="rounded-lg bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           >
-            Cancel
+            ${t('Cancel')}
           </button>
         </div>
       </div>
@@ -491,7 +492,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Create New Folder</h3>
-          <button onclick="closeCreateFolderModal()" aria-label="Close" class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors">
+          <button onclick="closeCreateFolderModal()" aria-label="${t('Close')}" class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -524,7 +525,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
               onclick="closeCreateFolderModal()"
               class="rounded-lg bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
             >
-              Cancel
+              ${t('Cancel')}
             </button>
             <button
               type="submit"

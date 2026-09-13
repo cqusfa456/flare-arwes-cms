@@ -873,7 +873,7 @@ function renderTopBar(pageTitle: string, user?: any, currentPath?: string): stri
             `
                 : `
               <a href="/auth/login" class="backdrop-blur-md bg-white/10 px-4 py-2 rounded-lg text-white font-medium hover:bg-white/20 transition-all">
-                Sign In
+                ${t('Sign In')}
               </a>
             `
             }

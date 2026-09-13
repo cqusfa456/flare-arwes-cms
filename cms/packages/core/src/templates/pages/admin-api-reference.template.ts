@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface APIEndpoint {
@@ -96,7 +97,7 @@ export function renderAPIReferencePage(data: APIReferencePageData): string {
           </dd>
         </div>
         <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 px-6 py-5">
-          <dt class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">Categories</dt>
+          <dt class="text-sm/6 font-medium text-zinc-500 dark:text-zinc-400">${t('Categories')}</dt>
           <dd class="mt-2 flex items-baseline gap-x-2">
             <span class="text-4xl font-semibold tracking-tight text-blue-600 dark:text-blue-400">${Object.keys(endpointsByCategory).length}</span>
           </dd>
@@ -108,7 +109,7 @@ export function renderAPIReferencePage(data: APIReferencePageData): string {
         <div class="px-6 py-5">
           <div class="flex flex-col sm:flex-row sm:items-end gap-4">
             <div class="flex-1">
-              <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+              <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('Search')}</label>
               <div class="relative">
                 <div class="absolute left-3 top-1/2 -translate-y-1/2">
                   <svg class="h-5 w-5 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -143,13 +144,13 @@ export function renderAPIReferencePage(data: APIReferencePageData): string {
               </div>
             </div>
             <div>
-              <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">Category</label>
+              <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white mb-2">${t('Category')}</label>
               <div class="grid grid-cols-1">
                 <select
                   id="category-filter"
                   class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white dark:bg-zinc-800 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-950/10 dark:outline-white/10 *:bg-white dark:*:bg-zinc-800 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-zinc-950 dark:focus:outline-white min-w-[200px]"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">${t('All Categories')}</option>
                   ${Object.keys(categoryInfo).map(category => `
                     <option value="${category}">${(categoryInfo as any)[category].title}</option>
                   `).join('')}

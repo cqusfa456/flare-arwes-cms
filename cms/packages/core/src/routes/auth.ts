@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 // import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
@@ -775,11 +776,11 @@ authRoutes.get('/accept-invitation', async (c) => {
     if (!token) {
       return c.html(`
         <html>
-          <head><title>Invalid Invitation</title></head>
+          <head><title>${t('Invalid Invitation')}</title></head>
           <body>
-            <h1>Invalid Invitation</h1>
+            <h1>${t('Invalid Invitation')}</h1>
             <p>The invitation link is invalid or has expired.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -798,11 +799,11 @@ authRoutes.get('/accept-invitation', async (c) => {
     if (!invitedUser) {
       return c.html(`
         <html>
-          <head><title>Invalid Invitation</title></head>
+          <head><title>${t('Invalid Invitation')}</title></head>
           <body>
-            <h1>Invalid Invitation</h1>
+            <h1>${t('Invalid Invitation')}</h1>
             <p>The invitation link is invalid or has expired.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -819,7 +820,7 @@ authRoutes.get('/accept-invitation', async (c) => {
           <body>
             <h1>Invitation Expired</h1>
             <p>This invitation has expired. Please contact your administrator for a new invitation.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -863,7 +864,7 @@ authRoutes.get('/accept-invitation', async (c) => {
               <input type="hidden" name="token" value="${token}" />
               
               <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                <label class="block text-sm font-medium text-gray-300 mb-2">${t('Username')}</label>
                 <input 
                   type="text" 
                   name="username" 
@@ -874,7 +875,7 @@ authRoutes.get('/accept-invitation', async (c) => {
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <label class="block text-sm font-medium text-gray-300 mb-2">${t('Password')}</label>
                 <input 
                   type="password" 
                   name="password" 
@@ -915,11 +916,11 @@ authRoutes.get('/accept-invitation', async (c) => {
     console.error('Accept invitation page error:', error)
     return c.html(`
       <html>
-        <head><title>Error</title></head>
+        <head><title>${t('Error')}</title></head>
         <body>
-          <h1>Error</h1>
+          <h1>${t('Error')}</h1>
           <p>An error occurred while processing your invitation.</p>
-          <a href="/auth/login">Go to Login</a>
+          <a href="/auth/login">${t('Go to Login')}</a>
         </body>
       </html>
     `)
@@ -1111,11 +1112,11 @@ authRoutes.get('/reset-password', async (c) => {
     if (!token) {
       return c.html(`
         <html>
-          <head><title>Invalid Reset Link</title></head>
+          <head><title>${t('Invalid Reset Link')}</title></head>
           <body>
-            <h1>Invalid Reset Link</h1>
+            <h1>${t('Invalid Reset Link')}</h1>
             <p>The password reset link is invalid or has expired.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -1134,11 +1135,11 @@ authRoutes.get('/reset-password', async (c) => {
     if (!user) {
       return c.html(`
         <html>
-          <head><title>Invalid Reset Link</title></head>
+          <head><title>${t('Invalid Reset Link')}</title></head>
           <body>
-            <h1>Invalid Reset Link</h1>
+            <h1>${t('Invalid Reset Link')}</h1>
             <p>The password reset link is invalid or has already been used.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -1152,7 +1153,7 @@ authRoutes.get('/reset-password', async (c) => {
           <body>
             <h1>Reset Link Expired</h1>
             <p>The password reset link has expired. Please request a new one.</p>
-            <a href="/auth/login">Go to Login</a>
+            <a href="/auth/login">${t('Go to Login')}</a>
           </body>
         </html>
       `)
@@ -1242,11 +1243,11 @@ authRoutes.get('/reset-password', async (c) => {
     console.error('Password reset page error:', error)
     return c.html(`
       <html>
-        <head><title>Error</title></head>
+        <head><title>${t('Error')}</title></head>
         <body>
-          <h1>Error</h1>
+          <h1>${t('Error')}</h1>
           <p>An error occurred while processing your password reset.</p>
-          <a href="/auth/login">Go to Login</a>
+          <a href="/auth/login">${t('Go to Login')}</a>
         </body>
       </html>
     `)

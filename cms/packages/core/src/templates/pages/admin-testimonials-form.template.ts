@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
 import { renderAlert } from '../alert.template'
 
@@ -187,7 +188,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Published Status -->
             <div>
-              <label class="block text-sm font-medium text-white">Status</label>
+              <label class="block text-sm font-medium text-white">${t('Status')}</label>
               <div class="mt-2 space-y-2">
                 <div class="flex items-center">
                   <input id="published"
@@ -197,7 +198,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
                          ${!testimonial || testimonial.isPublished ? 'checked' : ''}
                          class="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-600 bg-gray-700">
                   <label for="published" class="ml-2 block text-sm text-white">
-                    Published <span class="text-gray-300">(visible to users)</span>
+                    ${t('Published')} <span class="text-gray-300">(visible to users)</span>
                   </label>
                 </div>
                 <div class="flex items-center">
@@ -208,7 +209,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
                          ${testimonial && !testimonial.isPublished ? 'checked' : ''}
                          class="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-600 bg-gray-700">
                   <label for="draft" class="ml-2 block text-sm text-white">
-                    Draft <span class="text-gray-300">(not visible to users)</span>
+                    ${t('Draft')} <span class="text-gray-300">(not visible to users)</span>
                   </label>
                 </div>
               </div>
@@ -216,7 +217,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
 
             <!-- Sort Order -->
             <div>
-              <label for="sortOrder" class="block text-sm font-medium text-white">Sort Order</label>
+              <label for="sortOrder" class="block text-sm font-medium text-white">${t('Sort Order')}</label>
               <div class="mt-1">
                 <input type="number"
                        name="sortOrder"
@@ -241,7 +242,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
           <div class="flex items-center justify-end space-x-3 pt-6 border-t border-white/20">
             <a href="/admin/testimonials"
                class="inline-flex items-center justify-center rounded-xl backdrop-blur-sm bg-white/10 px-4 py-2 text-sm font-semibold text-white border border-white/20 hover:bg-white/20 transition-all">
-              Cancel
+              ${t('Cancel')}
             </a>
             <button type="submit"
                     class="inline-flex items-center justify-center rounded-xl backdrop-blur-sm bg-blue-500/80 px-4 py-2 text-sm font-semibold text-white border border-white/20 hover:bg-blue-500 transition-all">

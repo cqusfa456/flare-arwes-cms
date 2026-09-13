@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { html } from 'hono/html'
 import { adminLayoutV2 } from '../layouts/admin-layout-v2.template'
 import type { LogConfig } from '../../db/schema'
@@ -96,11 +97,11 @@ export function renderLogConfigPage(data: LogConfigPageData) {
                 <div class="flex items-center">
                   ${config.enabled ? html`
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Enabled
+                      ${t('Enabled')}
                     </span>
                   ` : html`
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Disabled
+                      ${t('Disabled')}
                     </span>
                   `}
                 </div>
@@ -141,10 +142,10 @@ export function renderLogConfigPage(data: LogConfigPageData) {
                     name="level"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
-                    <option value="debug" ${config.level === 'debug' ? 'selected' : ''}>Debug</option>
-                    <option value="info" ${config.level === 'info' ? 'selected' : ''}>Info</option>
-                    <option value="warn" ${config.level === 'warn' ? 'selected' : ''}>Warning</option>
-                    <option value="error" ${config.level === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="debug" ${config.level === 'debug' ? 'selected' : ''}>${t('Debug')}</option>
+                    <option value="info" ${config.level === 'info' ? 'selected' : ''}>${t('Info')}</option>
+                    <option value="warn" ${config.level === 'warn' ? 'selected' : ''}>${t('Warning')}</option>
+                    <option value="error" ${config.level === 'error' ? 'selected' : ''}>${t('Error')}</option>
                     <option value="fatal" ${config.level === 'fatal' ? 'selected' : ''}>Fatal</option>
                   </select>
                   <p class="mt-1 text-sm text-gray-500">Only logs at this level or higher will be stored</p>

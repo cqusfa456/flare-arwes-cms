@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 export type AlertType = 'success' | 'error' | 'warning' | 'info'
 
 export interface AlertData {
@@ -73,7 +74,7 @@ export function renderAlert(data: AlertData): string {
                 class="inline-flex rounded-md p-1.5 ${iconClasses[data.type]} hover:bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 onclick="document.getElementById('dismissible-alert').remove()"
               >
-                <span class="sr-only">Dismiss</span>
+                <span class="sr-only">${t('Dismiss')}</span>
                 <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>

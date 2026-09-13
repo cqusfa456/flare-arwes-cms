@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 interface BaseUser {
@@ -91,7 +92,7 @@ export function renderLogsListPage(data: LogsListPageData) {
             <form method="GET" action="/admin/logs" class="space-y-4">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="relative group">
-                  <label for="search" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                  <label for="search" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Search')}</label>
                   <div class="relative">
                     <div class="absolute left-3.5 top-2.5 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 dark:from-blue-300 dark:to-blue-400 opacity-90 group-focus-within:opacity-100 transition-opacity">
                       <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -117,30 +118,30 @@ export function renderLogsListPage(data: LogsListPageData) {
                     class="w-full rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white border-2 border-blue-200/50 dark:border-blue-700/50 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:shadow-lg focus:shadow-blue-500/20 dark:focus:shadow-blue-400/20 transition-all duration-300"
                   >
                     <option value="">All Levels</option>
-                    <option value="debug" ${filters.level === 'debug' ? 'selected' : ''}>Debug</option>
-                    <option value="info" ${filters.level === 'info' ? 'selected' : ''}>Info</option>
-                    <option value="warn" ${filters.level === 'warn' ? 'selected' : ''}>Warning</option>
-                    <option value="error" ${filters.level === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="debug" ${filters.level === 'debug' ? 'selected' : ''}>${t('Debug')}</option>
+                    <option value="info" ${filters.level === 'info' ? 'selected' : ''}>${t('Info')}</option>
+                    <option value="warn" ${filters.level === 'warn' ? 'selected' : ''}>${t('Warning')}</option>
+                    <option value="error" ${filters.level === 'error' ? 'selected' : ''}>${t('Error')}</option>
                     <option value="fatal" ${filters.level === 'fatal' ? 'selected' : ''}>Fatal</option>
                   </select>
                 </div>
 
                 <div>
-                  <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Category</label>
+                  <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Category')}</label>
                   <select
                     name="category"
                     id="category"
                     class="w-full rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white border-2 border-blue-200/50 dark:border-blue-700/50 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:shadow-lg focus:shadow-blue-500/20 dark:focus:shadow-blue-400/20 transition-all duration-300"
                   >
-                    <option value="">All Categories</option>
+                    <option value="">${t('All Categories')}</option>
                     <option value="auth" ${filters.category === 'auth' ? 'selected' : ''}>Authentication</option>
                     <option value="api" ${filters.category === 'api' ? 'selected' : ''}>API</option>
-                    <option value="workflow" ${filters.category === 'workflow' ? 'selected' : ''}>Workflow</option>
+                    <option value="workflow" ${filters.category === 'workflow' ? 'selected' : ''}>${t('Workflow')}</option>
                     <option value="plugin" ${filters.category === 'plugin' ? 'selected' : ''}>Plugin</option>
-                    <option value="media" ${filters.category === 'media' ? 'selected' : ''}>Media</option>
+                    <option value="media" ${filters.category === 'media' ? 'selected' : ''}>${t('Media')}</option>
                     <option value="system" ${filters.category === 'system' ? 'selected' : ''}>System</option>
-                    <option value="security" ${filters.category === 'security' ? 'selected' : ''}>Security</option>
-                    <option value="error" ${filters.category === 'error' ? 'selected' : ''}>Error</option>
+                    <option value="security" ${filters.category === 'security' ? 'selected' : ''}>${t('Security')}</option>
+                    <option value="error" ${filters.category === 'error' ? 'selected' : ''}>${t('Error')}</option>
                   </select>
                 </div>
 
@@ -189,7 +190,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     href="/admin/logs"
                     class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors shadow-sm"
                   >
-                    Clear
+                    ${t('Clear')}
                   </a>
                 </div>
               </div>
@@ -212,7 +213,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                   Level
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Category
+                  ${t('Category')}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
                   Message
@@ -224,7 +225,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                   Time
                 </th>
                 <th scope="col" class="relative px-4 py-3.5 sm:pr-6">
-                  <span class="sr-only">Actions</span>
+                  <span class="sr-only">${t('Actions')}</span>
                 </th>
               </tr>
             </thead>
@@ -285,11 +286,11 @@ export function renderLogsListPage(data: LogsListPageData) {
                 href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage - 1).toString()}).toString()}"
                 class="relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Previous
+                ${t('Previous')}
               </a>
             ` : `
               <span class="relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Previous
+                ${t('Previous')}
               </span>
             `}
             ${pagination.currentPage < pagination.totalPages ? `
@@ -297,11 +298,11 @@ export function renderLogsListPage(data: LogsListPageData) {
                 href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage + 1).toString()}).toString()}"
                 class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Next
+                ${t('Next')}
               </a>
             ` : `
               <span class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Next
+                ${t('Next')}
               </span>
             `}
           </div>
@@ -313,13 +314,13 @@ export function renderLogsListPage(data: LogsListPageData) {
               </p>
             </div>
             <div>
-              <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+              <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="${t('Pagination')}">
                 ${pagination.currentPage > 1 ? `
                   <a
                     href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage - 1).toString()}).toString()}"
                     class="relative inline-flex items-center px-2 py-2 rounded-l-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
                   >
-                    <span class="sr-only">Previous</span>
+                    <span class="sr-only">${t('Previous')}</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
@@ -349,7 +350,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     href="${pagination.baseUrl}?${new URLSearchParams({...filters, page: (pagination.currentPage + 1).toString()}).toString()}"
                     class="relative inline-flex items-center px-2 py-2 rounded-r-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
                   >
-                    <span class="sr-only">Next</span>
+                    <span class="sr-only">${t('Next')}</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>

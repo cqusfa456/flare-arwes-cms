@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderAlert } from '../alert.template'
 import { renderDynamicField, renderFieldGroup, FieldDefinition } from '../components/dynamic-field.template'
@@ -145,7 +146,7 @@ export function renderContentFormPage(data: ContentFormData): string {
     ? ''
     : `
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Site</h3>
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">${t('Site')}</h3>
             <label for="site_id" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Owning site</label>
             <div class="mt-2 grid grid-cols-1">
               <select
@@ -251,7 +252,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             ${data.workflowEnabled ? `
               <!-- Workflow Status (when workflow plugin is enabled) -->
               <div class="mb-4">
-                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('Status')}</label>
                 <div class="mt-2 grid grid-cols-1">
                   <select
                     id="status"
@@ -259,10 +260,10 @@ export function renderContentFormPage(data: ContentFormData): string {
                     form="content-form"
                     class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
                   >
-                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                    <option value="review" ${data.status === 'review' ? 'selected' : ''}>Under Review</option>
-                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                    <option value="archived" ${data.status === 'archived' ? 'selected' : ''}>Archived</option>
+                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>${t('Draft')}</option>
+                    <option value="review" ${data.status === 'review' ? 'selected' : ''}>${t('Under Review')}</option>
+                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>${t('Published')}</option>
+                    <option value="archived" ${data.status === 'archived' ? 'selected' : ''}>${t('Archived')}</option>
                   </select>
                   <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
                     <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -272,7 +273,7 @@ export function renderContentFormPage(data: ContentFormData): string {
 
               <!-- Scheduled Publishing -->
               <div class="mb-4">
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Schedule Publish</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Schedule Publish')}</label>
                 <input
                   type="datetime-local"
                   name="scheduled_publish_at"
@@ -298,7 +299,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             ` : `
               <!-- Simple Status (when workflow plugin is disabled) -->
               <div class="mb-6">
-                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+                <label for="status" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('Status')}</label>
                 <div class="mt-2 grid grid-cols-1">
                   <select
                     id="status"
@@ -306,8 +307,8 @@ export function renderContentFormPage(data: ContentFormData): string {
                     form="content-form"
                     class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
                   >
-                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
+                    <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>${t('Draft')}</option>
+                    <option value="published" ${data.status === 'published' ? 'selected' : ''}>${t('Published')}</option>
                   </select>
                   <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
                     <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -324,7 +325,7 @@ export function renderContentFormPage(data: ContentFormData): string {
 
             <!-- Author (editable) -->
             <div class="mb-3">
-              <label for="author_display" class="block text-sm text-zinc-500 dark:text-zinc-400">Author</label>
+              <label for="author_display" class="block text-sm text-zinc-500 dark:text-zinc-400">${t('Author')}</label>
               <input
                 type="text"
                 id="author_display"
@@ -338,7 +339,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             ${isEdit ? `
               <dl class="space-y-3 text-sm">
                 <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
+                  <dt class="text-zinc-500 dark:text-zinc-400">${t('Created')}</dt>
                   <dd class="mt-1 text-zinc-950 dark:text-white">${data.data?.created_at && new Date(data.data.created_at).getFullYear() >= 2000 ? new Date(data.data.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not set'}</dd>
                 </div>
                 <div>
@@ -347,7 +348,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                 </div>
                 ${data.data?.published_at ? `
                   <div>
-                    <dt class="text-zinc-500 dark:text-zinc-400">Published</dt>
+                    <dt class="text-zinc-500 dark:text-zinc-400">${t('Published')}</dt>
                     <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.data.published_at).getFullYear() >= 2000 ? new Date(data.data.published_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not set'}</dd>
                   </div>
                 ` : ''}
@@ -405,7 +406,7 @@ export function renderContentFormPage(data: ContentFormData): string {
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
                   </svg>
-                  Delete Content
+                  ${t('Delete Content')}
                 </button>
               ` : ''}
             </div>
@@ -427,7 +428,7 @@ export function renderContentFormPage(data: ContentFormData): string {
       <div class="border-t border-zinc-200 dark:border-zinc-700 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm px-6 py-3 lg:px-10 flex items-center justify-between rounded-b-lg">
         <div class="flex items-center gap-3">
           <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
-            Cancel
+            ${t('Cancel')}
           </a>
           <span x-show="dirty" x-cloak class="text-xs text-amber-600 dark:text-amber-400 font-medium">Unsaved changes</span>
         </div>

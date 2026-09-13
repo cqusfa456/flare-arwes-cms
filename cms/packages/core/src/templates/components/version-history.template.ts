@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 export interface ContentVersion {
   id: string
   version: number
@@ -22,7 +23,7 @@ export function renderVersionHistory(data: VersionHistoryData): string {
         <div class="relative px-6 py-4 border-b border-white/10">
           <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-blue-500/10 to-blue-400/10"></div>
           <div class="relative flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-white">Version History</h3>
+            <h3 class="text-lg font-semibold text-white">${t('Version History')}</h3>
             <button onclick="closeVersionHistory()" class="text-gray-300 hover:text-white">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -54,7 +55,7 @@ export function renderVersionHistory(data: VersionHistoryData): string {
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
                         </svg>
-                        Restore
+                        ${t('Restore')}
                       </button>
                     ` : ''}
                     <button 
@@ -65,7 +66,7 @@ export function renderVersionHistory(data: VersionHistoryData): string {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
-                      Preview
+                      ${t('Preview')}
                     </button>
                   </div>
                 </div>
@@ -122,7 +123,7 @@ export function renderVersionHistory(data: VersionHistoryData): string {
               onclick="closeVersionHistory()"
               class="px-4 py-2 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-white/20 transition-all"
             >
-              Close
+              ${t('Close')}
             </button>
           </div>
         </div>

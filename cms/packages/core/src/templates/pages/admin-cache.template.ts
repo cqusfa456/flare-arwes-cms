@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 /**
  * Admin Cache Dashboard Template
  *
@@ -58,7 +59,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
-            Refresh
+            ${t('Refresh')}
           </button>
           <button
             onclick="clearAllCaches()"
@@ -127,10 +128,10 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
                   Entries
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Size
+                  ${t('Size')}
                 </th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Actions
+                  ${t('Actions')}
                 </th>
               </tr>
             </thead>
@@ -322,7 +323,7 @@ function renderNamespaceRow(namespace: string, stat: CacheStats): string {
           onclick="clearNamespaceCache('${namespace}')"
           class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
         >
-          Clear
+          ${t('Clear')}
         </button>
       </td>
     </tr>

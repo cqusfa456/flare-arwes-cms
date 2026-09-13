@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 export interface CheckboxPageData {
@@ -34,11 +35,11 @@ export function renderCheckboxPage(data: CheckboxPageData): string {
 
       <!-- Example 1: Discoverability -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
-        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">Discoverability</h3>
+        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">${t('Discoverability')}</h3>
         <p class="text-sm/6 text-zinc-500 dark:text-zinc-400 mb-6">Decide where your events can be found across the web.</p>
 
         <fieldset>
-          <legend class="sr-only">Discoverability</legend>
+          <legend class="sr-only">${t('Discoverability')}</legend>
           <div class="space-y-5">
             <div class="flex gap-3">
               <div class="flex h-6 shrink-0 items-center">
@@ -76,11 +77,11 @@ export function renderCheckboxPage(data: CheckboxPageData): string {
 
       <!-- Example 2: Newsletter Preferences -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
-        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">Newsletter Preferences</h3>
+        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">${t('Newsletter Preferences')}</h3>
         <p class="text-sm/6 text-zinc-500 dark:text-zinc-400 mb-6">Choose which updates you'd like to receive.</p>
 
         <fieldset>
-          <legend class="sr-only">Newsletter Preferences</legend>
+          <legend class="sr-only">${t('Newsletter Preferences')}</legend>
           <div class="space-y-5">
             <div class="flex gap-3">
               <div class="flex h-6 shrink-0 items-center">
@@ -108,7 +109,7 @@ export function renderCheckboxPage(data: CheckboxPageData): string {
                 </div>
               </div>
               <div class="text-sm/6">
-                <label for="weekly_digest" class="font-medium text-zinc-950 dark:text-white">Weekly Digest</label>
+                <label for="weekly_digest" class="font-medium text-zinc-950 dark:text-white">${t('Weekly Digest')}</label>
                 <p id="weekly-description" class="text-zinc-500 dark:text-zinc-400">Receive a summary of activity every week.</p>
               </div>
             </div>
@@ -133,11 +134,11 @@ export function renderCheckboxPage(data: CheckboxPageData): string {
 
       <!-- Example 3: Privacy Settings -->
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
-        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">Privacy Settings</h3>
+        <h3 class="text-base/6 font-semibold text-zinc-950 dark:text-white mb-2">${t('Privacy Settings')}</h3>
         <p class="text-sm/6 text-zinc-500 dark:text-zinc-400 mb-6">Control your privacy and data sharing preferences.</p>
 
         <fieldset>
-          <legend class="sr-only">Privacy Settings</legend>
+          <legend class="sr-only">${t('Privacy Settings')}</legend>
           <div class="space-y-5">
             <div class="flex gap-3">
               <div class="flex h-6 shrink-0 items-center">
@@ -180,7 +181,7 @@ export function renderCheckboxPage(data: CheckboxPageData): string {
                 </div>
               </div>
               <div class="text-sm/6">
-                <label for="analytics" class="font-medium text-zinc-950 dark:text-white">Analytics</label>
+                <label for="analytics" class="font-medium text-zinc-950 dark:text-white">${t('Analytics')}</label>
                 <p id="analytics-description" class="text-zinc-500 dark:text-zinc-400">Help us improve by sharing anonymous usage data.</p>
               </div>
             </div>

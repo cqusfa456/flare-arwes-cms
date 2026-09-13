@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderPagination, PaginationData } from '../pagination.template'
 import { renderTable, TableData, TableColumn } from '../table.template'
@@ -160,7 +161,7 @@ export function renderContentListPage(data: ContentListPageData): string {
             hx-confirm="Restore this item to drafts?"
             hx-target="#content-list"
             hx-swap="outerHTML"
-            title="Restore"
+            title="${t('Restore')}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 0 1 0 10H9m-6-10 3-3m-3 3 3 3"/>
@@ -184,7 +185,7 @@ export function renderContentListPage(data: ContentListPageData): string {
           <button
             class="inline-flex items-center justify-center p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
             onclick="window.location.href='/admin/content/${row.id}/edit${currentParams ? `?ref=${encodeURIComponent(currentParams)}` : ''}'"
-            title="Edit"
+            title="${t('Edit')}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
@@ -205,7 +206,7 @@ export function renderContentListPage(data: ContentListPageData): string {
             hx-confirm="Are you sure you want to delete this content item?"
             hx-target="#content-list"
             hx-swap="outerHTML"
-            title="Delete"
+            title="${t('Delete')}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -262,7 +263,7 @@ export function renderContentListPage(data: ContentListPageData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            New Content
+            ${t('New Content')}
           </a>
         </div>
       </div>
@@ -299,20 +300,20 @@ export function renderContentListPage(data: ContentListPageData): string {
 
                 <!-- Status Filter -->
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Status</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Status')}</label>
                   <div class="grid grid-cols-1">
                     <select
                       name="status"
                       onchange="updateContentFilters('status', this.value)"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 min-w-40"
                     >
-                      <option value="all" ${data.status === 'all' ? 'selected' : ''}>All Status</option>
-                      <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>Draft</option>
-                      <option value="review" ${data.status === 'review' ? 'selected' : ''}>Under Review</option>
-                      <option value="scheduled" ${data.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
-                      <option value="published" ${data.status === 'published' ? 'selected' : ''}>Published</option>
-                      <option value="archived" ${data.status === 'archived' ? 'selected' : ''}>Archived</option>
-                      <option value="deleted" ${data.status === 'deleted' ? 'selected' : ''}>Deleted</option>
+                      <option value="all" ${data.status === 'all' ? 'selected' : ''}>${t('All Status')}</option>
+                      <option value="draft" ${data.status === 'draft' ? 'selected' : ''}>${t('Draft')}</option>
+                      <option value="review" ${data.status === 'review' ? 'selected' : ''}>${t('Under Review')}</option>
+                      <option value="scheduled" ${data.status === 'scheduled' ? 'selected' : ''}>${t('Scheduled')}</option>
+                      <option value="published" ${data.status === 'published' ? 'selected' : ''}>${t('Published')}</option>
+                      <option value="archived" ${data.status === 'archived' ? 'selected' : ''}>${t('Archived')}</option>
+                      <option value="deleted" ${data.status === 'deleted' ? 'selected' : ''}>${t('Deleted')}</option>
                     </select>
                     <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-blue-600 dark:text-blue-400 sm:size-4">
                       <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -322,7 +323,7 @@ export function renderContentListPage(data: ContentListPageData): string {
 
                 <!-- Search Input -->
                 <div class="flex-1 max-w-md">
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Search')}</label>
                   <form onsubmit="performContentSearch(event)" class="flex items-center space-x-2">
                     <div class="relative group flex-1">
                       <input
@@ -357,7 +358,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                       </svg>
-                      Search
+                      ${t('Search')}
                     </button>
                   </form>
                   <script>
@@ -765,12 +766,12 @@ export function renderContentListPage(data: ContentListPageData): string {
 
               <!-- Filters -->
               <div class="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-                <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">Filters</h4>
+                <h4 class="text-sm font-semibold text-zinc-950 dark:text-white mb-3">${t('Filters')}</h4>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Collection Filter -->
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Collections</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Collections')}</label>
                     <select
                       id="filterCollections"
                       name="collections"
@@ -778,7 +779,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                       class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10"
                       size="4"
                     >
-                      <option value="">All Collections</option>
+                      <option value="">${t('All Collections')}</option>
                       ${data.models.map(
                         (model) => `
                           <option value="${model.name}">${model.displayName}</option>
@@ -790,7 +791,7 @@ export function renderContentListPage(data: ContentListPageData): string {
 
                   <!-- Status Filter -->
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Status</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Status')}</label>
                     <select
                       id="filterStatus"
                       name="status"
@@ -798,11 +799,11 @@ export function renderContentListPage(data: ContentListPageData): string {
                       class="w-full rounded-lg bg-white dark:bg-white/5 px-3 py-2 text-sm text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10"
                       size="4"
                     >
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                      <option value="review">Under Review</option>
-                      <option value="scheduled">Scheduled</option>
-                      <option value="archived">Archived</option>
+                      <option value="published">${t('Published')}</option>
+                      <option value="draft">${t('Draft')}</option>
+                      <option value="review">${t('Under Review')}</option>
+                      <option value="scheduled">${t('Scheduled')}</option>
+                      <option value="archived">${t('Archived')}</option>
                     </select>
                   </div>
                 </div>
@@ -815,13 +816,13 @@ export function renderContentListPage(data: ContentListPageData): string {
                   onclick="closeAdvancedSearch()"
                   class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700"
                 >
-                  Cancel
+                  ${t('Cancel')}
                 </button>
                 <button
                   type="submit"
                   class="inline-flex items-center justify-center rounded-lg bg-indigo-600 text-white px-6 py-2.5 text-sm font-semibold hover:bg-indigo-500 shadow-sm"
                 >
-                  Search
+                  ${t('Search')}
                 </button>
               </div>
             </form>
