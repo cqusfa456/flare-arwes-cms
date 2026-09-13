@@ -141,9 +141,11 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                 <Animator
                   combine
                   manager="stagger"
-                  condition={!isIndex}
+                  // The front page hides the menu unless the CMS provides one for it:
+                  // a site that manages its navigation decides what the home menu is.
+                  condition={!isIndex || hasCmsNav}
                   unmountOnExited
-                  unmountOnDisabled={isIndex}
+                  unmountOnDisabled={isIndex && !hasCmsNav}
                 >
                   <Menu className={HEIGHT_CLASS}>
                     {/*
