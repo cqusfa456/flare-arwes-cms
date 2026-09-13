@@ -25,7 +25,8 @@ import {
   SoundHigh,
   SoundOff,
   Heart,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  Post
 } from 'iconoir-react'
 
 import { atomAudioEnabled, atomMotionEnabled, settings, theme } from '@/config'
@@ -144,6 +145,13 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                       <MenuItem active={pathname.startsWith('/docs')} animated={['flicker']}>
                         <Link href="/docs" title="Go to Documentation">
                           <Page /> <span className="hidden md:block">Docs</span>
+                        </Link>
+                      </MenuItem>
+                    </Animator>
+                    <Animator>
+                      <MenuItem active={pathname.startsWith('/blog')} animated={['flicker']}>
+                        <Link href="/blog" title="Go to Blog">
+                          <Post /> <span className="hidden md:block">Blog</span>
                         </Link>
                       </MenuItem>
                     </Animator>
