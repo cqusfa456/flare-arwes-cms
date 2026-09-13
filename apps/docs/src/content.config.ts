@@ -50,12 +50,14 @@ const docsSections = defineCollection({
   })
 })
 
-// Menus and page frames, both managed in the CMS. Neither publishes a path of its
-// own: they configure how pages look (see src/lib/site-content.ts).
-const navigation = defineCollection({
+// Menus, shared components and page frames, all managed in the CMS. None of them
+// publishes a path of its own: they configure how pages look (see
+// src/lib/site-content.ts). A component may carry markup (`astro`), the menu it
+// renders (`items`), or both — the navigation bar is markup plus its menu.
+const components = defineCollection({
   loader: sciFiLoader({
     ...source,
-    collection: 'navigation'
+    collection: 'components'
   })
 })
 
@@ -66,4 +68,4 @@ const layouts = defineCollection({
   })
 })
 
-export const collections = { posts, pages, docs, docsSections, navigation, layouts }
+export const collections = { posts, pages, docs, docsSections, components, layouts }

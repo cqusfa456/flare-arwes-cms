@@ -1,24 +1,22 @@
 /**
- * Publish the site's shared chrome — the components, the menus and the layouts —
- * into the CMS.
+ * Publish the site's shared chrome — the components and the layouts — into the CMS.
  *
  * The chrome is part of the site's content, not its code:
  *
  *   components  the pieces a site repeats on every page (Admin -> Content ->
- *               Components), written as Astro files: the navigation bar, the
- *               footer bar, ...
- *   navigation  the menus those components render (Admin -> Content -> Navigation)
+ *               Components): the navigation bar, the footer bar, ... A component is
+ *               markup (an Astro file) and may also carry the menu it renders (a
+ *               JSON file of the same key), which is how the bars get their links.
  *   layouts     the page frames, which compose the components and render the page
  *               through a <slot /> (Admin -> Content -> Layouts). Several versions
  *               coexist and each page picks one with its own `layout` field.
  *
- * This script uploads the repository's fixtures for all three, so a new
- * environment gets the same starting point and a change made in the repository can
- * be re-applied:
+ * This script uploads the repository's fixtures for both, so a new environment gets
+ * the same starting point and a change made in the repository can be re-applied:
  *
- *   cms/packages/cms/content/components/<key>.astro   -> components/<key> (field `astro`)
- *   cms/packages/cms/content/navigation/<key>.json    -> navigation/<key> (field `items`)
- *   cms/packages/cms/content/layouts/<key>.astro      -> layouts/<key>    (field `astro`)
+ *   cms/packages/cms/content/components/<key>.astro -> components/<key> (field `astro`)
+ *   cms/packages/cms/content/components/<key>.json  -> components/<key> (field `items`)
+ *   cms/packages/cms/content/layouts/<key>.astro    -> layouts/<key>    (field `astro`)
  *
  * Entries that already exist are updated in place; the rest of their fields (and
  * every other entry, including pages) are left alone.
@@ -69,10 +67,10 @@ const fixtures = (directory, extension) => {
 
 const run = async () => {
   const components = fixtures('components', '.astro')
+  const componentMenus = fixtures('components', '.json')
   const layouts = fixtures('layouts', '.astro')
-  const navigation = fixtures('navigation', '.json')
   log(
-    `${components.length} component(s), ${layouts.length} layout(s), ${navigation.length} menu(s) in the repository`
+    `${components.length} component(s), ${componentMenus.length} menu(s), ${layouts.length} layout(s) in the repository`
   )
 
   const login = await fetch(`${baseUrl}/auth/login`, {
@@ -134,18 +132,18 @@ const run = async () => {
     await upsert('components', key, `Component: ${key}`, { key, astro })
   }
 
-  for (const [key, file] of layouts) {
-    const astro = readFileSync(file, 'utf-8')
-    await upsert('layouts', key, `Layout: ${key}`, { key, astro })
-  }
-
-  for (const [key, file] of navigation) {
+  for (const [key, file] of componentMenus) {
     const menu = JSON.parse(readFileSync(file, 'utf-8'))
-    await upsert('navigation', key, menu.name ?? `Menu: ${key}`, {
+    await upsert('components', key, `Component: ${key}`, {
       key,
       name: menu.name ?? `Menu: ${key}`,
       items: JSON.stringify(menu.items ?? [])
     })
+  }
+
+  for (const [key, file] of layouts) {
+    const astro = readFileSync(file, 'utf-8')
+    await upsert('layouts', key, `Layout: ${key}`, { key, astro })
   }
 
   log(dryRun ? 'dry run: nothing was written' : 'done')

@@ -1,14 +1,17 @@
 /**
- * CMS-managed site chrome: menus and page frames.
+ * CMS-managed site chrome: menus, shared components and page frames.
  *
- * Both come from collections that publish no path of their own:
+ * All of them are entries of collections that publish no path of their own:
  *
- *   navigation  a menu, identified by `key`, whose `items` field is a JSON array
- *               of { label, href }. Several coexist — `home` for the front page
- *               and `default` for every other page, for instance.
+ *   components  a piece a site repeats on every page, written as an `.astro` file
+ *               (Admin → Content → Components) and identified by `key`: the
+ *               navigation bar, the footer bar, ... A component may also carry the
+ *               menu it renders, as an `items` field holding a JSON array of
+ *               { label, href }; that is how the bars get their links, and several
+ *               menus coexist — `home` for the front page, `default` elsewhere.
  *   layouts     a page frame written as an `.astro` file (with a `<slot />`),
- *               identified by `key`. The build wraps a page's content in the
- *               layout it selects, so an author writes content only.
+ *               identified by `key`. The build wraps a page's content in the layout
+ *               it selects, so an author writes content only.
  *
  * A page may name either through its own `nav` / `layout` field.
  */
@@ -43,14 +46,17 @@ const parseItems = (raw: unknown): NavItem[] => {
  * Menu for a path: the page's own choice first, then the site rule (home gets
  * `home`, everything else `default`). An empty result means the site's built-in
  * navigation is used.
+ *
+ * Menus are components that carry an `items` field; a component with markup only is
+ * not a menu and is skipped.
  */
 export const getNavigation = async (pathname: string, pageKey?: string): Promise<NavItem[]> => {
-  const entries = await getCollection('navigation')
+  const entries = await getCollection('components')
   const wanted = [pageKey, defaultNavKey(pathname)].filter((key): key is string => !!key)
 
   for (const key of wanted) {
     const match = entries.find((entry: any) => String(entry.data.key) === key)
-    if (match) {
+    if (match && typeof match.data.items === 'string' && match.data.items.trim() !== '') {
       return parseItems(match.data.items)
     }
   }
