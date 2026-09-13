@@ -88,7 +88,7 @@ export function renderProfilePage(data: ProfilePageData): string {
               <!-- Basic Information -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">First Name</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('First Name')}</label>
                   <input
                     type="text"
                     name="first_name"
@@ -99,7 +99,7 @@ export function renderProfilePage(data: ProfilePageData): string {
                   >
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Last Name</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Last Name')}</label>
                   <input
                     type="text"
                     name="last_name"
@@ -136,7 +136,7 @@ export function renderProfilePage(data: ProfilePageData): string {
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Phone Number</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Phone Number')}</label>
                 <input
                   type="tel"
                   name="phone"
@@ -147,7 +147,7 @@ export function renderProfilePage(data: ProfilePageData): string {
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-zinc-950 dark:text-whi>${t('Bio')}<-2">Bio</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-whi>${t('Bio')}<-2">${t('Bio')}</label>
                 <textarea
                   name="bio"
                   rows="3"
@@ -162,7 +162,7 @@ export function renderProfilePage(data: ProfilePageData): string {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label for="timezone" class="block text-sm/6 font-medium text-zinc-950 dark:>${t('Timezone')}< mb-2">Timezone</label>
+                    <label for="timezone" class="block text-sm/6 font-medium text-zinc-950 dark:>${t('Timezone')}< mb-2">${t('Timezone')}</label>
                     <div class="grid grid-cols-1">
                       <select id="timezone" name="timezone" class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6">
                         ${data.timezones.map(tz => `
@@ -175,7 +175,7 @@ export function renderProfilePage(data: ProfilePageData): string {
                     </div>
                   </div>
                   <div>
-                    <label for="language" class="block text-sm/6 font-medium text-zinc-9>${t('Language')}<xt-white mb-2">Language</label>
+                    <label for="language" class="block text-sm/6 font-medium text-zinc-9>${t('Language')}<xt-white mb-2">${t('Language')}</label>
                     <div class="grid grid-cols-1">
                       <select id="language" name="language" class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6">
                         ${data.languages.map(lang => `
@@ -192,7 +192,7 @@ export function renderProfilePage(data: ProfilePageData): string {
 
               <!-- Notifications -->
               <div class="pt-6 border-t border-zinc-950/5 dark:border-white/5">
-                <h3 class="text-base font-semibold tex>${t('Notifications')}<:text-white mb-4">Notifications</h3>
+                <h3 class="text-base font-semibold tex>${t('Notifications')}<:text-white mb-4">${t('Notifications')}</h3>
 
                 <div class="space-y-5">
                   <div class="flex gap-3">
@@ -212,7 +212,7 @@ export function renderProfilePage(data: ProfilePageData): string {
                       </div>
                     </div>
                     <div class="text-sm/6">
-                      <label for="email_notifications" class="fo>${t('Email notifications')}<50 dark:text-white">Email notifications</label>
+                      <label for="email_notifications" class="fo>${t('Email notifications')}<50 dark:text-white">${t('Email notifications')}</label>
                       <p class="text-zinc-500 dark:text-zinc-400">Receive email updates about new features and product announcements.</p>
                     </div>
                   </div>
@@ -275,7 +275,7 @@ export function renderProfilePage(data: ProfilePageData): string {
 
             <dl class="space-y-3 text-sm">
               <div>
-            >${t('Role')}<t class="text-zinc-500 dark:text-zinc-400">Role</dt>
+            >${t('Role')}<t class="text-zinc-500 dark:text-zinc-400">${t('Role')}</dt>
                 <dd class="mt-1">
                   <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20 capitalize">
                     ${data.profile.role}
@@ -288,7 +288,7 @@ export function renderProfilePage(data: ProfilePageData): string {
               </div>
               ${data.profile.last_login_at ? `
                 <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Last Login</dt>
+                  <dt class="text-zinc-500 dark:text-zinc-400">${t('Last Login')}</dt>
                   <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.profile.last_login_at).toLocaleDateString()}</dd>
                 </div>
               ` : ''}
@@ -306,7 +306,7 @@ export function renderProfilePage(data: ProfilePageData): string {
 
           <!-- Security Actions -->
           <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="tex>${t('Security')}<t-semibold text-zinc-950 dark:text-white mb-4">Security</h3>
+            <h3 class="tex>${t('Security')}<t-semibold text-zinc-950 dark:text-white mb-4">${t('Security')}</h3>
 
             <div class="space-y-2">
               <button
@@ -397,7 +397,7 @@ export function renderProfilePage(data: ProfilePageData): string {
               ${t('Cancel')}
             <tion-colors"
             >
-              Cancel
+              ${t('Cancel')}
             </button>
             <button
               type="submit"

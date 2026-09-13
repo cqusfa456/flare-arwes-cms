@@ -190,7 +190,7 @@ adminAuditLogRoutes.get('/', async (c) => {
           <thead>
             <tr class="bg-zinc-50 dark:bg-zinc-800/50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               <th class="px-4 py-3">${t('Action')}</th>
-              <th class="px-4 py-3">Resource</th>
+              <th class="px-4 py-3">${t('Resource')}</th>
               <th class="px-4 py-3">${t('User')}</th>
               <th class="px-4 py-3">When</th>
               <th class="px-4 py-3">IP</th>

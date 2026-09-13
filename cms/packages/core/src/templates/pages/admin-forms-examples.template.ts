@@ -206,7 +206,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
-          Back to Forms
+          ${t('Back to Forms')}
         </a>
       </div>
       <h1 class="text-3xl font-bold text-zinc-950 dark:text-white">Form Examples</h1>
@@ -225,16 +225,16 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
         
         <h3>Advanced Forms</h3>
         <ul class="examples-nav">
-          <li><a href="#wizard-form" class="example-link">Multi-Page Wizard</a></li>
+          <li><a href="#wizard-form" class="example-link">${t('Multi-Page Wizard')}</a></li>
           <li><a href="#conditional-logic" class="example-link">${t('Conditional Logic')}</a></li>
-          <li><a href="#file-upload" class="example-link">File Upload</a></li>
+          <li><a href="#file-upload" class="example-link">${t('File Upload')}</a></li>
         </ul>
         
         <h3>Components</h3>
         <ul class="examples-nav">
           <li><a href="#address-maps" class="example-link">Address with Maps</a></li>
           <li><a href="#signature" class="example-link">Signature Pad</a></li>
-          <li><a href="#data-grid" class="example-link">Data Grid</a></li>
+          <li><a href="#data-grid" class="example-link">${t('Data Grid')}</a></li>
           <li><a href="#turnstile-protection" class="example-link">🛡️ Turnstile Protection</a></li>
         </ul>
       </aside>
@@ -551,7 +551,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
             static schema(...extend) {
               return FieldComponent.schema({
                 type: 'turnstile',
-                label: 'Turnstile Verification',
+                label: t('Turnstile Verification'),
                 key: 'turnstile',
                 input: true,
                 persistent: false,
@@ -672,10 +672,10 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
               content: 'Basic Fields',
               className: 'mb-3 text-lg font-semibold'
             },
-            { type: 'textfield', key: 'firstName', label: 'First Name', placeholder: 'Enter your first name', validate: { required: true } },
-            { type: 'textfield', key: 'lastName', label: 'Last Name', placeholder: 'Enter your last name', validate: { required: true } },
+            { type: 'textfield', key: 'firstName', label: t('First Name'), placeholder: 'Enter your first name', validate: { required: true } },
+            { type: 'textfield', key: 'lastName', label: t('Last Name'), placeholder: 'Enter your last name', validate: { required: true } },
             { type: 'email', key: 'email', label: 'Email Address', placeholder: 'you@example.com', validate: { required: true } },
-            { type: 'phoneNumber', key: 'phone', label: 'Phone Number', placeholder: '(555) 555-5555' },
+            { type: 'phoneNumber', key: 'phone', label: t('Phone Number'), placeholder: '(555) 555-5555' },
             { type: 'number', key: 'age', label: 'Age', placeholder: '18', validate: { min: 18, max: 120 } },
             { type: 'password', key: 'password', label: t('Password'), placeholder: 'Enter password', validate: { required: true } },
             { type: 'url', key: 'website', label: 'Website', placeholder: 'https://example.com' },
@@ -720,7 +720,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
               values: [
                 { label: 'Sports', value: 'sports' },
                 { label: 'Music', value: 'music' },
-                { label: 'Technology', value: 'tech' },
+                { label: t('Technology'), value: 'tech' },
                 { label: 'Travel', value: 'travel' },
                 { label: 'Reading', value: 'reading' }
               ]
@@ -802,7 +802,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           components: [
             { type: 'textfield', key: 'name', label: 'Full Name', validate: { required: true } },
             { type: 'email', key: 'email', label: 'Email Address', validate: { required: true } },
-            { type: 'textarea', key: 'message', label: 'Message', rows: 5, validate: { required: true } },
+            { type: 'textarea', key: 'message', label: t('Message'), rows: 5, validate: { required: true } },
             { type: 'button', action: 'submit', label: 'Send Message', theme: 'primary' }
           ]
         };
@@ -818,11 +818,11 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
               content: 'Fill out this form and watch it redirect to a thank you page after submission.',
               className: 'mb-4 text-gray-600'
             },
-            { type: 'textfield', key: 'firstName', label: 'First Name', placeholder: 'Enter your first name', validate: { required: true } },
-            { type: 'textfield', key: 'lastName', label: 'Last Name', placeholder: 'Enter your last name', validate: { required: true } },
+            { type: 'textfield', key: 'firstName', label: t('First Name'), placeholder: 'Enter your first name', validate: { required: true } },
+            { type: 'textfield', key: 'lastName', label: t('Last Name'), placeholder: 'Enter your last name', validate: { required: true } },
             { type: 'email', key: 'email', label: 'Email Address', placeholder: 'you@example.com', validate: { required: true } },
-            { type: 'phoneNumber', key: 'phone', label: 'Phone Number', placeholder: '(555) 555-5555' },
-            { type: 'textarea', key: 'message', label: 'Message', rows: 4, placeholder: 'Your message here...', validate: { required: true } },
+            { type: 'phoneNumber', key: 'phone', label: t('Phone Number'), placeholder: '(555) 555-5555' },
+            { type: 'textarea', key: 'message', label: t('Message'), rows: 4, placeholder: 'Your message here...', validate: { required: true } },
             { type: 'button', action: 'submit', label: 'Submit Form', theme: 'primary' }
           ]
         };
@@ -853,8 +853,8 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
                   content: 'Please provide your personal information.',
                   className: 'mb-3 text-gray-600'
                 },
-                { type: 'textfield', key: 'firstName', label: 'First Name', placeholder: 'John', validate: { required: true } },
-                { type: 'textfield', key: 'lastName', label: 'Last Name', placeholder: 'Doe', validate: { required: true } },
+                { type: 'textfield', key: 'firstName', label: t('First Name'), placeholder: 'John', validate: { required: true } },
+                { type: 'textfield', key: 'lastName', label: t('Last Name'), placeholder: 'Doe', validate: { required: true } },
                 { type: 'datetime', key: 'birthDate', label: 'Date of Birth', format: 'yyyy-MM-dd', validate: { required: true } },
                 { 
                   type: 'select', 
@@ -883,7 +883,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
                   className: 'mb-3 text-gray-600'
                 },
                 { type: 'email', key: 'email', label: 'Email Address', placeholder: 'john.doe@example.com', validate: { required: true } },
-                { type: 'phoneNumber', key: 'phone', label: 'Phone Number', placeholder: '(555) 555-5555', validate: { required: true } },
+                { type: 'phoneNumber', key: 'phone', label: t('Phone Number'), placeholder: '(555) 555-5555', validate: { required: true } },
                 { type: 'textfield', key: 'address', label: 'Street Address', placeholder: '123 Main St' },
                 { type: 'textfield', key: 'city', label: 'City', placeholder: 'New York' },
                 { 
@@ -1062,7 +1062,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
             { 
               type: 'textarea', 
               key: 'message', 
-              label: 'Message',
+              label: t('Message'),
               placeholder: 'Tell us what you are thinking...',
               rows: 4,
               validate: { required: true }

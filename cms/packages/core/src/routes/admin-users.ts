@@ -52,9 +52,9 @@ const LANGUAGES = [
 // Role options for user form
 const ROLES = [
   { value: 'admin', label: 'Administrator' },
-  { value: 'editor', label: 'Editor' },
+  { value: 'editor', label: t('Editor') },
   { value: 'author', label: t('Author') },
-  { value: 'viewer', label: 'Viewer' }
+  { value: 'viewer', label: t('Viewer') }
 ]
 
 /**

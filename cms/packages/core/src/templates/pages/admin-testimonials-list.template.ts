@@ -72,9 +72,9 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
                       hx-include="[name='minRating'], [name='search']"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 sm:text-sm/6 min-w-48"
                     >
-                      <option >${t('All')}<="">All</option>
-                      <opt>${t('Published')}<true">Published</option>
-                   >${t('Draft')}<ion value="false">Draft</option>
+                      <option >${t('All')}<="">${t('All')}</option>
+                      <opt>${t('Published')}<true">${t('Published')}</option>
+                   >${t('Draft')}<ion value="false">${t('Draft')}</option>
                     </select>
                     <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-blue-600 dark:text-blue-400 sm:size-4">
                       <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -104,7 +104,7 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
                   </div>
                 </div>
                 <div class="flex-1 max-w-md">
-                  <label for="search" class="block text-sm font-medium tex>${t('Search')}<50 dark:text-white mb-2">Search</label>
+                  <label for="search" class="block text-sm font-medium tex>${t('Search')}<50 dark:text-white mb-2">${t('Search')}</label>
                   <div class="relative group">
                     <div class="absolute left-3.5 top-2.5 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 dark:from-blue-300 dark:to-blue-400 opacity-90 group-focus-within:opacity-100 transition-opacity">
                       <svg class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -150,7 +150,7 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
           rowClickUrl: (row: any) => `/admin/testimonials/${row.id}`,
           columns: [
             { key: 'author', label: t('Author'), sortable: true, sortType: 'string' },
-            { key: 'testimonial', label: 'Testimonial', sortable: false },
+            { key: 'testimonial', label: t('Testimonial'), sortable: false },
             { key: 'status', label: t('Status'), sortable: true, sortType: 'boolean' },
             { key: 'sortOrder', label: t('Order'), sortable: true, sortType: 'number' },
             { key: 'created_at', label: t('Created'), sortable: true, sortType: 'date' }

@@ -43,7 +43,7 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to List
+            ${t('Back to List')}
           </a>
         </div>
       </div>
@@ -187,12 +187,12 @@ export function renderCodeExamplesForm(data: CodeExamplesFormData): string {
 
           <!-- Code Section -->
           <div>
-            <h2 class="text-lg font-medium text-white mb-4">Code</h2>
+            <h2 class="text-lg font-medium text-white mb-4">${t('Code')}</h2>
 
             <!-- Code Editor -->
             <div class="mb-4">
               <label for="code" class="block text-sm font-medium text-white">
-                Code <span class="text-red-400">*</span>
+                ${t('Code')} <span class="text-red-400">*</span>
               </label>
               <div class="mt-1">
                 <textarea name="code"

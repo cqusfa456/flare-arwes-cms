@@ -158,8 +158,8 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Timestamp')}</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('User')}</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Action')}</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Resource</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">IP Address</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Resource')}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('IP Address')}</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">${t('Details')}</th>
               </tr>
             </thead>

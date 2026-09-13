@@ -38,7 +38,7 @@ function getTurnstileComponentScript(): string {
         static schema(...extend) {
           return FieldComponent.schema({
             type: 'turnstile',
-            label: 'Turnstile Verification',
+            label: t('Turnstile Verification'),
             key: 'turnstile',
             input: true,
             persistent: false,
@@ -172,8 +172,8 @@ function getTurnstileComponentScript(): string {
               border: 2px dashed rgba(255,255,255,0.3);
             ">
               <div style="font-size: 24px; margin-bottom: 8px;">🛡️</div>
-              <div style="font-weight: 600; margin-bottom: 4px;">Turnstile Verification</div>
-              <div style="font-size: 12px; opacity: 0.9;">CAPTCHA-free bot protection by Cloudflare</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">${t('Turnstile Verification')}</div>
+              <div style="font-size: 12px; opacity: 0.9;">${t('CAPTCHA-free bot protection by Cloudflare')}</div>
               <div style="font-size: 11px; margin-top: 8px; opacity: 0.7;">Widget will appear here on the live form</div>
             </div>
           \`;
@@ -1310,7 +1310,7 @@ export function renderFormBuilderPage(data: FormBuilderPageData): string {
               <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
-              Submissions
+              ${t('Submissions')}
             </a>
           </div>
         </div>
@@ -1332,7 +1332,7 @@ export function renderFormBuilderPage(data: FormBuilderPageData): string {
             class="display-type-btn inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all"
             data-display="wizard"
           >
-            Multi-Page Wizard
+            ${t('Multi-Page Wizard')}
           </button>
         </div>
         <span class="text-xs text-zinc-500 dark:text-zinc-400" id="wizard-hint" style="display: none;">

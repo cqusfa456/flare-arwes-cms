@@ -111,7 +111,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                 </div>
 
                 <div>
-                  <label for="level" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Level</label>
+                  <label for="level" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Level')}</label>
                   <select
                     name="level"
                     id="level"
@@ -122,7 +122,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     <option value="info" ${filters.level === 'info' ? 'selected' : ''}>${t('Info')}</option>
                     <option value="warn" ${filters.level === 'warn' ? 'selected' : ''}>${t('Warning')}</option>
                     <option value="error" ${filters.level === 'error' ? 'selected' : ''}>${t('Error')}</option>
-                    <option value="fatal" ${filters.level === 'fatal' ? 'selected' : ''}>Fatal</option>
+                    <option value="fatal" ${filters.level === 'fatal' ? 'selected' : ''}>${t('Fatal')}</option>
                   </select>
                 </div>
 
@@ -146,7 +146,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                 </div>
 
                 <div>
-                  <label for="source" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Source</label>
+                  <label for="source" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Source')}</label>
                   <input
                     type="text"
                     name="source"
@@ -210,19 +210,19 @@ export function renderLogsListPage(data: LogsListPageData) {
             <thead>
               <tr class="border-b border-zinc-950/5 dark:border-white/5">
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white sm:pl-6">
-                  Level
+                  ${t('Level')}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
                   ${t('Category')}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Message
+                  ${t('Message')}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Source
+                  ${t('Source')}
                 </th>
                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white">
-                  Time
+                  ${t('Time')}
                 </th>
                 <th scope="col" class="relative px-4 py-3.5 sm:pr-6">
                   <span class="sr-only">${t('Actions')}</span>

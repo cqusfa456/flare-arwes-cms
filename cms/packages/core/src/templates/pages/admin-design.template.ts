@@ -105,7 +105,7 @@ export function renderDesignPage(data: DesignPageData): string {
             <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
               <div class="flex flex-wrap gap-2">
                 <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-700/10 dark:ring-emerald-400/20">
-                  Collection Name
+                  ${t('Collection Name')}
                 </span>
                 <span class="inline-flex items-center rounded-full bg-red-50 dark:bg-red-500/10 px-2.5 py-1 text-sm font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-700/10 dark:ring-red-400/20">
                   5 fields
@@ -459,7 +459,7 @@ export function renderDesignPage(data: DesignPageData): string {
             <!-- Select -->
             <div>
               <label for="select-demo" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">
-                Select Dropdown
+                ${t('Select Dropdown')}
               </label>
               <div class="mt-2 grid grid-cols-1">
                 <select id="select-demo" class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6">
@@ -528,9 +528,9 @@ export function renderDesignPage(data: DesignPageData): string {
           <div class="space-y-8">
             <!-- Simple Checkboxes -->
             <div>
-              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Simple Checkboxes</h3>
+              <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">${t('Simple Checkboxes')}</h3>
               <fieldset>
-                <legend class="sr-only">Simple Checkboxes</legend>
+                <legend class="sr-only">${t('Simple Checkboxes')}</legend>
                 <div class="space-y-3">
                   <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
@@ -760,7 +760,7 @@ export function renderDesignPage(data: DesignPageData): string {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <div>
-                <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300">Information</h3>
+                <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300">${t('Information')}</h3>
                 <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">Here's some helpful information about this feature.</p>
               </div>
             </div>
@@ -775,7 +775,7 @@ export function renderDesignPage(data: DesignPageData): string {
         <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-8">
           <div class="flex flex-wrap gap-2">
             <span class="inline-flex items-center rounded-full bg-zinc-50 dark:bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400 ring-1 ring-inset ring-zinc-500/10 dark:ring-zinc-400/20">
-              Default
+              ${t('Default')}
             </span>
             <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
               ${t('Info')}

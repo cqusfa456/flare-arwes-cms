@@ -146,7 +146,7 @@ export function renderLogConfigPage(data: LogConfigPageData) {
                     <option value="info" ${config.level === 'info' ? 'selected' : ''}>${t('Info')}</option>
                     <option value="warn" ${config.level === 'warn' ? 'selected' : ''}>${t('Warning')}</option>
                     <option value="error" ${config.level === 'error' ? 'selected' : ''}>${t('Error')}</option>
-                    <option value="fatal" ${config.level === 'fatal' ? 'selected' : ''}>Fatal</option>
+                    <option value="fatal" ${config.level === 'fatal' ? 'selected' : ''}>${t('Fatal')}</option>
                   </select>
                   <p class="mt-1 text-sm text-gray-500">Only logs at this level or higher will be stored</p>
                 </div>

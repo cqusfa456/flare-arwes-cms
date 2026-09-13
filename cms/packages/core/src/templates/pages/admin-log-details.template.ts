@@ -61,7 +61,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
             </div>
             
             <div>
-              <dt class="text-sm font-medium text-gray-500">Level</dt>
+              <dt class="text-sm font-medium text-gray-500">${t('Level')}</dt>
               <dd class="mt-1">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.levelClass}">
                   ${log.level}
@@ -80,14 +80,14 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
             
             ${log.source ? html`
               <div>
-                <dt class="text-sm font-medium text-gray-500">Source</dt>
+                <dt class="text-sm font-medium text-gray-500">${t('Source')}</dt>
                 <dd class="mt-1 text-sm text-gray-900">${log.source}</dd>
               </div>
             ` : ''}
             
             ${log.userId ? html`
               <div>
-                <dt class="text-sm font-medium text-gray-500">User ID</dt>
+                <dt class="text-sm font-medium text-gray-500">${t('User ID')}</dt>
                 <dd class="mt-1 text-sm text-gray-900 font-mono">${log.userId}</dd>
               </div>
             ` : ''}
@@ -108,7 +108,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
             
             ${log.ipAddress ? html`
               <div>
-                <dt class="text-sm font-medium text-gray-500">IP Address</dt>
+                <dt class="text-sm font-medium text-gray-500">${t('IP Address')}</dt>
                 <dd class="mt-1 text-sm text-gray-900">${log.ipAddress}</dd>
               </div>
             ` : ''}
@@ -143,7 +143,7 @@ export function renderLogDetailsPage(data: LogDetailsPageData) {
       <!-- Message -->
       <div class="mt-6 bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900">Message</h3>
+          <h3 class="text-lg font-medium text-gray-900">${t('Message')}</h3>
         </div>
         <div class="px-6 py-4">
           <div class="text-sm text-gray-900 whitespace-pre-wrap break-words">

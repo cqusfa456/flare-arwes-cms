@@ -149,7 +149,7 @@ export function renderDatabaseTablePage(data: DatabaseTablePageData): string {
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
                 <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                  Page <span class="font-medium">${data.currentPage}</span> of <span class="font-medium">${totalPages}</span>
+                  ${t('Page')} <span class="font-medium">${data.currentPage}</span> of <span class="font-medium">${totalPages}</span>
                 </p>
               </div>
               <div>

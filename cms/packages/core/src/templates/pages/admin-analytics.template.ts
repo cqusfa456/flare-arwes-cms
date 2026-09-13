@@ -334,7 +334,7 @@ export function renderTopPagesHtml(pages: Array<{ path: string; views: number; v
         <table class="min-w-full">
           <thead>
             <tr>
-              <th class="text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 pb-3">Page</th>
+              <th class="text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 pb-3">${t('Page')}</th>
               <th class="text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 pb-3">Views</th>
               <th class="text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 pb-3">Visitors</th>
             </tr>

@@ -124,7 +124,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
     },
     {
       key: 'lastLoginAt',
-      label: 'Last Login',
+      label: t('Last Login'),
       sortable: true,
       sortType: 'date',
       render: (value: number | null) => {
@@ -197,7 +197,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            Export
+            ${t('Export')}
           </button>
         </div>
       </div>
@@ -284,7 +284,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <!-- Modern Search Input -->
               <div>
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Search</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Search')}</label>
                 <div class="relative group">
                   <input
                     type="text"
@@ -318,7 +318,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
               </div>
 
               <div>
-                <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Role</label>
+                <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('Role')}</label>
                 <div class="mt-2 grid grid-cols-1">
                   <select
                     name="role"
@@ -329,10 +329,10 @@ export function renderUsersListPage(data: UsersListPageData): string {
                     class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-slate-500/30 dark:outline-slate-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-500 dark:focus-visible:outline-slate-400 sm:text-sm/6"
                   >
                     <option value="" ${!data.roleFilter ? 'selected' : ''}>All Roles</option>
-                    <option value="admin" ${data.roleFilter === 'admin' ? 'selected' : ''}>Admin</option>
-                    <option value="editor" ${data.roleFilter === 'editor' ? 'selected' : ''}>Editor</option>
-                    <option value="author" ${data.roleFilter === 'author' ? 'selected' : ''}>Author</option>
-                    <option value="viewer" ${data.roleFilter === 'viewer' ? 'selected' : ''}>Viewer</option>
+                    <option value="admin" ${data.roleFilter === 'admin' ? 'selected' : ''}>${t('Admin')}</option>
+                    <option value="editor" ${data.roleFilter === 'editor' ? 'selected' : ''}>${t('Editor')}</option>
+                    <option value="author" ${data.roleFilter === 'author' ? 'selected' : ''}>${t('Author')}</option>
+                    <option value="viewer" ${data.roleFilter === 'viewer' ? 'selected' : ''}>${t('Viewer')}</option>
                   </select>
                   <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-slate-600 dark:text-slate-400 sm:size-4">
                     <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -341,7 +341,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
               </div>
 
               <div>
-                <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Status</label>
+                <label class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${t('Status')}</label>
                 <div class="mt-2 grid grid-cols-1">
                   <select
                     name="status"
@@ -351,9 +351,9 @@ export function renderUsersListPage(data: UsersListPageData): string {
                     hx-include="[name='search'], [name='role']"
                     class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-slate-500/30 dark:outline-slate-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-500 dark:focus-visible:outline-slate-400 sm:text-sm/6"
                   >
-                    <option value="active" ${!data.statusFilter || data.statusFilter === 'active' ? 'selected' : ''}>Active</option>
-                    <option value="inactive" ${data.statusFilter === 'inactive' ? 'selected' : ''}>Inactive</option>
-                    <option value="all" ${data.statusFilter === 'all' ? 'selected' : ''}>All Users</option>
+                    <option value="active" ${!data.statusFilter || data.statusFilter === 'active' ? 'selected' : ''}>${t('Active')}</option>
+                    <option value="inactive" ${data.statusFilter === 'inactive' ? 'selected' : ''}>${t('Inactive')}</option>
+                    <option value="all" ${data.statusFilter === 'all' ? 'selected' : ''}>${t('All Users')}</option>
                   </select>
                   <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-slate-600 dark:text-slate-400 sm:size-4">
                     <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -371,7 +371,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    Clear Filters
+                    ${t('Clear Filters')}
                   </button>
                 </div>
               </div>

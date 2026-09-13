@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 
 interface FaqFormData {
@@ -77,7 +78,7 @@ export function renderFaqForm(data: FaqFormData): string {
           <!-- Question -->
           <div>
             <label for="question" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-              Question <span class="text-red-500">*</span>
+              ${t('Question')} <span class="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -110,7 +111,7 @@ export function renderFaqForm(data: FaqFormData): string {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <!-- Category -->
             <div>
-              <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Category</label>
+              <label for="category" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Category')}</label>
               <input
                 type="text"
                 id="category"
@@ -128,7 +129,7 @@ export function renderFaqForm(data: FaqFormData): string {
 
             <!-- Tags -->
             <div>
-              <label for="tags" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Tags</label>
+              <label for="tags" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Tags')}</label>
               <input
                 type="text"
                 id="tags"
@@ -144,7 +145,7 @@ export function renderFaqForm(data: FaqFormData): string {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <!-- Sort Order -->
             <div>
-              <label for="sortOrder" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Sort Order</label>
+              <label for="sortOrder" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Sort Order')}</label>
               <input
                 type="number"
                 id="sortOrder"
@@ -158,10 +159,10 @@ export function renderFaqForm(data: FaqFormData): string {
 
             <!-- Published -->
             <div>
-              <label for="isPublished" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Status</label>
+              <label for="isPublished" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Status')}</label>
               <select id="isPublished" name="isPublished" class="${inputClass}">
-                <option value="true" ${faq?.isPublished !== false ? 'selected' : ''}>Published</option>
-                <option value="false" ${faq?.isPublished === false ? 'selected' : ''}>Draft</option>
+                <option value="true" ${faq?.isPublished !== false ? 'selected' : ''}>${t('Published')}</option>
+                <option value="false" ${faq?.isPublished === false ? 'selected' : ''}>${t('Draft')}</option>
               </select>
             </div>
           </div>
@@ -181,7 +182,7 @@ export function renderFaqForm(data: FaqFormData): string {
             </div>
             <div class="flex items-center gap-3">
               <a href="/admin/faq" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-zinc-950/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
-                Cancel
+                ${t('Cancel')}
               </a>
               <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg bg-zinc-950 dark:bg-blue-600 text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm">
                 ${isEdit ? 'Save Changes' : 'Create FAQ'}

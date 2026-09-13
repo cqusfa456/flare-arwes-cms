@@ -50,7 +50,7 @@ export function renderFaqList(data: FaqListData): string {
       },
       {
         key: 'question',
-        label: 'Question',
+        label: t('Question'),
         sortable: true,
         sortType: 'string',
         render: (_v: any, row: any) => {
@@ -90,12 +90,12 @@ export function renderFaqList(data: FaqListData): string {
         sortable: false,
         render: (_v: any, row: any) => `
           <div class="flex items-center gap-1">
-            <a href="/admin/faq/${row.id}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors" title="Edit" onclick="event.stopPropagation()">
+            <a href="/admin/faq/${row.id}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors" title="${t('Edit')}" onclick="event.stopPropagation()">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
             </a>
-            <button onclick="event.stopPropagation(); deleteFaq(${row.id}, '${escHtml(row.question).replace(/'/g, "\\'").substring(0, 50)}')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-400 dark:text-zinc-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800 transition-colors" title="Delete">
+            <button onclick="event.stopPropagation(); deleteFaq(${row.id}, '${escHtml(row.question).replace(/'/g, "\\'").substring(0, 50)}')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-400 dark:text-zinc-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800 transition-colors" title="${t('Delete')}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
               </svg>
@@ -147,7 +147,7 @@ export function renderFaqList(data: FaqListData): string {
               name="category"
               class="block w-full rounded-lg border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white sm:text-sm px-3 py-2"
             >
-              <option value="">All Categories</option>
+              <option value="">${t('All Categories')}</option>
               ${categories.map(cat => `<option value="${escHtml(cat)}" ${filters.category === cat ? 'selected' : ''}>${escHtml(cat)}</option>`).join('')}
             </select>
           </div>
@@ -156,17 +156,17 @@ export function renderFaqList(data: FaqListData): string {
               name="published"
               class="block w-full rounded-lg border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white sm:text-sm px-3 py-2"
             >
-              <option value="">All Status</option>
-              <option value="true" ${filters.published === 'true' ? 'selected' : ''}>Published</option>
-              <option value="false" ${filters.published === 'false' ? 'selected' : ''}>Draft</option>
+              <option value="">${t('All Status')}</option>
+              <option value="true" ${filters.published === 'true' ? 'selected' : ''}>${t('Published')}</option>
+              <option value="false" ${filters.published === 'false' ? 'selected' : ''}>${t('Draft')}</option>
             </select>
           </div>
           <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-            Filter
+            ${t('Filter')}
           </button>
           ${(filters.search || filters.category || filters.published) ? `
             <a href="/admin/faq" class="inline-flex items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors">
-              Clear
+              ${t('Clear')}
             </a>
           ` : ''}
         </form>

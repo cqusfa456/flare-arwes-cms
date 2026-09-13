@@ -99,7 +99,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 <h3 class="text-base font-semibold text-zinc-950 dark:>${t('Basic Information')}<sic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">First Name</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('First Name')}</label>
                     <input
                       type="text"
                       name="first_name"
@@ -110,7 +110,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Last Name</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Last Name')}</label>
                     <input
                       type="text"
                       name="last_name"
@@ -121,7 +121,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-zinc-9>${t('Username')}<xt-white mb-2">Username</label>
+                    <label class="block text-sm font-medium text-zinc-9>${t('Username')}<xt-white mb-2">${t('Username')}</label>
                     <input
                       type="text"
                       name="username"
@@ -132,7 +132,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium tex>${t('Email')}<950 dark:text-white mb-2">Email</label>
+                    <label class="block text-sm font-medium tex>${t('Email')}<950 dark:text-white mb-2">${t('Email')}</label>
                     <input
                       type="email"
                       name="email"
@@ -153,7 +153,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                   </div>
 
                   <div>
-                    <label for="role" class="block text-sm/6 fo>${t('Role')}<ium text-zinc-950 dark:text-white">Role</label>
+                    <label for="role" class="block text-sm/6 fo>${t('Role')}<ium text-zinc-950 dark:text-white">${t('Role')}</label>
                     <div class="mt-2 grid grid-cols-1">
                       <select
                         id="role"
@@ -178,7 +178,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Extended profile data for this user</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Display Name</label>
+                    <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Display Name')}</label>
                     <input
                       type="text"
                       name="profile_display_name"
@@ -244,7 +244,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 </div>
 
                 <div class="mt-6">
-                  <label class="block text-sm>${t('Bio')}<-medium text-zinc-950 dark:text-white mb-2">Bio</label>
+                  <label class="block text-sm>${t('Bio')}<-medium text-zinc-950 dark:text-white mb-2">${t('Bio')}</label>
                   <textarea
                     name="profile_bio"
                     rows="3"
@@ -317,20 +317,20 @@ export function renderUserEditPage(data: UserEditPageData): string {
             <h3 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">User Details</h3>
             <dl class="space-y-4 text-sm">
               <div>
-                <dt class="text-zinc-500 dark:text-zinc-400">User ID</dt>
+                <dt class="text-zinc-500 dark:text-zinc-400">${t('User ID')}</dt>
                 <dd class="mt-1 text-zinc-950 dark:text-white font-mono text-xs">${data.userToEdit.id}</dd>
               </div>
               <div>
-    >${t('Created')}<   <dt class="text-zinc-500 dark:text-zinc-400">Created</dt>
+    >${t('Created')}<   <dt class="text-zinc-500 dark:text-zinc-400">${t('Created')}</dt>
                 <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.userToEdit.createdAt).toLocaleDateString()}</dd>
               </div>
               ${data.userToEdit.lastLoginAt ? `
                 <div>
-                  <dt class="text-zinc-500 dark:text-zinc-400">Last Login</dt>
+                  <dt class="text-zinc-500 dark:text-zinc-400">${t('Last Login')}</dt>
                   <dd class="mt-1 text-zinc-950 dark:text-white">${new Date(data.userToEdit.lastLoginAt).toLocaleDateString()}</dd>
                 </div>
               ` : ''}
-              <di>${t('Status')}<            <dt class="text-zinc-500 dark:text-zinc-400">Status</dt>
+              <di>${t('Status')}<            <dt class="text-zinc-500 dark:text-zinc-400">${t('Status')}</dt>
                 <dd class="mt-1">
                   ${data.userToEdit.isActive
                     ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-700/10 dark:ring-emerald-400/20">Active</span>'
@@ -339,7 +339,7 @@ export function renderUserEditPage(data: UserEditPageData): string {
                 </dd>
               </div>
               ${data.userToEdit.twoFactorEnabled ? `
-             >${t('Security')}<                  <dt class="text-zinc-500 dark:text-zinc-400">Security</dt>
+             >${t('Security')}<                  <dt class="text-zinc-500 dark:text-zinc-400">${t('Security')}</dt>
                   <dd class="mt-1">
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-500/20">2FA Enabled</span>
                   </dd>

@@ -42,7 +42,7 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to List
+            ${t('Back to List')}
           </a>
         </div>
       </div>
@@ -131,12 +131,12 @@ export function renderTestimonialsForm(data: TestimonialsFormData): string {
 
           <!-- Testimonial Content Section -->
           <div>
-            <h2 class="text-lg font-medium text-white mb-4">Testimonial</h2>
+            <h2 class="text-lg font-medium text-white mb-4">${t('Testimonial')}</h2>
 
             <!-- Testimonial Text -->
             <div class="mb-4">
               <label for="testimonialText" class="block text-sm font-medium text-white">
-                Testimonial <span class="text-red-400">*</span>
+                ${t('Testimonial')} <span class="text-red-400">*</span>
               </label>
               <div class="mt-1">
                 <textarea name="testimonialText"

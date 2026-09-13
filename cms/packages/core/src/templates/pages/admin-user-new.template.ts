@@ -38,7 +38,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            Create User
+            ${t('Create User')}
           </button>
           <a
             href="/admin/users"
@@ -68,7 +68,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      First Name <span class="text-red-500">*</span>
+                      ${t('First Name')} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -81,7 +81,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
 
                   <div>
                     <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-                      Last Name <span class="text-red-500">*</span>
+                      ${t('Last Name')} <span class="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -272,7 +272,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 <dd class="text-zinc-500 dark:text-zinc-400">Full system access and permissions</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Editor</dt>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('Editor')}</dt>
                 <dd class="text-zinc-500 dark:text-zinc-400">Can create and edit content</dd>
               </div>
               <div>
@@ -280,7 +280,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
                 <dd class="text-zinc-500 dark:text-zinc-400">Can create own content</dd>
               </div>
               <div>
-                <dt class="font-medium text-zinc-950 dark:text-white">Viewer</dt>
+                <dt class="font-medium text-zinc-950 dark:text-white">${t('Viewer')}</dt>
                 <dd class="text-zinc-500 dark:text-zinc-400">Read-only access</dd>
               </div>
             </dl>
@@ -291,7 +291,7 @@ export function renderUserNewPage(data: UserNewPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Create User',
+    title: t('Create User'),
     pageTitle: 'Create New User',
     currentPath: '/admin/users',
     user: data.user,

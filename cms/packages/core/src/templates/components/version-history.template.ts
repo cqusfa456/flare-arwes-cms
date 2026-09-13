@@ -79,12 +79,12 @@ export function renderVersionHistory(data: VersionHistoryData): string {
                       <span class="text-white ml-2">${escapeHtml(version.data?.title || 'Untitled')}</span>
                     </div>
                     <div>
-                      <span class="text-gray-400">Author:</span>
+                      <span class="text-gray-400">${t('Author:')}</span>
                       <span class="text-white ml-2">${escapeHtml(version.author_name || 'Unknown')}</span>
                     </div>
                     ${version.data?.excerpt ? `
                       <div class="md:col-span-2">
-                        <span class="text-gray-400">Excerpt:</span>
+                        <span class="text-gray-400">${t('Excerpt:')}</span>
                         <p class="text-white mt-1 text-xs">${escapeHtml(version.data.excerpt.substring(0, 200))}${version.data.excerpt.length > 200 ? '...' : ''}</p>
                       </div>
                     ` : ''}

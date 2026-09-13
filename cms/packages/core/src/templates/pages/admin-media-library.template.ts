@@ -70,7 +70,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                 class="w-full rounded-lg bg-zinc-950 dark:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
                 onclick="document.getElementById('upload-modal').classList.remove('hidden')"
               >
-                Upload Files
+                ${t('Upload Files')}
               </button>
             </div>
 
@@ -149,7 +149,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                 <button
                   onclick="openCreateFolderModal()"
                   class="w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors">
-                  Create Folder
+                  ${t('Create Folder')}
                 </button>
                 <button
                   class="w-full text-left px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors"
@@ -177,7 +177,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-2">
-                      <label class="text-sm/6 font-medium text-zinc-950 dark:text-white">View:</label>
+                      <label class="text-sm/6 font-medium text-zinc-950 dark:text-white">${t('View:')}</label>
                       <div class="grid grid-cols-1">
                         <select
                           class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 sm:text-sm/6 min-w-32"
@@ -201,7 +201,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                         type="text"
                         id="media-search-input"
                         name="search"
-                        placeholder="Search files..."
+                        placeholder="${t('Search files...')}"
                         oninput="toggleMediaClearButton()"
                         class="rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2.5 pl-11 pr-10 text-sm w-72 text-zinc-950 dark:text-white border-2 border-blue-200/50 dark:border-blue-700/50 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-800 focus:shadow-lg focus:shadow-blue-500/20 dark:focus:shadow-blue-400/20 transition-all duration-300"
                         hx-get="/admin/media/search"
@@ -271,7 +271,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                             <svg viewBox="0 0 20 20" fill="currentColor" class="mr-3 size-5 text-zinc-400 dark:text-zinc-500 group-hover/item:text-zinc-950 dark:group-hover/item:text-white">
                               <path d="M2 6a2 2 0 0 1 2-2h5.532a2 2 0 0 1 1.536.72l1.9 2.28a1 1 0 0 0 .768.36H17a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z" />
                             </svg>
-                            Move to Folder
+                            ${t('Move to Folder')}
                           </button>
                         </div>
                         <div class="py-1">
@@ -348,7 +348,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
     <div id="upload-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-2xl">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Upload Files</h3>
+          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">${t('Upload Files')}</h3>
           <button onclick="document.getElementById('upload-modal').classList.add('hidden')" class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -421,7 +421,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
               class="rounded-lg bg-zinc-950 dark:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
               disabled
             >
-              Upload Files
+              ${t('Upload Files')}
             </button>
           </div>
         </form>
@@ -442,7 +442,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
     <div id="move-to-folder-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="rounded-xl bg-white dark:bg-zinc-900 shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Move to Folder</h3>
+          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">${t('Move to Folder')}</h3>
           <button onclick="closeMoveToFolderModal()" class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -531,7 +531,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
               type="submit"
               class="rounded-lg bg-zinc-950 dark:bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
             >
-              Create Folder
+              ${t('Create Folder')}
             </button>
           </div>
         </form>

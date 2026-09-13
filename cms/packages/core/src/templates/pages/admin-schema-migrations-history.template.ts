@@ -137,7 +137,7 @@ export function renderSchemaMigrationsHistoryPage(data: SchemaMigrationsPageData
               onchange="window.location.href = this.value ? '/admin/schema-migrations?collection=' + encodeURIComponent(this.value) : '/admin/schema-migrations'"
               class="w-full max-w-xs rounded-lg bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm px-4 py-2 text-sm text-zinc-950 dark:text-white border-2 border-blue-200/50 dark:border-blue-700/50 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300"
             >
-              <option value="">All Collections</option>
+              <option value="">${t('All Collections')}</option>
               ${collections.map(col => `
                 <option value="${escapeHtml(col.id)}" ${collectionFilter === col.id ? 'selected' : ''}>
                   ${escapeHtml(col.display_name || col.name)}
@@ -258,11 +258,11 @@ export function renderSchemaMigrationsHistoryPage(data: SchemaMigrationsPageData
                 href="/admin/schema-migrations${buildQueryString({ ...filterParams, page: page - 1 })}"
                 class="relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Previous
+                ${t('Previous')}
               </a>
             ` : `
               <span class="relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Previous
+                ${t('Previous')}
               </span>
             `}
             ${page < totalPages ? `
@@ -270,28 +270,28 @@ export function renderSchemaMigrationsHistoryPage(data: SchemaMigrationsPageData
                 href="/admin/schema-migrations${buildQueryString({ ...filterParams, page: page + 1 })}"
                 class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
               >
-                Next
+                ${t('Next')}
               </a>
             ` : `
               <span class="ml-3 relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed">
-                Next
+                ${t('Next')}
               </span>
             `}
           </div>
           <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                Showing <span class="font-medium">${startItem}</span> to <span class="font-medium">${endItem}</span> of <span class="font-medium">${total}</span> migrations
+                ${t('Showing')} <span class="font-medium">${startItem}</span> to <span class="font-medium">${endItem}</span> of <span class="font-medium">${total}</span> migrations
               </p>
             </div>
             <div>
-              <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+              <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="${t('Pagination')}">
                 ${page > 1 ? `
                   <a
                     href="/admin/schema-migrations${buildQueryString({ ...filterParams, page: page - 1 })}"
                     class="relative inline-flex items-center px-2 py-2 rounded-l-lg bg-white dark:bg-zinc-800 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 transition-colors"
                   >
-                    <span class="sr-only">Previous</span>
+                    <span class="sr-only">${t('Previous')}</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>

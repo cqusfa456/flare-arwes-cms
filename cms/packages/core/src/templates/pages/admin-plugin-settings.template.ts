@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
 
 /**
@@ -59,7 +60,7 @@ export function renderPluginSettingsPage(data: PluginSettingsPageData): string {
       <!-- Header with Back Button -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Plugin Settings</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Plugin Settings')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
             ${plugin.description}
           </p>
@@ -102,15 +103,15 @@ export function renderPluginSettingsPage(data: PluginSettingsPageData): string {
 
       <!-- Tabs -->
       <div class="mb-6">
-        <nav class="flex space-x-8" aria-label="Tabs">
+        <nav class="flex space-x-8" aria-label="${t('Tabs')}">
           <button onclick="showTab('settings')" id="settings-tab" class="tab-button active border-b-2 border-blue-400 py-2 px-1 text-sm font-medium text-blue-400">
-            Settings
+            ${t('Settings')}
           </button>
           <button onclick="showTab('activity')" id="activity-tab" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300">
             Activity Log
           </button>
           <button onclick="showTab('info')" id="info-tab" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300">
-            Information
+            ${t('Information')}
           </button>
         </nav>
       </div>
@@ -345,7 +346,7 @@ function renderSettingsTab(plugin: any): string {
         <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-4">Cloudflare Turnstile Settings</h2>
         <p class="text-zinc-500 dark:text-zinc-400 mb-6">Configure CAPTCHA-free bot protection for your forms.</p>
       ` : `
-        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-4">Plugin Settings</h2>
+        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-4">${t('Plugin Settings')}</h2>
       `}
 
       <form id="settings-form" class="space-y-6">
@@ -574,7 +575,7 @@ function renderInformationTab(plugin: any): string {
         <h2 class="text-xl font-semibold text-zinc-950 dark:text-white mb-4">Plugin Details</h2>
         <div class="space-y-3">
           <div class="flex justify-between">
-            <span class="text-zinc-500 dark:text-zinc-400">Name:</span>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Name:')}</span>
             <span class="text-zinc-950 dark:text-white">${plugin.displayName}</span>
           </div>
           <div class="flex justify-between">
@@ -582,7 +583,7 @@ function renderInformationTab(plugin: any): string {
             <span class="text-zinc-950 dark:text-white">${plugin.version}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-zinc-500 dark:text-zinc-400">Author:</span>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Author:')}</span>
             <span class="text-zinc-950 dark:text-white">${plugin.author}</span>
           </div>
           <div class="flex justify-between">
@@ -590,7 +591,7 @@ function renderInformationTab(plugin: any): string {
             <span class="text-zinc-950 dark:text-white">${plugin.category}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-zinc-500 dark:text-zinc-400">Status:</span>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Status:')}</span>
             <span class="text-zinc-950 dark:text-white">${plugin.status}</span>
           </div>
           <div class="flex justify-between">

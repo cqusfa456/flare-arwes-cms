@@ -160,7 +160,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
-          Back to Forms
+          ${t('Back to Forms')}
         </a>
       </div>
       <h1 class="text-3xl font-bold text-zinc-950 dark:text-white">Forms Quick Reference</h1>
@@ -180,23 +180,23 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         <ul class="docs-nav">
           <li><a href="#textfield" class="doc-link">Text Field</a></li>
           <li><a href="#textarea" class="doc-link">Text Area</a></li>
-          <li><a href="#number" class="doc-link">Number</a></li>
+          <li><a href="#number" class="doc-link">${t('Number')}</a></li>
           <li><a href="#password" class="doc-link">${t('Password')}</a></li>
           <li><a href="#email" class="doc-link">${t('Email')}</a></li>
           <li><a href="#url" class="doc-link">URL</a></li>
-          <li><a href="#phonenumber" class="doc-link">Phone Number</a></li>
+          <li><a href="#phonenumber" class="doc-link">${t('Phone Number')}</a></li>
         </ul>
         
         <h3>Date & Time</h3>
         <ul class="docs-nav">
           <li><a href="#datetime" class="doc-link">Date/Time</a></li>
           <li><a href="#day" class="doc-link">Day</a></li>
-          <li><a href="#time" class="doc-link">Time</a></li>
+          <li><a href="#time" class="doc-link">${t('Time')}</a></li>
         </ul>
         
         <h3>Selection Fields</h3>
         <ul class="docs-nav">
-          <li><a href="#select" class="doc-link">Select Dropdown</a></li>
+          <li><a href="#select" class="doc-link">${t('Select Dropdown')}</a></li>
           <li><a href="#selectboxes" class="doc-link">Select Boxes</a></li>
           <li><a href="#radio" class="doc-link">Radio</a></li>
           <li><a href="#checkbox" class="doc-link">Checkbox</a></li>
@@ -208,7 +208,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           <li><a href="#tags" class="doc-link">${t('Tags')}</a></li>
           <li><a href="#survey" class="doc-link">${t('Survey')}</a></li>
           <li><a href="#signature" class="doc-link">Signature</a></li>
-          <li><a href="#file" class="doc-link">File Upload</a></li>
+          <li><a href="#file" class="doc-link">${t('File Upload')}</a></li>
           <li><a href="#address" class="doc-link">Address</a></li>
           <li><a href="#turnstile" class="doc-link">🛡️ Turnstile</a></li>
         </ul>
@@ -224,7 +224,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         
         <h3>Data Components</h3>
         <ul class="docs-nav">
-          <li><a href="#datagrid" class="doc-link">Data Grid</a></li>
+          <li><a href="#datagrid" class="doc-link">${t('Data Grid')}</a></li>
           <li><a href="#editgrid" class="doc-link">Edit Grid</a></li>
         </ul>
         
@@ -292,7 +292,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
               <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
               </svg>
-              Create New Form
+              ${t('Create New Form')}
             </a>
             <a href="/admin/forms" style="display: inline-flex; align-items: center; padding: 0.625rem 1.25rem; background: #6b7280; color: white; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 500;">
               <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,7 +339,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Most common field type for names, titles, and short text</p>
             <pre class="code-block">{
   "type": "textfield",
@@ -367,7 +367,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Perfect for comments, descriptions, and multi-line text</p>
             <pre class="code-block">{
   "type": "textarea",
@@ -391,7 +391,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>For ages, quantities, scores, and any numeric value</p>
             <pre class="code-block">{
   "type": "number",
@@ -415,7 +415,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Automatically masks input for security</p>
             <pre class="code-block">{
   "type": "password",
@@ -439,7 +439,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Validates email format automatically</p>
             <pre class="code-block">{
   "type": "email",
@@ -461,7 +461,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Validates URL format (http/https)</p>
             <pre class="code-block">{
   "type": "url",
@@ -483,7 +483,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Automatically formats phone numbers</p>
             <pre class="code-block">{
   "type": "phoneNumber",
@@ -505,7 +505,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Interactive date/time picker with format control</p>
             <pre class="code-block">{
   "type": "datetime",
@@ -528,7 +528,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Separate dropdowns for day, month, and year</p>
             <pre class="code-block">{
   "type": "day",
@@ -554,7 +554,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Select time in HH:MM format</p>
             <pre class="code-block">{
   "type": "time",
@@ -575,7 +575,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Choose one option from a list</p>
             <pre class="code-block">{
   "type": "select",
@@ -605,7 +605,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Select multiple options with checkboxes</p>
             <pre class="code-block">{
   "type": "selectboxes",
@@ -629,7 +629,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Choose one option from radio buttons</p>
             <pre class="code-block">{
   "type": "radio",
@@ -656,7 +656,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>For agreements, subscriptions, and yes/no options</p>
             <pre class="code-block">{
   "type": "checkbox",
@@ -687,7 +687,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Automatically formats with currency symbol</p>
             <pre class="code-block">{
   "type": "currency",
@@ -711,7 +711,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Type and press Enter to add tags</p>
             <pre class="code-block">{
   "type": "tags",
@@ -733,7 +733,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Multiple questions with rating scale</p>
             <pre class="code-block">{
   "type": "survey",
@@ -762,7 +762,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Capture signatures with mouse or touch</p>
             <pre class="code-block">{
   "type": "signature",
@@ -786,7 +786,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Upload files to Cloudflare R2 or base64 encode</p>
             <pre class="code-block">{
   "type": "file",
@@ -825,7 +825,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Google Maps API-powered address autocomplete</p>
             <pre class="code-block">{
   "type": "address",
@@ -850,11 +850,11 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
         <section id="turnstile" class="doc-section">
           <div class="doc-header">
             <h2>🛡️ Turnstile</h2>
-            <p>CAPTCHA-free bot protection by Cloudflare</p>
+            <p>${t('CAPTCHA-free bot protection by Cloudflare')}</p>
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Add invisible bot protection to your forms</p>
             <pre class="code-block">{
   "type": "turnstile",
@@ -905,7 +905,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Used for wizards and grouping related fields</p>
             <pre class="code-block">{
   "type": "panel",
@@ -930,7 +930,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Create side-by-side fields (responsive)</p>
             <pre class="code-block">{
   "type": "columns",
@@ -964,7 +964,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Create tabbed interface for complex forms</p>
             <pre class="code-block">{
   "type": "tabs",
@@ -992,7 +992,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Create table-based layouts</p>
             <pre class="code-block">{
   "type": "table",
@@ -1016,7 +1016,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>HTML fieldset with legend label</p>
             <pre class="code-block">{
   "type": "fieldset",
@@ -1037,7 +1037,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Add/remove rows of structured data</p>
             <pre class="code-block">{
   "type": "datagrid",
@@ -1061,7 +1061,7 @@ export function renderFormsDocsPage(data: FormsDocsPageData): string {
           </div>
           
           <div class="field-example">
-            <h3>Basic Usage</h3>
+            <h3>${t('Basic Usage')}</h3>
             <p>Similar to Data Grid but with modal editing</p>
             <pre class="code-block">{
   "type": "editgrid",

@@ -55,7 +55,7 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
   return [
     {
       name: 'text',
-      displayName: 'Text',
+      displayName: t('Text'),
       description: 'Single-line text input for short strings, names, titles, etc.',
       category: 'Basic',
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +211,7 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
     },
     {
       name: 'number',
-      displayName: 'Number',
+      displayName: t('Number'),
       description: 'Numeric input with validation for integers and decimals',
       category: 'Basic',
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,8 +504,8 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
           configuration: {
             multiple: true,
             options: [
-              { value: 'tech', label: 'Technology' },
-              { value: 'design', label: 'Design' },
+              { value: 'tech', label: t('Technology') },
+              { value: 'design', label: t('Design') },
               { value: 'marketing', label: 'Marketing' }
             ]
           },
@@ -842,7 +842,7 @@ function renderFieldTypeCard(fieldType: FieldTypeDefinition): string {
                       onclick="copyExample('${validation.example.replace(/'/g, "\\'")}')"
                       class="ml-2 text-xs text-blue-400 hover:text-blue-300"
                     >
-                      Copy
+                      ${t('Copy')}
                     </button>
                   </div>
                 </div>

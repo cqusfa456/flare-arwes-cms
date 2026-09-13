@@ -107,7 +107,7 @@ const domainBadge = (status: string): string => {
     return `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">${t('Active')}</span>`
   }
   if (status === 'error') {
-    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text->${t('Error')}<">Error</span>`
+    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text->${t('Error')}<">${t('Error')}</span>`
   }
   if (status === 'removed') {
     return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Removed</span>`
@@ -331,7 +331,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
               </p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="triggerBuild('${escapeHtml(site.id)}', this)" class="${SECONDARY_BTN}">Build now</button>
+              <button onclick="triggerBuild('${escapeHtml(site.id)}', this)" class="${SECONDARY_BTN}">${t('Build now')}</button>
               <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="${PRIMARY_BTN}">Manage</a>
             </div>
           </div>`
@@ -368,7 +368,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
     <div class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-whi>${t('Sites')}<ext-xl/8">Sites</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-whi>${t('Sites')}<ext-xl/8">${t('Sites')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">One control plane for every website: builds, domain bindings and content.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -539,7 +539,7 @@ export function renderSiteNewPage(data: {
               <option value="">— Blank site —</option>
               ${presetOptions}
             </select>
-            <button onclick="applyPreset()" >${t('Apply')}<${SECONDARY_BTN}">Apply</button>
+            <button onclick="applyPreset()" >${t('Apply')}<${SECONDARY_BTN}">${t('Apply')}</button>
           </div>
           <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             A preset fills in the monorepo's build contract — <code>{{slug}}</code> in a command is replaced with the site slug you enter below.
@@ -550,11 +550,11 @@ export function renderSiteNewPage(data: {
       <div class="${CARD} p-6 space-y-5">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-   >${t('Name')}<   <label class="${LABEL}">Name</label>
+   >${t('Name')}<   <label class="${LABEL}">${t('Name')}</label>
             <input id="site-name" class="${INPUT}" placeholder="ARWES Docs" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Human readable label shown in the admin.</p>
           </div>
-          <d>${t('Slug')}<           <label class="${LABEL}">Slug</label>
+          <d>${t('Slug')}<           <label class="${LABEL}">${t('Slug')}</label>
             <input id="site-slug" class="${INPUT}" placeholder="docs" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">URL-safe identifier, generated from the name when left blank.</p>
           </div>
@@ -566,7 +566,7 @@ export function renderSiteNewPage(data: {
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
           </div>
-          <div class="sm:c>${t('Deploy mode')}<            <label class="${LABEL}">Deploy mode</label>
+          <div class="sm:c>${t('Deploy mode')}<            <label class="${LABEL}">${t('Deploy mode')}</label>
             <select id="site-deploy-mode" class="${INPUT}">
               ${deployModeOptions(data.deployModes, '')}
             </select>
@@ -634,13 +634,13 @@ export function renderSiteNewPage(data: {
             <code>{"blog-posts": "/blog"}</code> keeps them under <code>/blog</code>).
           </p>
         </>${t('Description')}<   <div>
-          <label class="${LABEL}">Description</label>
+          <label class="${LABEL}">${t('Description')}</label>
           <input id="site-description" class="${INPUT}" placeholder="Documentation site" />
         </div>
 
         <div class="flex items-center justify-between pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="create-result" class="text-sm"></div>
-          <div class="flex items-center gap->${t('Cancel')}<         <a href="/admin/sites" class="${SECONDARY_BTN}">Cancel</a>
+          <div class="flex items-center gap->${t('Cancel')}<         <a href="/admin/sites" class="${SECONDARY_BTN}">${t('Cancel')}</a>
             <button onclick="createSite()" class="${PRIMARY_BTN}">Register site</button>
           </div>
         </div>
@@ -930,7 +930,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <a href="/admin/sites" class="text-sm tex>${t('Sites')}<500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">Sites</a>
+            <a href="/admin/sites" class="text-sm tex>${t('Sites')}<500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">${t('Sites')}</a>
             <span class="text-zinc-300 dark:text-zinc-600">/</span>
             <h1 class="text-xl font-semibold text-zinc-950 dark:text-white">${escapeHtml(site.name)}</h1>
             ${providerBadge(site.provider)}
@@ -963,9 +963,9 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         </div>
         <dl class="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2 text-xs">
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Last triggered</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
-          <div>${t('Status')}<flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Status</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
+          <div>${t('Status')}<flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">${t('Status')}</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
           <div class="flex items->${t('Deploy mode')}<y-between gap-4">
-            <dt class="text-zinc-500 dark:text-zinc-400">Deploy mode</dt>
+            <dt class="text-zinc-500 dark:text-zinc-400">${t('Deploy mode')}</dt>
             <dd>
               <span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">${escapeHtml(deployModeLabel)}</span>
               ${site.deployMode === null ? '<span class="ml-2 text-zinc-500 dark:text-zinc-400">provider default</span>' : ''}
@@ -992,7 +992,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <div class="mt-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
-  >${t('Status')}<    <tr><th class="px-4 py-2 >${t('Validation')}<>Hostname</th><th class="px-4 py-2 font-medium">Status</th><th class="px-4 py-2 font-medium">Validation</th><th class="px-4 py-2"></th></tr>
+  >${t('Status')}<    <tr><th class="px-4 py-2 >${t('Validation')}<>Hostname</th><th class="px-4 py-2 font-medium">${t('Status')}</th><th class="px-4 py-2 font-medium">${t('Validation')}</th><th class="px-4 py-2"></th></tr>
             </thead>
             <tbody>${domainRows}</tbody>
           </table>
@@ -1011,8 +1011,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <div class="${CARD} p-6 space-y-5">
         <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Site se>${t('Name')}<</h2>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div><label class="${LABEL}">Name</lab>${t('Slug')}<put id="s-name" class="${INPUT}" value="${escapeHtml(site.name)}" /></div>
-          <div><label class="${LABEL}">Slug</label><input id="s-slug" class="${INPUT}" value="${escapeHtml(site.slug)}" /></div>
+          <div><label class="${LABEL}">${t('Name')}</lab>${t('Slug')}<put id="s-name" class="${INPUT}" value="${escapeHtml(site.name)}" /></div>
+          <div><label class="${LABEL}">${t('Slug')}</label><input id="s-slug" class="${INPUT}" value="${escapeHtml(site.slug)}" /></div>
           <div class="sm:col-span-2">
             <label class="${LABEL}">Hosting provider</label>
             <select id="s-provider" class="${INPUT}">
@@ -1025,7 +1025,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             </p>
           </div>
           <div class="sm:col-span-2">
-            <label class="${LABEL}">Deploy mode</label>
+            <label class="${LABEL}">${t('Deploy mode')}</label>
             <select id="s-deploy-mode" class="${INPUT}">
               ${deployModeOptions(data.deployModes, data.effectiveDeployMode)}
             </select>
@@ -1072,7 +1072,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <p class="text-xs text-zinc-500 dark:text-zinc-400">Build config was last pushed ${escapeHtml(fmtTime(site.buildConfigSyncedAt))}.</p>
       </>${t('Content')}<     <!-- Content -->
       <div class="${CARD} p-6">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Content</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Content')}</h2>
         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
           ${data.contentOwned} content item${data.contentOwned === 1 ? '' : 's'} owned by this site ·
           ${data.contentShared} shared item${data.contentShared === 1 ? '' : 's'} readable by every site.

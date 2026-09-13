@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import { html, raw } from 'hono/html'
 import { z } from 'zod'
@@ -216,7 +217,7 @@ adminMediaRoutes.get('/selector', async (c) => {
         <input
           type="search"
           id="media-selector-search"
-          placeholder="Search files..."
+          placeholder="${t('Search files...')}"
           class="w-full rounded-lg bg-white dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
           hx-get="/admin/media/selector"
           hx-trigger="keyup changed delay:300ms"
@@ -262,7 +263,7 @@ adminMediaRoutes.get('/selector', async (c) => {
                   onclick="selectMediaFile('${file.id}', '${file.public_url.replace(/'/g, "\\'")}', '${file.filename.replace(/'/g, "\\'")}')"
                   class="px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white rounded-lg font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  Select
+                  ${t('Select')}
                 </button>
               </div>
             </div>
@@ -691,7 +692,7 @@ adminMediaRoutes.put('/:id', async (c) => {
     if (!fileRecord) {
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          File not found
+          ${t('File not found')}
         </div>
       `)
     }
@@ -865,7 +866,7 @@ adminMediaRoutes.delete('/:id', async (c) => {
     if (!fileRecord) {
       return c.html(html`
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          File not found
+          ${t('File not found')}
         </div>
       `)
     }

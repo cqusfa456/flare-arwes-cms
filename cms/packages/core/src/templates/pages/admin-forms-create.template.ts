@@ -25,7 +25,7 @@ export function renderFormCreatePage(data: FormCreatePageData): string {
             </svg>
           </a>
           <div>
-            <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Create New Form</h1>
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Create New Form')}</h1>
             <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Enter basic information to create your form. You'll be able to add fields in the builder.</p>
           </div>
         </div>
@@ -82,7 +82,7 @@ export function renderFormCreatePage(data: FormCreatePageData): string {
             <!-- Display Name -->
             <div>
               <label for="displayName" class="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                Display Name
+                ${t('Display Name')}
                 <span class="text-red-500">*</span>
               </label>
               <input

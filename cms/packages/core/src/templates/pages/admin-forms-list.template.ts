@@ -48,7 +48,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
       },
       {
         key: 'display_name',
-        label: 'Display Name',
+        label: t('Display Name'),
         sortable: true,
         sortType: 'string'
       },
@@ -75,7 +75,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
       },
       {
         key: 'submission_count',
-        label: 'Submissions',
+        label: t('Submissions'),
         sortable: true,
         sortType: 'number',
         render: (_value: any, form: any) => {
@@ -136,7 +136,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
           if (!form || !form.id) return '<span class="text-zinc-500 dark:text-zinc-400">-</span>'
           return `
             <div class="flex items-center space-x-2">
-              <a href="/admin/forms/${form.id}/builder" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-950 dark:bg-blue-600 text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors" title="Edit Form">
+              <a href="/admin/forms/${form.id}/builder" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-950 dark:bg-blue-600 text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors" title="${t('Edit Form')}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>

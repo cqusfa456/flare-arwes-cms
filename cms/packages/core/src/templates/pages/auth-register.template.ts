@@ -82,7 +82,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label for="firstName" class="block text-sm font-medium text-zinc-300 mb-2">
-                      First Name
+                      ${t('First Name')}
                     </label>
                     <input
                       id="firstName"
@@ -95,7 +95,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                   </div>
                   <div>
                     <label for="lastName" class="block text-sm font-medium text-zinc-300 mb-2">
-                      Last Name
+                      ${t('Last Name')}
                     </label>
                     <input
                       id="lastName"

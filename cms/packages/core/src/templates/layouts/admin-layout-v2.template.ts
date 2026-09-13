@@ -730,7 +730,7 @@ function renderTopBar(pageTitle: string, user?: any, currentPath?: string): stri
                       <!-- Default (Deep Space) -->
                       <button onclick="setBackground('default')" class="bg-preview bg-gradient-to-br from-slate-900 via-gray-900 to-black h-16 rounded-lg border-2 border-white/20 hover:border-white/40 transition-all relative group">
                         <div class="absolute inset-0 bg-black/20 rounded-lg"></div>
-                        <div class="absolute bottom-1 left-2 text-xs text-white font-medium">Default</div>
+                        <div class="absolute bottom-1 left-2 text-xs text-white font-medium">${t('Default')}</div>
                       </button>
                       
                       <!-- Cosmic Blue -->

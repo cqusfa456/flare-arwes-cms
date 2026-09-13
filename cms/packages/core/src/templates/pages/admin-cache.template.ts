@@ -68,7 +68,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
-            Clear All
+            ${t('Clear All')}
           </button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
                   Requests
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Hit Rate
+                  ${t('Hit Rate')}
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Memory Hits
@@ -222,7 +222,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
       id: 'clear-all-cache-confirm',
       title: 'Clear All Cache',
       message: 'Are you sure you want to clear all cache entries? This cannot be undone.',
-      confirmText: 'Clear All',
+      confirmText: t('Clear All'),
       cancelText: t('Cancel'),
       iconColor: 'yellow',
       confirmClass: 'bg-yellow-500 hover:bg-yellow-400',
@@ -348,7 +348,7 @@ function renderPerformanceMetric(label: string, hits: number, misses: number): s
         </div>
         <div class="mt-3">
           <div class="flex items-center justify-between text-sm mb-1">
-            <span class="text-zinc-600 dark:text-zinc-400">Hit Rate</span>
+            <span class="text-zinc-600 dark:text-zinc-400">${t('Hit Rate')}</span>
             <span class="font-medium text-zinc-900 dark:text-zinc-100">${hitPercentage.toFixed(1)}%</span>
           </div>
           <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">

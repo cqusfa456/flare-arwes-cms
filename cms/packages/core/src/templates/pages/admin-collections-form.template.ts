@@ -93,7 +93,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
   const fields: FormField[] = [
     {
       name: 'displayName',
-      label: 'Display Name',
+      label: t('Display Name'),
       type: 'text',
       value: data.display_name || '',
       placeholder: 'Blog Posts',
@@ -103,7 +103,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
     },
     {
       name: 'name',
-      label: 'Collection Name',
+      label: t('Collection Name'),
       type: 'text',
       value: data.name || '',
       placeholder: 'blog_posts',
@@ -124,7 +124,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
     },
     {
       name: 'url_prefix',
-      label: 'URL Prefix',
+      label: t('URL Prefix'),
       type: 'text',
       value: data.url_prefix === null || data.url_prefix === undefined ? '' : data.url_prefix,
       placeholder: '/docs',
@@ -360,7 +360,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
                             ` : ''}
                             ${field.is_searchable ? `
                               <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-emerald-500/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-500/20 dark:ring-emerald-400/20">
-                                Searchable
+                                ${t('Searchable')}
                               </span>
                             ` : ''}
                           </div>
@@ -430,7 +430,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
                             ` : ''}
                             ${field.is_searchable ? `
                               <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-emerald-500/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-500/20 dark:ring-emerald-400/20">
-                                Searchable
+                                ${t('Searchable')}
                               </span>
                             ` : ''}
                           </div>
@@ -565,13 +565,13 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
                 class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 sm:text-sm/6"
               >
                 <option value="">Select field type...</option>
-                <option value="text">Text</option>
+                <option value="text">${t('Text')}</option>
                 <option value="slug">URL Slug</option>
                 ${data.editorPlugins?.tinymce ? '<option value="richtext">Rich Text (TinyMCE)</option>' : ''}
                 ${data.editorPlugins?.quill ? '<option value="quill">Rich Text (Quill)</option>' : ''}
                 ${data.editorPlugins?.easyMdx ? '<option value="mdxeditor">EasyMDX</option>' : ''}
                 ${data.editorPlugins?.astroEditor ? '<option value="astro">Astro</option>' : ''}
-                <option value="number">Number</option>
+                <option value="number">${t('Number')}</option>
                 <option value="boolean">Boolean</option>
                 <option value="date">${t('Date')}</option>
                 <option value="select">${t('Select')}</option>
@@ -638,7 +638,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
                 </div>
               </div>
               <div class="text-sm/6">
-                <label for="field-searchable" class="font-medium text-zinc-950 dark:text-white">Searchable</label>
+                <label for="field-searchable" class="font-medium text-zinc-950 dark:text-white">${t('Searchable')}</label>
               </div>
             </div>
           </div>

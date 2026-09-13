@@ -55,7 +55,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       },
       {
         key: 'url_prefix',
-        label: 'URL Prefix',
+        label: t('URL Prefix'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, collection: any) => {
@@ -83,7 +83,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       },
       {
         key: 'display_name',
-        label: 'Display Name',
+        label: t('Display Name'),
         sortable: true,
         sortType: 'string'
       },
@@ -112,7 +112,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       },
       {
         key: 'managed',
-        label: 'Source',
+        label: t('Source'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, collection: any) => {
@@ -122,7 +122,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                 <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
-                <span class="text-sm text-zinc-700 dark:text-zinc-300">Code</span>
+                <span class="text-sm text-zinc-700 dark:text-zinc-300">${t('Code')}</span>
               </div>
             `
           } else {
@@ -174,7 +174,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       }
     ],
     rows: data.collections,
-    emptyMessage: 'No collections found.'
+    emptyMessage: t('No collections found.')
   }
 
   const pageContent = `
@@ -182,7 +182,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Collections</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Collections')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage your content collections and their schemas</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -190,7 +190,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
             <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            New Collection
+            ${t('New Collection')}
           </a>
         </div>
       </div>
@@ -237,7 +237,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                    Search
+                    ${t('Search')}
                   </button>
                 </form>
                 <script>
@@ -280,7 +280,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                   </svg>
-                  Refresh
+                  ${t('Refresh')}
                 </button>
               </div>
             </div>
@@ -306,7 +306,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
               <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
               </svg>
-              New Collection
+              ${t('New Collection')}
             </a>
           </div>
         </div>

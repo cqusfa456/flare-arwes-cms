@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import { html } from 'hono/html'
 import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
@@ -384,7 +385,7 @@ adminLogsRoutes.post('/search', async (c) => {
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedLog.source || '-'}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedLog.formattedDate}</td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <a href="/admin/logs/${formattedLog.id}" class="text-indigo-600 hover:text-indigo-900">View</a>
+            <a href="/admin/logs/${formattedLog.id}" class="text-indigo-600 hover:text-indigo-900">${t('View')}</a>
           </td>
         </tr>
       `
