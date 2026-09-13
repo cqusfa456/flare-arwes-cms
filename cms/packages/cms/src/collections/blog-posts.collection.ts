@@ -8,8 +8,8 @@ import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'blog-posts',
-  displayName: 'Blog Posts',
-  description: 'Manage your blog posts',
+  displayName: '博客帖子',
+  description: '管理博客帖子',
   icon: '📝',
 
   schema: {

@@ -8,8 +8,8 @@ import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'docs-sections',
-  displayName: 'Docs Sections',
-  description: 'Documentation sections for organizing docs pages',
+  displayName: '文档分组',
+  description: '用于整理文档页面的分组',
 
   schema: {
     type: 'object',

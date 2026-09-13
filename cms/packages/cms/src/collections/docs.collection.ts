@@ -8,8 +8,8 @@ import type { CollectionConfig } from '@sci-fi-cms/core'
 
 export default {
   name: 'docs',
-  displayName: 'Documentation',
-  description: 'Documentation pages with markdown content',
+  displayName: '文档',
+  description: '以 Markdown 撰写的文档页面',
 
   schema: {
     type: 'object',
