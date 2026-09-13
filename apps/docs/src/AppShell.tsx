@@ -4,7 +4,6 @@ import { useMemo, type ReactNode } from 'react'
 import { Provider, createStore } from 'jotai'
 
 import { Router, usePathname } from '@/router'
-import { isRoute } from '@/router/routes'
 import { atomPathname } from '@/router/store'
 import { LayoutRoot } from '@/app/LayoutRoot'
 import { App } from '@/App'
@@ -26,19 +25,29 @@ type AppShellProps = {
   children?: ReactNode
 }
 
-// Which content the shell shows. The island's slot holds the page content Astro
-// server-rendered for CMS and blog pages; app routes have none, because their
-// content comes from React.
+// Which content the shell shows.
 //
-// The choice has to follow the *live* pathname rather than the one the document
-// was loaded with. Deciding once from the `children` prop was wrong: after a
-// client-side navigation from a CMS page to an app route the slot element still
-// existed, so `<App />` never rendered and the app page came up empty (its
-// title effect never ran either).
-const PageContent = (props: { serverContent?: ReactNode }): JSX.Element => {
+// The island's slot holds the page content Astro server-rendered for CMS pages
+// and collections; app routes have none, because their content comes from React.
+//
+// The decision follows the live pathname compared with the one this document was
+// built for: the server content belongs to that path only. Deciding from the
+// route table alone was wrong twice over — a CMS page can own an app route (the
+// front page, or a collection's index on a content-only host), and after a
+// client-side navigation the previous page's HTML must not linger.
+const PageContent = (props: {
+  serverContent?: ReactNode
+  initialPathname: string
+}): JSX.Element => {
   const pathname = usePathname()
 
-  if (props.serverContent === undefined || isRoute(pathname)) {
+  const normalize = (value: string): string =>
+    value.length > 1 ? value.replace(/\/+$/, '') : value
+
+  if (
+    props.serverContent === undefined ||
+    normalize(pathname) !== normalize(props.initialPathname)
+  ) {
     return <App />
   }
 
@@ -63,7 +72,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
     <Provider store={store}>
       <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>
         <LayoutRoot blogPath={blogPath}>
-          <PageContent serverContent={children} />
+          <PageContent serverContent={children} initialPathname={pathname} />
         </LayoutRoot>
       </Router>
     </Provider>
