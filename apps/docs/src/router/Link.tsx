@@ -21,9 +21,10 @@ const Link = (props: LinkProps): JSX.Element => {
   // On a content-only host the app's own routes live on another site, so a link
   // to one has to be absolute (and therefore a normal page load). The root is
   // excluded: on such a host `/` is the collection's index, served locally.
-  const isAppRouteElsewhere = !!appBase && isRoute(href) && href !== '/'
+  const base = appBase ? appBase.replace(/\/+$/, '') : undefined
+  const isAppRouteElsewhere = !!base && isRoute(href) && href !== '/'
   const resolvedHref =
-    isAppRouteElsewhere && href.startsWith('/') ? `${appBase!.replace(/\/+$/, '')}${href}` : href
+    base && isRoute(href) && href !== '/' && href.startsWith('/') ? `${base}${href}` : href
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>) => {

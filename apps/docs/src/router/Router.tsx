@@ -12,6 +12,12 @@ type RouterProps = {
    * content-only host (see `Link`). Undefined on the main site.
    */
   appBaseUrl?: string
+  /**
+   * Paths this build generated from CMS content. They may sit on an app route
+   * (a CMS page can own the front page), so the client router must not take them
+   * over: navigating to one is a full page load of the CMS page.
+   */
+  serverPaths?: string[]
 }
 
 // Normalize a pathname: remove trailing slashes (except for the root path)
@@ -33,7 +39,12 @@ const normalizePathname = (pathname: string): string => {
 // navigated with a full page load since their content is only available
 // in the server-rendered HTML.
 const Router = (props: RouterProps): JSX.Element => {
-  const { children, appBaseUrl } = props
+  const { children, appBaseUrl, serverPaths } = props
+
+  const serverPathSet = useMemo(
+    () => new Set((serverPaths ?? []).map(normalizePathname)),
+    [serverPaths]
+  )
 
   const [pathname, setPathname] = useAtom(atomPathname)
 
@@ -78,6 +89,13 @@ const Router = (props: RouterProps): JSX.Element => {
         return
       }
 
+      // CMS-generated paths are server-rendered, even when they sit on an app
+      // route: navigating to one has to load the page.
+      if (serverPathSet.has(normalized)) {
+        window.location.href = normalized
+        return
+      }
+
       // CMS-managed pages are not in the static routes table. They are
       // server-rendered, so navigate with a full page load.
       if (!isRoute(normalized)) {
@@ -88,7 +106,7 @@ const Router = (props: RouterProps): JSX.Element => {
       window.history.pushState({}, '', normalized)
       setPathname(normalized)
     },
-    [setPathname]
+    [setPathname, serverPathSet]
   )
 
   const navigateValue = useMemo(() => navigate, [navigate])

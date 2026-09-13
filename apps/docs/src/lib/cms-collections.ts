@@ -41,7 +41,7 @@ export type SiteRoutingInfo = {
 let routingPromise: Promise<SiteRoutingInfo> | null = null
 let collectionsPromise: Promise<CollectionPrefixes> | null = null
 
-const createClient = () =>
+const createClient = (): SciFiClient | SciFiD1Client =>
   D1
     ? new SciFiD1Client(D1, SITE)
     : new SciFiClient({ apiUrl: API_URL, apiToken: API_TOKEN, site: SITE })
@@ -109,6 +109,11 @@ export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
       }
 
       for (const collection of collections) {
+        // A collection another site claims has moved to that host: this build
+        // links to it (routing.external) instead of generating it locally.
+        if (routing.external.has(collection.name)) {
+          continue
+        }
         prefixes.set(collection.name, collection.urlPrefix)
       }
       return prefixes
@@ -138,6 +143,19 @@ export const contentPath = (prefix: string | null | undefined, slug: string): st
   const base = stripTrailing(prefix)
   const cleanSlug = String(slug).replace(/^\/+|\/+$/g, '')
   return `${base}/${cleanSlug}/`
+}
+
+/**
+ * Path a `pages` entry is published at.
+ *
+ * `index` (or `home`) is the collection's own front page — with the default empty
+ * prefix that is the site root, which is how the home page is managed in the CMS.
+ */
+export const pagePath = (slug: string, prefix: string | null | undefined): string | null => {
+  const clean = String(slug ?? '')
+  return clean === 'index' || clean === 'home'
+    ? collectionIndexPath(prefix)
+    : contentPath(prefix, clean)
 }
 
 /** Path (no trailing slash) of a collection's index: `/` when it is the site root. */

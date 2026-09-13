@@ -13,7 +13,8 @@ import {
   collectionIndexPath,
   contentPath,
   getCollectionPrefixes,
-  isAppSite
+  isAppSite,
+  pagePath
 } from '@/lib/cms-collections'
 
 // Build the static paths.
@@ -82,11 +83,7 @@ export async function getStaticPaths() {
   const pageRoutes = new Map<string, Record<string, unknown>>()
   for (const page of cmsPages) {
     const slug = String(page.data.slug ?? '')
-    // `index` (or `home`) is the collection's own front page.
-    const path =
-      slug === 'index' || slug === 'home'
-        ? collectionIndexPath(pagesPrefix)
-        : contentPath(pagesPrefix, slug)
+    const path = pagePath(slug, pagesPrefix)
 
     if (!path) {
       continue

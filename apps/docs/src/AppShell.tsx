@@ -21,6 +21,8 @@ type AppShellProps = {
    * subdomain): the shell's links to the app's own routes have to point there.
    */
   appBaseUrl?: string
+  /** Paths this build generated from CMS content; the client router leaves them alone. */
+  serverPaths?: string[]
   children?: ReactNode
 }
 
@@ -49,7 +51,7 @@ const PageContent = (props: { serverContent?: ReactNode }): JSX.Element => {
 // The `children` are the CMS-managed page content rendered by Astro
 // (SSR) and passed through the slot.
 const AppShell = (props: AppShellProps): JSX.Element => {
-  const { pathname, blogPath, appBaseUrl, children } = props
+  const { pathname, blogPath, appBaseUrl, serverPaths, children } = props
 
   const store = useMemo(() => {
     const store = createStore()
@@ -59,7 +61,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
 
   return (
     <Provider store={store}>
-      <Router appBaseUrl={appBaseUrl}>
+      <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>
         <LayoutRoot blogPath={blogPath}>
           <PageContent serverContent={children} />
         </LayoutRoot>

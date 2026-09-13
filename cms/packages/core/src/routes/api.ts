@@ -929,6 +929,8 @@ apiRoutes.route('/content', apiContentCrudRoutes)
  * build both the website and a content-only host (a blog subdomain): `data` is
  * null — always with a 200, so the build can fall back cleanly — when no site was
  * identified or the named site is unknown/inactive, and `meta.reason` says which.
+ * `data.external` lists the collections another active site has taken over, which
+ * this site must not publish locally even when it is the app site.
  * See `services/site-routing.ts` for the contract; the Astro D1 loader client
  * mirrors it for D1 builds.
  */

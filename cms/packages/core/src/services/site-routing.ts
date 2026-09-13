@@ -20,6 +20,13 @@
  * can link to the blog host and back), and the base URL of the site that builds
  * the website itself (`appBaseUrl`, for a content-only site's links home).
  *
+ * `external` is "collections published by a different active site" regardless of
+ * who is asking: a collection can only be local to a site when no other active
+ * site claims it in its `content_routes`. So an **app site** also receives
+ * `external` entries for collections another site has taken over — it must skip
+ * generating those and link to the other host instead, exactly as a content-only
+ * site does for collections it does not publish.
+ *
  * How a site's own base URL is resolved: its first active custom domain
  * (`site_domains`, primary first), else `https://<cf_project_name>.pages.dev` for
  * a `cloudflare-pages` site. A Worker without a custom domain has no derivable
@@ -45,7 +52,11 @@ export interface SiteRouting {
   domain: string | null
   /** Collection name -> prefix on this site; null means "app site". */
   contentRoutes: Record<string, string> | null
-  /** Absolute base URL of a collection published on another site, by collection name. */
+  /**
+   * Absolute base URL of a collection published on another active site, by
+   * collection name. A collection listed here is *not* published locally — even
+   * on an app site — so the build must skip it and link to this URL instead.
+   */
   external: Record<string, string>
   /** Base URL of the site that builds the website, for a content-only site's links home. */
   appBaseUrl: string | null
@@ -121,12 +132,21 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
     siteBaseUrl(candidate, domains.get(candidate.id) ?? null)
 
   const contentRoutes = parseSiteContentRoutes(site.contentRoutes)
+  // Collections that are local to this site. An app site nominally publishes
+  // every collection at the collection's own `url_prefix`, but that is exactly
+  // the case the rule inverts: a collection claimed by another active site is not
+  // built here at all — it is linked to through `external` — so `published` is
+  // deliberately only this site's *explicit* content routes, never "everything"
+  // for an app site. A collection can only be local when no other site claims it.
   const published = new Set(Object.keys(contentRoutes ?? {}))
 
-  // Collections this site does not publish, mapped to the host that does. The
-  // same site's own collections are skipped so a link never points at itself, and
-  // the first other site to claim a collection wins (a second one would be a
-  // configuration error, not something to silently override).
+  // `external` = every collection published by a *different* active site,
+  // resolved to an absolute URL on that host. This holds for a content-only site
+  // and for an app site alike, so the website skips generating a collection that
+  // has moved to its own host and links there instead. The same site's own
+  // collections are skipped so a link never points at itself, and the first other
+  // site to claim a collection wins (a second one would be a configuration error,
+  // not something to silently override).
   const external: Record<string, string> = {}
   for (const other of sites) {
     if (other.id === site.id) continue

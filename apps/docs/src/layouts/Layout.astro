@@ -1,7 +1,10 @@
 ---
+import { getCollection } from 'astro:content'
+
 import { settings } from '@/config/settings'
+import { routes } from '@/router/routes'
 import { AppShell } from '@/AppShell'
-import { collectionIndexHref, getSiteRouting } from '@/lib/cms-collections'
+import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
 
 import '@/ui/globals.css'
 
@@ -17,8 +20,22 @@ const { title, pathname } = Astro.props
 //     another host when a secondary site publishes the blog there;
 //   * a content-only host (a blog subdomain) links the app's own routes back to
 //     the main site, because it does not generate them.
-const [blogPath, routing] = await Promise.all([collectionIndexHref('blog-posts'), getSiteRouting()])
+const [blogPath, routing, prefixes] = await Promise.all([
+  collectionIndexHref('blog-posts'),
+  getSiteRouting(),
+  getCollectionPrefixes()
+])
 const appBaseUrl = routing.appBaseUrl ?? undefined
+
+// A CMS page may own a path the app also declares (the front page, most often).
+// The client router has to leave those alone, or a click would render the app's
+// version of a page the build served from the CMS.
+const cmsPages = await getCollection('pages')
+const serverPaths = cmsPages
+  .map((page) => pagePath(String(page.data.slug ?? ''), prefixes.get('pages')))
+  .filter((path): path is string => path !== null)
+  .map((path) => (path.length > 1 ? path.replace(/\/+$/, '') : path))
+  .filter((path) => (routes as readonly string[]).includes(path))
 ---
 
 <html lang="en">
@@ -57,7 +74,13 @@ const appBaseUrl = routing.appBaseUrl ?? undefined
     <title>{title}</title>
   </head>
   <body>
-    <AppShell client:load pathname={pathname} blogPath={blogPath ?? undefined} appBaseUrl={appBaseUrl}>
+    <AppShell
+      client:load
+      pathname={pathname}
+      blogPath={blogPath ?? undefined}
+      appBaseUrl={appBaseUrl}
+      serverPaths={serverPaths}
+    >
       <slot />
     </AppShell>
   </body>
