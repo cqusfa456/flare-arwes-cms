@@ -172,7 +172,7 @@ adminApiTokensRoutes.get('/create', async (c) => {
             <span>/</span>
             <span class="text-white">${t('Create')}</span>
           </div>
-          <h1 class="text-2xl font-semibold text-white">Create API Token</h1>
+          <h1 class="text-2xl font-semibold text-white">${t('Create API Token')}</h1>
           <p class="text-sm text-zinc-400 mt-1">The token value will be shown once after creation. Store it securely.</p>
         </div>
 
@@ -224,7 +224,7 @@ adminApiTokensRoutes.get('/create', async (c) => {
     `
 
     return c.html(renderAdminLayoutCatalyst({
-      title: 'Create API Token',
+      title: t('Create API Token'),
       currentPath: '/admin/api-tokens',
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       content,
@@ -251,7 +251,7 @@ adminApiTokensRoutes.post('/', async (c) => {
 
     if (!name) {
       return c.html(renderAdminLayoutCatalyst({
-        title: 'Create API Token',
+        title: t('Create API Token'),
         currentPath: '/admin/api-tokens',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
         content: `<div class="px-8 py-8"><div class="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">Token name is required.</div><a href="/admin/api-tokens/create" class="mt-4 inline-block text-blue-400 hover:text-blue-300 text-sm">← Back to form</a></div>`,
@@ -293,9 +293,9 @@ adminApiTokensRoutes.post('/', async (c) => {
           <div class="flex items-center gap-2 text-sm text-zinc-400 mb-2">
             <a href="/admin/api-tokens" class="hover:text-white transition-colors">${t('API Tokens')}</a>
             <span>/</span>
-            <span class="text-white">Token Created</span>
+            <span class="text-white">${t('Token Created')}</span>
           </div>
-          <h1 class="text-2xl font-semibold text-white">Token Created</h1>
+          <h1 class="text-2xl font-semibold text-white">${t('Token Created')}</h1>
         </div>
 
         <!-- One-time reveal box -->
@@ -380,7 +380,7 @@ adminApiTokensRoutes.post('/', async (c) => {
     `
 
     return c.html(renderAdminLayoutCatalyst({
-      title: 'Token Created',
+      title: t('Token Created'),
       currentPath: '/admin/api-tokens',
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       content,

@@ -175,7 +175,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
     selectable: false,
     rowClickable: true,
     rowClickUrl: (row: User) => `/admin/users/${row.id}/edit`,
-    emptyMessage: 'No users found'
+    emptyMessage: t('No users found')
   }
 
   const pageContent = `
@@ -183,7 +183,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">User Management</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('User Management')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage user accounts and permissions</p>
         </div>
         <div class="mt-4 sm:mt-0 flex items-center gap-x-3">

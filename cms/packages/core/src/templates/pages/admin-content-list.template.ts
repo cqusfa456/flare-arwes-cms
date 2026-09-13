@@ -80,7 +80,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     ],
     actions: [
       {
-        label: 'Advanced Search',
+        label: t('Advanced Search'),
         className: 'btn-primary',
         onclick: 'openAdvancedSearch()'
       },
@@ -256,7 +256,7 @@ export function renderContentListPage(data: ContentListPageData): string {
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Content Management')}</h1>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage and organize your content items</p>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('Manage and organize your content items')}</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <a href="/admin/content/new" class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm">

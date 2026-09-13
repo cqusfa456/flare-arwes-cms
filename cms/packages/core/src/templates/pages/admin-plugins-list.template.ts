@@ -240,8 +240,8 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
 
             <div class="flex items-center gap-3 w-full sm:w-auto">
               <select id="sort-filter" onchange="filterAndSortPlugins()" class="block w-full sm:w-auto h-9 rounded-lg border-0 py-1.5 pl-3 pr-8 text-zinc-900 ring-1 ring-inset ring-zinc-300 focus:ring-2 focus:ring-inset focus:ring-zinc-600 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700 dark:focus:ring-zinc-500 sm:text-sm sm:leading-6">
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
+                <option value="name-asc">${t('Name (A-Z)')}</option>
+                <option value="name-desc">${t('Name (Z-A)')}</option>
                 <option value="newest">Newest Installed</option>
                 <option value="updated">Recently Updated</option>
                 <option value="popular">Popularity</option>

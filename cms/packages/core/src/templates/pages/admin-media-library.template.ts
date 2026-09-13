@@ -44,7 +44,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
       <!-- Header -->
       <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div class="sm:flex-auto">
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Media Library</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Media Library')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage your media files and assets</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 flex gap-x-2">
