@@ -113,6 +113,30 @@ const run = async () => {
     (item) => item.status === 'published'
   )
 
+  // Page frames live in the CMS too: a page is wrapped in the layout it selects
+  // (`default` when it names none), so an author writes content only.
+  const layoutEntries = await client.fetchCollection('layouts').catch(() => [])
+  const layoutsByKey = new Map()
+  for (const entry of layoutEntries) {
+    const key = String(entry.data?.key ?? entry.slug ?? '')
+    const astro = entry.data?.astro
+    if (key && typeof astro === 'string' && astro.trim() !== '') {
+      layoutsByKey.set(key, astro.replace(/\s*$/, ''))
+    }
+  }
+  const usedLayouts = new Set()
+  const layoutSourceFor = (page) => {
+    const wanted = [page.data?.layout, 'default'].filter((key) => typeof key === 'string' && key)
+    for (const key of wanted) {
+      const layoutSource = layoutsByKey.get(key)
+      if (layoutSource) {
+        usedLayouts.add(key)
+        return { key, source: layoutSource }
+      }
+    }
+    return null
+  }
+
   const generated = []
   // Paths a previous run wrote, so a hand-written page file is never overwritten.
   const previouslyGenerated = new Set(cleanPrevious())
@@ -146,21 +170,44 @@ const run = async () => {
 
     // The author decides the shape:
     //   * a file that starts with `---` is the whole page and is compiled as-is;
-    //   * anything else is the page's markup, wrapped in the site layout with the
-    //     title and path the CMS recorded, so the common case needs no boilerplate.
+    //   * anything else is the page's markup, wrapped in the page frame the CMS
+    //     provides (`default` unless the page names another) so the site's style
+    //     stays consistent and the author writes content only. A layout may render
+    //     `<slot />` and receives `title` and `pathname` as props.
     const trimmed = source.replace(/^\s+/, '')
-    const contents = trimmed.startsWith('---')
-      ? source
-      : [
-          '---',
-          "import Layout from '@/layouts/Layout.astro'",
-          '---',
-          '',
-          `<Layout title=${JSON.stringify(String(item.title ?? ''))} pathname=${JSON.stringify(path)}>`,
-          source.replace(/\s*$/, ''),
-          '</Layout>',
-          ''
-        ].join('\n')
+    let contents = source
+
+    if (!trimmed.startsWith('---')) {
+      const pageTitle = String(item.title ?? '')
+      const navKey = typeof item.data?.nav === 'string' && item.data.nav ? item.data.nav : null
+      const layout = layoutSourceFor(item)
+      const navAttr = navKey ? ` navKey=${JSON.stringify(navKey)}` : ''
+
+      const imports = ["import Layout from '@/layouts/Layout.astro'"]
+      if (layout) {
+        imports.push(`import PageLayout from '@/cms-layouts/${layout.key}.astro'`)
+      }
+      imports.push("import { settings } from '@/config/settings'")
+
+      const body = source.replace(/\s*$/, '')
+      const wrapped = layout
+        ? `  <PageLayout title={title} pathname={pathname}>\n${body}\n  </PageLayout>`
+        : body
+
+      contents = [
+        '---',
+        ...imports,
+        '',
+        `const title = ${JSON.stringify(pageTitle)}`,
+        `const pathname = ${JSON.stringify(path)}`,
+        '---',
+        '',
+        `<Layout title={\`\${title} | \${settings.title}\`} pathname={pathname}${navAttr}>`,
+        wrapped,
+        '</Layout>',
+        ''
+      ].join('\n')
+    }
 
     const header = `<!-- Generated from the CMS page "${item.slug}". Edit it in Admin → Content → Pages. -->\n`
     writeFileSync(file, `${contents.replace(/\s*$/, '')}\n${header}`)
@@ -169,6 +216,21 @@ const run = async () => {
     if (verbose) {
       log(`${path} -> ${file.replace(APP_DIR, '.')}`)
     }
+  }
+
+  // Write the layouts the generated pages import.
+  const layoutFiles = []
+  for (const key of usedLayouts) {
+    const file = join(LAYOUTS_DIR, `${key}.astro`)
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(
+      file,
+      `${layoutsByKey.get(key)}\n<!-- Generated from the CMS layout "${key}". Edit it in Admin → Content → Layouts. -->\n`
+    )
+    layoutFiles.push(key)
+  }
+  if (layoutFiles.length) {
+    log(`layout file(s): ${layoutFiles.join(', ')}`)
   }
 
   // Drop files a previous run wrote that no longer exist in the CMS.

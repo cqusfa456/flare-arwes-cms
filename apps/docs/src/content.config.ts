@@ -50,4 +50,20 @@ const docsSections = defineCollection({
   })
 })
 
-export const collections = { posts, pages, docs, docsSections }
+// Menus and page frames, both managed in the CMS. Neither publishes a path of its
+// own: they configure how pages look (see src/lib/site-content.ts).
+const navigation = defineCollection({
+  loader: sciFiLoader({
+    ...source,
+    collection: 'navigation'
+  })
+})
+
+const layouts = defineCollection({
+  loader: sciFiLoader({
+    ...source,
+    collection: 'layouts'
+  })
+})
+
+export const collections = { posts, pages, docs, docsSections, navigation, layouts }

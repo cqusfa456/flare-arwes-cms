@@ -5,15 +5,22 @@ import { settings } from '@/config/settings'
 import { routes } from '@/router/routes'
 import { AppShell } from '@/AppShell'
 import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
+import { getNavigation } from '@/lib/site-content'
 
 import '@/ui/globals.css'
 
 interface LayoutProps {
   title: string
   pathname: string
+  /** Menu this page selects; the site rule picks one when it names none. */
+  navKey?: string
 }
 
-const { title, pathname } = Astro.props
+const { title, pathname, navKey } = Astro.props
+
+// The header's menu is a CMS setting (see src/lib/site-content.ts). An empty
+// result means the site's own built-in navigation is used.
+const navItems = await getNavigation(pathname, navKey)
 
 // Two CMS settings shape the shell's navigation:
 //   * the blog link follows the `blog-posts` collection's prefix, and points at
@@ -80,6 +87,7 @@ const serverPaths = cmsPages
       blogPath={blogPath ?? undefined}
       appBaseUrl={appBaseUrl}
       serverPaths={serverPaths}
+      navItems={navItems}
     >
       <slot />
     </AppShell>

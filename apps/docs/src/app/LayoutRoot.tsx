@@ -15,7 +15,11 @@ import {
 } from '@/config'
 import { Background, Header } from '@/ui'
 
-const LayoutRoot = (props: { children: ReactNode; blogPath?: string }): JSX.Element => {
+const LayoutRoot = (props: {
+  children: ReactNode
+  blogPath?: string
+  navItems?: Array<{ label: string; href: string }>
+}): JSX.Element => {
   const [isMotionEnabled] = useAtom(atomMotionEnabled)
   const [isAudioEnabled] = useAtom(atomAudioEnabled)
 
@@ -48,7 +52,7 @@ const LayoutRoot = (props: { children: ReactNode; blogPath?: string }): JSX.Elem
               <Animator combine manager="sequence">
                 <div className="relative flex-1 flex flex-col min-w-0 min-h-0">
                   <Animator combine>
-                    <Header blogPath={props.blogPath} />
+                    <Header blogPath={props.blogPath} navItems={props.navItems} />
                   </Animator>
 
                   <div className="flex-1 flex min-w-0 min-h-0">{props.children}</div>
