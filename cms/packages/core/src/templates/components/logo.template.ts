@@ -8,11 +8,15 @@ export interface LogoData {
   href?: string // Optional link URL
 }
 
+/**
+ * Type sizes for the brand, chosen against the artwork it replaced: a wordmark that
+ * stood 24px (`sm`) to 64px (`xl`) tall, so the caps of this text match it.
+ */
 const textSizeClasses = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-xl',
-  xl: 'text-2xl'
+  sm: 'text-xl',
+  md: 'text-3xl',
+  lg: 'text-4xl',
+  xl: 'text-5xl'
 }
 
 /**
@@ -24,24 +28,25 @@ const BRAND_NAME = 'Sci-Fi'
 const BRAND_SUFFIX = 'CMS'
 
 /**
- * The admin's brand: the name, set in the interface's own font.
+ * The admin's brand: the name as bold, lightly slanted type.
  *
- * It is words rather than artwork, so it follows the theme's colour and stays crisp
- * at every size. `size` picks the type size; the version badge is optional.
+ * The wordmark it replaces was a slanted heavy geometric face, so the text keeps
+ * that stance — extra-bold, tightened, skewed a few degrees — while being words, so
+ * it follows the theme's colour and stays crisp at every size.
  */
 export function renderLogo(data: LogoData = {}): string {
   const { size = 'md', variant = 'default', showVersion = true, version, className = '', href } = data
 
   const textSizeClass = textSizeClasses[size]
 
-  // Colour mapping for variants; the suffix keeps the brand accent either way.
   const textColor =
     variant === 'white' ? 'currentColor' : variant === 'dark' ? '#1f2937' : 'currentColor'
-  const accentColor = '#f6821f'
 
   const wordmark = `
-    <span class="font-semibold leading-none tracking-tight whitespace-nowrap ${textSizeClass} ${className}" style="color: ${textColor}"
-      >${BRAND_NAME}&nbsp;<span style="color: ${accentColor}">${BRAND_SUFFIX}</span></span
+    <span
+      class="inline-block font-extrabold leading-none whitespace-nowrap ${textSizeClass} ${className}"
+      style="color: ${textColor}; font-weight: 800; letter-spacing: -0.02em; transform: skewX(-8deg)"
+      >${BRAND_NAME}&nbsp;${BRAND_SUFFIX}</span
     >
   `
 

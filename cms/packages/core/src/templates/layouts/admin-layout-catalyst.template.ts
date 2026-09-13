@@ -256,7 +256,7 @@ export function renderAdminLayoutCatalyst(
 
   <!-- Additional Styles -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
     * {
       margin: 0;
