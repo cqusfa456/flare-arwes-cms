@@ -124,9 +124,12 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
       type: 'text',
       value: data.url_prefix === null || data.url_prefix === undefined ? '' : data.url_prefix,
       placeholder: '/docs',
-      readonly: data.managed,
-      helpText: 'Path prefix this collection\'s entries are published under. Leave empty to publish at the site root (e.g. /about); enter a path such as /docs to publish under it (e.g. /docs/quick-start). Collections that only group other entries can leave this empty too.',
-      className: data.managed ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-not-allowed' : ''
+      // Editable even for config-managed collections: where a collection is
+      // published is a routing decision, not part of its code-defined schema, and
+      // the site reads it from here on every build.
+      helpText:
+        "Path prefix this collection's entries are published under. Leave empty to publish at the site root (e.g. /about); enter a path such as /docs to publish under it (e.g. /docs/quick-start). A collection that only groups other entries can leave this empty too.",
+      className: ''
     }
   ]
 
