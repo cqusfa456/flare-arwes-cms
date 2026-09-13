@@ -20,13 +20,19 @@ loader 会在 `astro build` 期间请求 CMS 的公开内容接口，把结果�
 
 ## 构建时的约定
 
-构建只需要两个环境变量：
+CI 构建（由 CMS 派发的 `deploy-site.yml`）**直接读 D1**：它用当次运行铸造的 Cloudflare
+凭据调 D1 查询接口，按站点作用域取出内容。这样数据库就是唯一事实来源，构建既不依赖
+Worker 是否可达，也不会读到缓存的旧响应。取数失败会让构建**失败**，而不是发布一个
+内容为空的站点。
 
-- `PUBLIC_SCIFI_API_URL`：CMS Worker 的地址
-- `PUBLIC_SCIFI_SITE`：站点 slug（注册于 Admin → Sites），以 `X-Site` 头发送
+本地开发没有 Cloudflare 凭据，于是回退到 CMS 的公开接口，并打印一条说明：
 
-第二个变量很关键：**一旦 CMS 里注册了任何站点，未标识 `X-Site` 的构建只能看到共享内容**。
+- `PUBLIC_SCIFI_API_URL`：CMS Worker 的地址（回退路径）
+- `PUBLIC_SCIFI_SITE`：站点 slug（注册于 Admin → Sites）
+
+第二个变量很关键：**一旦 CMS 里注册了任何站点，未标识站点的构建只能看到共享内容**。
 如果站点突然渲染成空页面，先检查它。
 
-> 缺少 `PUBLIC_SCIFI_API_URL` 时 loader 会回退到 `http://localhost:8787`，抓取失败后
-> 内容集合为空——页面会"成功"构建，但内容不见了。CI 里对此有显式的前置检查。
+> 缺少 D1 凭据时 loader 会回退到 `PUBLIC_SCIFI_API_URL`；两者都没有则回退到
+> `http://localhost:8787`，抓取失败后内容集合为空——页面会"成功"构建，但内容不见了。
+> CI 里对 D1 凭据有显式的前置检查。
