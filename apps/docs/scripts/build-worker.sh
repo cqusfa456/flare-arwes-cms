@@ -1,22 +1,26 @@
 #!/bin/sh
-# Full monorepo build for the docs Worker.
+# Full monorepo build for the docs site.
 #
-# This is the `build_command` for the Cloudflare Workers Builds trigger
-# (root_directory = "/"):
+# This is the site's recorded `build_command` (Admin → Sites in the CMS). The CMS
+# dispatches .github/workflows/deploy-site.yml with it, so the build runs in
+# GitHub Actions and the workflow uploads the output directly:
 #
 #   build_command  : sh ./apps/docs/scripts/build-worker.sh
-#   deploy_command : cd apps/docs && ../../cms/packages/cms/node_modules/.bin/wrangler deploy
+#   deploy_command : wrangler pages deploy apps/docs/build --project-name=...  (cloudflare-pages)
+#                    wrangler deploy                                           (cloudflare-worker)
 #
-# The order matters and mirrors what the removed `deploy-docs` job in
-# .github/workflows/deploy.yml used to do, because apps/docs consumes build
-# output from two other workspaces:
+# The order matters, because apps/docs consumes build output from two other
+# workspaces:
 #
 #   1. cms workspace            → @sci-fi-cms/core and @sci-fi-cms/astro (file: dep)
 #   2. ARWES packages workspace → @arwes/* consumed via workspace links
 #   3. apps/docs                → Astro build into apps/docs/build
 #
-# Building the site on Cloudflare means no site build lives in GitHub Actions
-# anymore; only the CMS Worker is deployed from there.
+# Step 3 is where content enters. The Astro content loader fetches published
+# content from the CMS API (PUBLIC_SCIFI_API_URL / PUBLIC_SCIFI_SITE, provided by
+# the workflow) and bakes it into static HTML; the CMS Worker answers that API
+# from D1. The browser therefore never queries the CMS or D1, and no page content
+# is assembled at runtime.
 
 set -e
 
