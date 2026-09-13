@@ -18,22 +18,32 @@ const posts = (await getCollection('pages')).sort(
 <Layout title={`Blog | ${settings.title}`} pathname="/blog">
   <div className="flex-1 overflow-y-auto p-4 min-w-0 min-h-0 md:p-8">
     <div className="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg">
-      <h1 className="text-3xl font-bold">Blog</h1>
-      {posts.length === 0 && <p className="opacity-70">No posts yet.</p>}
-      <ul className="flex flex-col gap-5">
+      {/*
+        Theme colours, not the document default: this page is outside the prose
+        container, so unstyled text inherits black on a black background.
+      */}
+      <h1 class="font-header text-size-2 text-primary-main-3">Blog</h1>
+      {posts.length === 0 && <p class="text-primary-low-2">No posts yet.</p>}
+      <ul class="flex flex-col gap-5">
         {
           posts.map((post) => (
-            <li key={post.data.slug} className="flex flex-col gap-1">
-              <a href={`/blog/${post.data.slug}/`} class="text-lg font-medium underline">
+            <li key={post.data.slug} class="flex flex-col gap-1">
+              <a
+                href={`/blog/${post.data.slug}/`}
+                class="font-header text-size-5 text-secondary-low-2 hover:text-secondary-high-3"
+              >
                 {post.data.title}
               </a>
               {post.data._publishedAt && (
-                <time class="opacity-60 text-sm" datetime={post.data._publishedAt.toISOString()}>
+                <time
+                  class="font-code text-size-10 text-primary-low-2"
+                  datetime={post.data._publishedAt.toISOString()}
+                >
                   {post.data._publishedAt.toISOString().slice(0, 10)}
                 </time>
               )}
               {post.data.meta_description && (
-                <p class="opacity-70 text-sm">{post.data.meta_description}</p>
+                <p class="text-primary-low-2 text-size-8">{post.data.meta_description}</p>
               )}
             </li>
           ))

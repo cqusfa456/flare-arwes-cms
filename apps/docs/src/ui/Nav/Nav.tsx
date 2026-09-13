@@ -34,19 +34,58 @@ const List = (props: ListProps): JSX.Element => {
 }
 
 type ItemProps = {
-  href: string
+  /**
+   * Destination. Omitted for a row that groups other rows without being a link
+   * itself (a CMS documentation section), which then renders as themed text
+   * instead of an anchor.
+   */
+  href?: string
   icon?: ReactNode
   text: ReactNode
   children?: ReactNode
   onLink?: () => void
+  /**
+   * Pathname to compare against, when the caller is rendered in a different
+   * React root than the app shell and therefore cannot read the router state
+   * (the CMS navigation island is passed the pathname by Astro).
+   */
+  pathname?: string
 }
 
 const Item = (props: ItemProps): JSX.Element => {
-  const { href, icon, text, children, onLink } = props
+  const { href, icon, text, children, onLink, pathname: pathnameProp } = props
 
-  const pathname = usePathname()
-  const matches = pathname.startsWith(href)
-  const active = pathname === href
+  const routerPathname = usePathname()
+  const pathname = pathnameProp ?? routerPathname
+  const matches = !!href && pathname.startsWith(href)
+  const active = !!href && pathname === href
+
+  const content = (
+    <div
+      className={cx(
+        'flex-1 flex flex-row items-center gap-2 px-4 py-2',
+        active && 'bg-secondary-main-3/[0.05]'
+      )}
+      style={{
+        clipPath: styleFrameClipOctagon({
+          leftTop: false,
+          leftBottom: false,
+          squareSize: theme.space(2)
+        })
+      }}
+    >
+      {icon}
+      {text}
+    </div>
+  )
+
+  const linkClassName = cx(
+    'flex font-cta text-size-9',
+    'transition-all ease-out duration-200',
+    !href && 'text-primary-main-3',
+    matches && 'text-secondary-main-4 hover:text-secondary-high-2',
+    !!href && !matches && 'text-primary-main-4 hover:text-primary-high-2'
+  )
 
   return (
     <li className="flex flex-col">
@@ -64,33 +103,13 @@ const Item = (props: ItemProps): JSX.Element => {
             }
           }}
         >
-          <Link
-            className={cx(
-              'flex font-cta text-size-9',
-              'transition-all ease-out duration-200',
-              !matches && 'text-primary-main-4 hover:text-primary-high-2',
-              matches && 'text-secondary-main-4 hover:text-secondary-high-2'
-            )}
-            href={href}
-            onClick={onLink}
-          >
-            <div
-              className={cx(
-                'flex-1 flex flex-row items-center gap-2 px-4 py-2',
-                active && 'bg-secondary-main-3/[0.05]'
-              )}
-              style={{
-                clipPath: styleFrameClipOctagon({
-                  leftTop: false,
-                  leftBottom: false,
-                  squareSize: theme.space(2)
-                })
-              }}
-            >
-              {icon}
-              {text}
-            </div>
-          </Link>
+          {href ? (
+            <Link className={linkClassName} href={href} onClick={onLink}>
+              {content}
+            </Link>
+          ) : (
+            <div className={linkClassName}>{content}</div>
+          )}
         </Animated>
       </Animator>
 
@@ -164,8 +183,15 @@ const NavRoot = (props: NavSectionProps): JSX.Element => {
         <NavDocs onLink={onLink} />
       </Item>
       <Item href="/demos" icon={<IconDemos />} text="Demos" onLink={onLink} />
-      <Item href={settings.apps.play.url} icon={<IconPlay />} text="Play" onLink={onLink} />
-      <Item href={settings.apps.perf.url} icon={<IconPerf />} text="Perf" onLink={onLink} />
+      {/* The Playground and Performance apps are separate deployments. Without a
+          URL there is nothing to link to, so the row is omitted instead of
+          pointing at a path this site does not serve. */}
+      {settings.apps.play.url && (
+        <Item href={settings.apps.play.url} icon={<IconPlay />} text="Play" onLink={onLink} />
+      )}
+      {settings.apps.perf.url && (
+        <Item href={settings.apps.perf.url} icon={<IconPerf />} text="Perf" onLink={onLink} />
+      )}
     </Item>
   )
 }
@@ -189,3 +215,7 @@ const Nav = memo((props: NavProps): JSX.Element => {
 })
 
 export { Nav }
+// The row and list are exported so CMS-managed navigation (see CmsDocsNav) is
+// rendered with exactly the same theme colours, octagon clip and nesting as the
+// static app navigation, instead of a second, plainer style.
+export { Item as NavItem, List as NavList }

@@ -1,8 +1,7 @@
 'use client'
 
-import { memo } from '@arwes/react'
-
-import { Link, usePathname } from '@/router'
+import { Animator, memo } from '@arwes/react'
+import { NavItem, NavList } from '@/ui'
 
 export type CmsNavDoc = {
   slug: string
@@ -28,16 +27,20 @@ type CmsDocsNavProps = {
    * the hook stays as the fallback.
    */
   pathname?: string
+  className?: string
 }
 
 // Sidebar for CMS-managed documentation. The links come from the CMS (docs +
 // docs-sections), not from the app's static route list, so adding a page in the
-// admin is enough to make it appear here. Rendered with the router's Link, which
-// is a real anchor, so a CMS path that the client router does not know still
-// opens (with a full page load).
+// admin is enough to make it appear here.
+//
+// It is built from the same NavItem/NavList primitives as the static app
+// navigation, so it keeps the theme colours, the octagon clipped rows, the
+// dashed nested list and the flicker animation. The rows used to be plain
+// markup with only opacity utilities, which inherited the document colour —
+// black text on a black background.
 const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
-  const { docs, sections = [], pathname: pathnameProp } = props
-  const pathname = usePathname()
+  const { docs, sections = [], pathname, className } = props
 
   const bySection = new Map<string, CmsNavDoc[]>()
   for (const doc of docs) {
@@ -47,12 +50,14 @@ const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
     bySection.set(key, list)
   }
 
+  const byOrder = (a: CmsNavDoc, b: CmsNavDoc): number => (a.order ?? 0) - (b.order ?? 0)
+
   const groups: Array<{ key: string; label?: string; docs: CmsNavDoc[] }> = []
 
   for (const section of [...sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
     const list = bySection.get(section.slug)
     if (list && list.length > 0) {
-      groups.push({ key: section.slug, label: section.name, docs: list })
+      groups.push({ key: section.slug, label: section.name, docs: [...list].sort(byOrder) })
       bySection.delete(section.slug)
     }
   }
@@ -61,40 +66,35 @@ const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
   // becomes unreachable just because its section is missing from the CMS.
   for (const [key, list] of bySection) {
     if (list.length > 0) {
-      groups.push({ key: key || '_', label: undefined, docs: list })
+      groups.push({ key: key || '_', docs: [...list].sort(byOrder) })
     }
   }
 
-  const current = (pathnameProp ?? pathname).replace(/\/+$/, '')
-
   return (
-    <nav className="flex flex-col gap-5 w-full text-sm">
-      {groups.map((group) => (
-        <div key={group.key} className="flex flex-col gap-2">
-          {group.label && (
-            <div className="font-bold uppercase tracking-wide opacity-70">{group.label}</div>
-          )}
-          <ul className="flex flex-col gap-1">
-            {[...group.docs]
-              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              .map((doc) => {
-                const href = `/docs/${doc.slug}`
-                const active = current === href
-                return (
-                  <li key={doc.slug}>
-                    <Link
-                      href={href}
-                      className={active ? 'underline opacity-100' : 'opacity-80 hover:opacity-100'}
-                    >
-                      {doc.title}
-                    </Link>
-                  </li>
-                )
-              })}
-          </ul>
-        </div>
-      ))}
-    </nav>
+    <Animator combine manager="stagger" duration={{ stagger: 0.015 }}>
+      <NavList className={className}>
+        {groups.map((group) => {
+          const items = group.docs.map((doc) => (
+            <NavItem
+              key={doc.slug}
+              href={`/docs/${doc.slug}`}
+              text={doc.title}
+              pathname={pathname}
+            />
+          ))
+
+          // A group without a name from the CMS still renders its links, just
+          // without the parent row.
+          return group.label ? (
+            <NavItem key={group.key} text={group.label}>
+              {items}
+            </NavItem>
+          ) : (
+            items
+          )
+        })}
+      </NavList>
+    </Animator>
   )
 })
 

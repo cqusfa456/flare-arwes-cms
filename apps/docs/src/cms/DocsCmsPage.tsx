@@ -40,9 +40,23 @@ const DocsCmsPage = (props: DocsCmsPageProps): JSX.Element => {
     }
   }
 
+  // Most CMS documents open with their own `# Title`, which the markdown
+  // renderer already produced as an `<h1>`. Rendering the wrapper title as well
+  // printed the heading twice, so it is only used when the content lacks one.
+  const contentHasTitle = /^\s*<h1[\s>]/i.test(contentHtml)
+
   return (
-    <LayoutDevelop nav={<CmsDocsNav sections={sections} docs={docs} pathname={pathname} />}>
-      <h1>{title}</h1>
+    <LayoutDevelop
+      nav={
+        <CmsDocsNav
+          sections={sections}
+          docs={docs}
+          pathname={pathname}
+          className="mb-auto"
+        />
+      }
+    >
+      {!contentHasTitle && <h1>{title}</h1>}
       <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
     </LayoutDevelop>
   )

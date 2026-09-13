@@ -68,6 +68,26 @@ export const tailwind: Config = {
             lineHeight: 1.4,
             color: theme.colors.primary.low(2),
 
+            // Tailwind Typography's own defaults for these variables are near
+            // black (bold was #111827, markers and captions #6b7280), and they
+            // are what elements without an explicit colour above resolve to —
+            // so bold text inside CMS markdown was invisible on the background.
+            // Every variable is themed, not just the ones a rule happens to
+            // override, so nothing can fall back to a dark default.
+            '--tw-prose-body': theme.colors.primary.low(2),
+            '--tw-prose-headings': theme.colors.primary.main(3),
+            '--tw-prose-lead': theme.colors.primary.low(3),
+            '--tw-prose-links': theme.colors.secondary.low(2),
+            '--tw-prose-bold': theme.colors.primary.high(2),
+            '--tw-prose-counters': theme.colors.primary.main(3),
+            '--tw-prose-bullets': theme.colors.primary.main(3),
+            '--tw-prose-quotes': theme.colors.primary.low(2),
+            '--tw-prose-captions': theme.colors.primary.low(3),
+            '--tw-prose-kbd': theme.colors.primary.main(3),
+            '--tw-prose-code': 'inherit',
+            '--tw-prose-pre-code': theme.colors.primary.low(1),
+            '--tw-prose-pre-bg': theme.colors.primary.main(10),
+
             'h1,h2,h3,h4,h5,h6': {
               fontFamily: theme.fontFamily.header.join(),
               fontWeight: 300,
