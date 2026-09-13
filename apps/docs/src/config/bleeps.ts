@@ -12,6 +12,20 @@ export type BleepNames =
   | 'hover'
   | 'assemble'
 
+// The sample files that actually ship with this repository. The other ARWES
+// website audio files are licensed for that site only — see the README in
+// static/assets/sounds — so they are not in the repository and must not be
+// referenced here: every page load requested them (webm, then mp3), got a 404
+// for each, and played nothing.
+type SampleName = 'click' | 'type' | 'info' | 'error'
+
+type BleepSources = NonNullable<BleepsProviderSettings<BleepNames>['bleeps']>[BleepNames]['sources']
+
+const sample = (name: SampleName): BleepSources => [
+  { src: `/assets/sounds/${name}.webm`, type: 'audio/webm' },
+  { src: `/assets/sounds/${name}.mp3`, type: 'audio/mpeg' }
+]
+
 export const bleepsSettings: BleepsProviderSettings<BleepNames> = {
   master: { volume: 0.5 },
   categories: {
@@ -21,84 +35,56 @@ export const bleepsSettings: BleepsProviderSettings<BleepNames> = {
     notification: { volume: 1 }
   },
   bleeps: {
-    // Background bleeps.
+    // Background bleeps. "hover" has no sample of its own; the short click is
+    // the closest one that ships.
     hover: {
       category: 'background',
-      sources: [
-        { src: '/assets/sounds/hover.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/hover.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('click')
     },
 
-    // Transition bleeps.
+    // Transition bleeps. "intro" is played on the home page, so it maps to a
+    // sample rather than being dropped.
     intro: {
       category: 'transition',
-      sources: [
-        { src: '/assets/sounds/intro.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/intro.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('info')
     },
     content: {
       category: 'transition',
-      sources: [
-        { src: '/assets/sounds/content.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/content.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('type')
     },
     type: {
       category: 'transition',
-      sources: [
-        { src: '/assets/sounds/type.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/type.mp3', type: 'audio/mpeg' }
-      ],
+      sources: sample('type'),
       loop: true
     },
     assemble: {
       category: 'transition',
-      sources: [
-        { src: '/assets/sounds/assemble.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/assemble.mp3', type: 'audio/mpeg' }
-      ],
+      sources: sample('type'),
       loop: true
     },
 
     // Interaction bleeps.
     click: {
       category: 'interaction',
-      sources: [
-        { src: '/assets/sounds/click.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/click.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('click')
     },
     open: {
       category: 'interaction',
-      sources: [
-        { src: '/assets/sounds/open.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/open.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('click')
     },
     close: {
       category: 'interaction',
-      sources: [
-        { src: '/assets/sounds/close.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/close.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('click')
     },
 
     // Notification bleeps.
     info: {
       category: 'notification',
-      sources: [
-        { src: '/assets/sounds/info.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/info.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('info')
     },
     error: {
       category: 'notification',
-      sources: [
-        { src: '/assets/sounds/error.webm', type: 'audio/webm' },
-        { src: '/assets/sounds/error.mp3', type: 'audio/mpeg' }
-      ]
+      sources: sample('error')
     }
   }
 }
