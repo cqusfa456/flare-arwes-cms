@@ -47,7 +47,7 @@ export function renderTable<T = any>(data: TableData<T>): string {
           <thead>
             <tr>
               ${data.selectable ? `
-                <th class="px-4 py-3.5 text-center sm:pl-0">
+                <th class="px-4 py-3.5 text-center whitespace-nowrap sm:pl-0">
                   <div class="flex items-center justify-center">
                     <div class="group grid size-4 grid-cols-1">
                       <input type="checkbox" id="select-all-${tableId}" class="col-start-1 row-start-1 appearance-none rounded border border-zinc-400 dark:border-zinc-600 bg-white dark:bg-white/5 checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-zinc-200 dark:disabled:border-white/5 disabled:bg-zinc-100 dark:disabled:bg-white/10 disabled:checked:bg-white/10 forced-colors:appearance-auto row-checkbox" />
@@ -63,10 +63,10 @@ export function renderTable<T = any>(data: TableData<T>): string {
                 const isFirst = index === 0 && !data.selectable
                 const isLast = index === data.columns.length - 1
                 return `
-                <th class="px-4 py-3.5 text-left text-sm font-semibold text-zinc-950 dark:text-white ${isFirst ? 'sm:pl-0' : ''} ${isLast ? 'sm:pr-0' : ''} ${column.className || ''}">
+                <th class="px-4 py-3.5 text-left text-sm font-semibold whitespace-nowrap text-zinc-950 dark:text-white ${isFirst ? 'sm:pl-0' : ''} ${isLast ? 'sm:pr-0' : ''} ${column.className || ''}">
                   ${column.sortable ? `
                     <button
-                      class="flex items-center gap-x-2 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors sort-btn text-left"
+                      class="flex items-center gap-x-2 whitespace-nowrap hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors sort-btn text-left"
                       data-column="${column.key}"
                       data-sort-type="${column.sortType || 'string'}"
                       data-sort-direction="none"

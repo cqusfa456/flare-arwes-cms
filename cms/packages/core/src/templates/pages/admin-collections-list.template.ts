@@ -37,6 +37,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         label: t('Name'),
         sortable: true,
         sortType: 'string',
+        className: 'whitespace-nowrap',
         render: (_value: any, collection: any) => `
             <div class="flex items-center gap-2 ml-2">
                 <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 text-sm font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
@@ -58,6 +59,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         label: t('URL Prefix'),
         sortable: true,
         sortType: 'string',
+        className: 'whitespace-nowrap',
         render: (_value: any, collection: any) => {
           const prefix = collection.url_prefix
 
@@ -85,7 +87,8 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         key: 'display_name',
         label: t('Display Name'),
         sortable: true,
-        sortType: 'string'
+        sortType: 'string',
+        className: 'whitespace-nowrap'
       },
       {
         key: 'description',
@@ -99,6 +102,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         label: 'Fields',
         sortable: true,
         sortType: 'number',
+        className: 'whitespace-nowrap',
         render: (_value: any, collection: any) => {
           const count = collection.field_count || 0
           return `
@@ -115,6 +119,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         label: t('Source'),
         sortable: true,
         sortType: 'string',
+        className: 'whitespace-nowrap',
         render: (_value: any, collection: any) => {
           if (collection.managed) {
             return `
@@ -143,7 +148,8 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
         key: 'formattedDate',
         label: t('Created'),
         sortable: true,
-        sortType: 'date'
+        sortType: 'date',
+        className: 'whitespace-nowrap'
       },
       {
         key: 'actions',
