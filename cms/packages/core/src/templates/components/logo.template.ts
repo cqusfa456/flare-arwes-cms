@@ -8,13 +8,6 @@ export interface LogoData {
   href?: string // Optional link URL
 }
 
-const sizeClasses = {
-  sm: 'h-6 w-auto',
-  md: 'h-8 w-auto',
-  lg: 'h-12 w-auto',
-  xl: 'h-16 w-auto'
-}
-
 const textSizeClasses = {
   sm: 'text-sm',
   md: 'text-base',
@@ -24,46 +17,31 @@ const textSizeClasses = {
 
 /**
  * The name the admin introduces itself with. It is the CMS's own name, not the
- * `siteName` setting (which names the site the content belongs to), so the wordmark
+ * `siteName` setting (which names the site the content belongs to), so the brand
  * reads the same everywhere it is rendered.
  */
 const BRAND_NAME = 'Sci-Fi'
 const BRAND_SUFFIX = 'CMS'
 
+/**
+ * The admin's brand: the name, set in the interface's own font.
+ *
+ * It is words rather than artwork, so it follows the theme's colour and stays crisp
+ * at every size. `size` picks the type size; the version badge is optional.
+ */
 export function renderLogo(data: LogoData = {}): string {
-  const {
-    size = 'md',
-    variant = 'default',
-    showText = true,
-    showVersion = true,
-    version,
-    className = '',
-    href
-  } = data
+  const { size = 'md', variant = 'default', showVersion = true, version, className = '', href } = data
 
-  const sizeClass = sizeClasses[size]
   const textSizeClass = textSizeClasses[size]
 
-  // Color mapping for variants
+  // Colour mapping for variants; the suffix keeps the brand accent either way.
   const textColor =
     variant === 'white' ? 'currentColor' : variant === 'dark' ? '#1f2937' : 'currentColor'
-  const sparkColor = '#f6821f'
+  const accentColor = '#f6821f'
 
-  // The mark: a frame with a lit core inside. Drawn rather than lettered, so it
-  // stays crisp at every size and needs no font.
-  const logoSvg = `
-    <svg class="${sizeClass} ${className}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 1.9 21.1 7.05v10.1L12 22.3 2.9 17.15V7.05z" stroke="${textColor}" stroke-width="1.3" stroke-linejoin="round" opacity="0.55"/>
-      <path d="M12 6.1 17 8.95v5.7L12 17.5 7 14.65v-5.7z" fill="${sparkColor}"/>
-      <path d="M12 9.4 14.5 10.85v2.9L12 15.2 9.5 13.75v-2.9z" fill="${textColor}"/>
-    </svg>
-  `
-
-  // The wordmark is set in text: it is the product's name, and keeping it out of
-  // the artwork means it follows the interface's font and colour.
   const wordmark = `
-    <span class="font-semibold leading-none tracking-tight whitespace-nowrap ${textSizeClass}" style="color: inherit"
-      >${BRAND_NAME}&nbsp;<span style="color: ${sparkColor}">${BRAND_SUFFIX}</span></span
+    <span class="font-semibold leading-none tracking-tight whitespace-nowrap ${textSizeClass} ${className}" style="color: ${textColor}"
+      >${BRAND_NAME}&nbsp;<span style="color: ${accentColor}">${BRAND_SUFFIX}</span></span
     >
   `
 
@@ -80,15 +58,12 @@ export function renderLogo(data: LogoData = {}): string {
   `
       : ''
 
-  const logoContent = showText
-    ? `
-    <div class="flex items-center gap-2 ${className}">
-      ${logoSvg}
+  const logoContent = `
+    <div class="flex items-center gap-2">
       ${wordmark}
       ${versionBadge}
     </div>
   `
-    : logoSvg
 
   // Wrap in link if href is provided
   if (href) {
