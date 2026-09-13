@@ -18,13 +18,17 @@ export const securityHeadersMiddleware = () => {
 
     // CSP: allow inline styles/scripts (needed for admin UI templates),
     // images from self + data URIs + Cloudflare Images, fonts from bunny.net
+    //
+    // esm.sh serves the ES modules the astro-editor plugin's CodeMirror editor
+    // loads; without it here the browser blocks every module and the editor
+    // silently falls back to a plain textarea.
     c.header('Content-Security-Policy', [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com https://esm.sh",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://maxcdn.bootstrapcdn.com https://fonts.bunny.net https://fonts.googleapis.com",
       "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com",
       "img-src 'self' data: blob: https://imagedelivery.net https://*.r2.dev",
-      "connect-src 'self'",
+      "connect-src 'self' https://esm.sh",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'"
