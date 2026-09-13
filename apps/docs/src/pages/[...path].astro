@@ -35,7 +35,8 @@ export async function getStaticPaths() {
       cmsPage: {
         title: page.data.title,
         contentHtml: md.render(String(page.data.content ?? '')),
-        metaDescription: page.data.meta_description
+        metaDescription: page.data.meta_description,
+        publishedAt: page.data.published_at
       }
     }
   }))
