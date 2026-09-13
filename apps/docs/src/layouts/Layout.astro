@@ -8,7 +8,7 @@ import CmsLayout from '@/components/CmsLayout.astro'
 import CmsComponent from '@/components/CmsComponent.astro'
 import { CONTENT_ELEMENT_ID } from '@/lib/page-content'
 import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
-import { getLayout, getNavigation } from '@/lib/site-content'
+import { getLayout, getMenu, getNavigation } from '@/lib/site-content'
 
 import '@/ui/globals.css'
 
@@ -50,6 +50,10 @@ const layoutEntry = await getLayout(layout)
 // The header's menu is a CMS setting (see src/lib/site-content.ts). An empty
 // result means the site's own built-in navigation is used.
 const navItems = await getNavigation(pathname, navKey)
+
+// The header's own links (the right-hand side) are the same on every page: they are
+// a menu of their own, edited with the rest of the chrome.
+const actionItems = await getMenu('links')
 
 // The navigation bar is a shared component too, but it belongs in the header —
 // that is where a menu sits on this site, on every page — so the site layout hands
@@ -187,6 +191,7 @@ const serverPaths = cmsPages
       appBaseUrl={appBaseUrl}
       serverPaths={serverPaths}
       navItems={navItems}
+      actionItems={actionItems}
       hideMenu={hideMenu}
       hasServerContent={!!hasServerContent}
     >

@@ -51,14 +51,39 @@ interface HeaderProps {
    * `navItems`.
    */
   navContent?: ReactNode
+  /**
+   * Links for the right-hand side, from the CMS `links` component. Empty means the
+   * site's built-in links are used.
+   */
+  actionItems?: Array<{ label: string; href: string; icon?: string }>
   /** Set when the page's layout renders the chrome: no menu from the shell. */
   hideMenu?: boolean
 }
 
 const HEIGHT_CLASS = 'h-10 md:h-12'
 
+/** Icons a CMS link may ask for, by the name it gives in its `icon` field. */
+const ACTION_ICONS: Record<string, JSX.Element> = {
+  sponsor: <Heart />,
+  github: <Github />,
+  x: <X />,
+  discord: <Discord />,
+  docs: <Page />,
+  blog: <Post />,
+  demos: <CollageFrame />
+}
+
+/** The links the site ships with; the CMS `links` menu replaces them. */
+const DEFAULT_ACTION_LINKS: Array<{ label: string; href: string; icon?: string }> = [
+  { label: 'Sponsor', href: 'https://github.com/sponsors/romelperez', icon: 'sponsor' },
+  { label: 'GitHub', href: 'https://github.com/arwes/arwes', icon: 'github' },
+  { label: 'X', href: 'https://x.com/arwesjs', icon: 'x' },
+  { label: 'Discord', href: 'https://discord.gg/s5sbTkw', icon: 'discord' }
+]
+
 const Header = memo((props: HeaderProps): JSX.Element => {
-  const { className, animated, blogPath, navItems, navContent, hideMenu } = props
+  const { className, animated, blogPath, navItems, navContent, actionItems, hideMenu } = props
+  const actionLinks = actionItems && actionItems.length > 0 ? actionItems : DEFAULT_ACTION_LINKS
   const hasCmsNav = !navContent && !!navItems && navItems.length > 0
   const hasNavContent = !!navContent
 
@@ -319,52 +344,43 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                       </MenuItem>
                     </Animator>
                   </Menu>
+                  {/*
+                    The right-hand links are a CMS component too (Admin → Content →
+                    组件 → links): the shell shows the menu it publishes, and falls back
+                    to the links the site ships with when there is none.
+                  */}
                   <Menu className={HEIGHT_CLASS}>
-                    <Animator>
-                      <MenuItem className="group hover:!text-fuchsia-300" animated={['flicker']}>
-                        <a
-                          className="!gap-0 group-hover:text-fuchsia-300"
-                          href="https://github.com/sponsors/romelperez"
-                          target="sponsor"
-                        >
-                          <Heart />
-                          <div
-                            className={cx(
-                              'grid grid-flow-row grid-cols-[0fr]',
-                              'transition-all ease-out duration-200',
-                              'group-hover:grid-cols-[1fr] group-hover:pl-2'
-                            )}
+                    {actionLinks.map((item) => {
+                      const isSponsor = item.icon === 'sponsor'
+                      return (
+                        <Animator key={`${item.label}-${item.href}`}>
+                          <MenuItem
+                            className={cx(isSponsor && 'group hover:!text-fuchsia-300')}
+                            animated={['flicker']}
                           >
-                            <div className="overflow-hidden">Sponsor</div>
-                          </div>
-                        </a>
-                      </MenuItem>
-                    </Animator>
-                    <Animator>
-                      <MenuItem animated={['flicker']}>
-                        <a
-                          href="https://github.com/arwes/arwes"
-                          target="github"
-                          title="Go to Github"
-                        >
-                          <Github />
-                        </a>
-                      </MenuItem>
-                    </Animator>
-                    <Animator>
-                      <MenuItem animated={['flicker']}>
-                        <a href="https://x.com/arwesjs" target="twitter" title="Go to X (Twitter)">
-                          <X />
-                        </a>
-                      </MenuItem>
-                    </Animator>
-                    <Animator>
-                      <MenuItem animated={['flicker']}>
-                        <a href="https://discord.gg/s5sbTkw" target="discord" title="Go to Discord">
-                          <Discord />
-                        </a>
-                      </MenuItem>
-                    </Animator>
+                            <a
+                              className={cx('!gap-0', isSponsor && 'group-hover:text-fuchsia-300')}
+                              href={item.href}
+                              target={item.icon ?? item.label.toLowerCase()}
+                              title={item.label}
+                            >
+                              {ACTION_ICONS[item.icon ?? item.label.toLowerCase()] ?? null}
+                              {isSponsor && (
+                                <div
+                                  className={cx(
+                                    'grid grid-flow-row grid-cols-[0fr]',
+                                    'transition-all ease-out duration-200',
+                                    'group-hover:grid-cols-[1fr] group-hover:pl-2'
+                                  )}
+                                >
+                                  <div className="overflow-hidden">{item.label}</div>
+                                </div>
+                              )}
+                            </a>
+                          </MenuItem>
+                        </Animator>
+                      )
+                    })}
                   </Menu>
 
                   <Menu className={HEIGHT_CLASS}>

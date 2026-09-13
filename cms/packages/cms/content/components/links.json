@@ -1,0 +1,10 @@
+{
+  "key": "links",
+  "name": "Header links (right)",
+  "items": [
+    { "label": "Sponsor", "href": "https://github.com/sponsors/romelperez", "icon": "sponsor" },
+    { "label": "GitHub", "href": "https://github.com/arwes/arwes", "icon": "github" },
+    { "label": "X", "href": "https://x.com/arwesjs", "icon": "x" },
+    { "label": "Discord", "href": "https://discord.gg/s5sbTkw", "icon": "discord" }
+  ]
+}

@@ -17,7 +17,12 @@
  */
 import { getCollection } from 'astro:content'
 
-export type NavItem = { label: string; href: string }
+export type NavItem = {
+  label: string
+  href: string
+  /** Icon the shell should show, e.g. `github`; empty renders the label only. */
+  icon?: string
+}
 
 /** Key of the menu a path uses when the page names none. */
 export const defaultNavKey = (pathname: string): string =>
@@ -34,7 +39,11 @@ const parseItems = (raw: unknown): NavItem[] => {
     }
     return parsed
       .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
-      .map((item) => ({ label: String(item.label ?? ''), href: String(item.href ?? '') }))
+      .map((item) => ({
+        label: String(item.label ?? ''),
+        href: String(item.href ?? ''),
+        icon: typeof item.icon === 'string' && item.icon ? item.icon : undefined
+      }))
       .filter((item) => item.label !== '' && item.href !== '')
   } catch {
     console.warn('[navigation] the selected menu has invalid JSON in its items field; ignoring it')
@@ -62,6 +71,16 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
   }
 
   return []
+}
+
+/**
+ * A named menu, wherever the page is: the header's own links are the same on every
+ * page, so they are read by key rather than by the path rule.
+ */
+export const getMenu = async (key: string): Promise<NavItem[]> => {
+  const entries = await getCollection('components')
+  const match = entries.find((entry: any) => String(entry.data.key) === key)
+  return match && typeof match.data.items === 'string' ? parseItems(match.data.items) : []
 }
 
 /** Source of the layout a page should be wrapped in, or null when there is none. */

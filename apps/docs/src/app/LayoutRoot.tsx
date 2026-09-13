@@ -21,6 +21,8 @@ const LayoutRoot = (props: {
   navItems?: Array<{ label: string; href: string }>
   /** The site's navigation bar from the CMS, placed in the header. */
   navContent?: ReactNode
+  /** The header's right-hand links from the CMS. */
+  actionItems?: Array<{ label: string; href: string; icon?: string }>
   hideMenu?: boolean
 }): JSX.Element => {
   const [isMotionEnabled] = useAtom(atomMotionEnabled)
@@ -59,6 +61,7 @@ const LayoutRoot = (props: {
                       blogPath={props.blogPath}
                       navItems={props.navItems}
                       navContent={props.navContent}
+                      actionItems={props.actionItems}
                       hideMenu={props.hideMenu}
                     />
                   </Animator>

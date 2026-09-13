@@ -26,6 +26,8 @@ type AppShellProps = {
   serverPaths?: string[]
   /** Menu items from the CMS; empty means the shell uses its built-in navigation. */
   navItems?: Array<{ label: string; href: string }>
+  /** Links for the right-hand side from the CMS; empty means the built-in links. */
+  actionItems?: Array<{ label: string; href: string; icon?: string }>
   /**
    * The site's navigation bar, rendered from the CMS `nav` component by the site
    * layout and placed in the header. Undefined falls back to `navItems`.
@@ -92,6 +94,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
     serverPaths,
     navItems,
     nav,
+    actionItems,
     hideMenu,
     hasServerContent,
     children
@@ -116,7 +119,13 @@ const AppShell = (props: AppShellProps): JSX.Element => {
   return (
     <Provider store={store}>
       <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>
-        <LayoutRoot blogPath={blogPath} navItems={navItems} navContent={nav} hideMenu={hideMenu}>
+        <LayoutRoot
+          blogPath={blogPath}
+          navItems={navItems}
+          navContent={nav}
+          actionItems={actionItems}
+          hideMenu={hideMenu}
+        >
           <PageContent
             serverContent={children}
             initialPathname={pathname}
