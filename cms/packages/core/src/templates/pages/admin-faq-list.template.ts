@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderTable } from '../components/table.template'
 
@@ -60,7 +61,7 @@ export function renderFaqList(data: FaqListData): string {
       },
       {
         key: 'category',
-        label: 'Category',
+        label: t('Category'),
         sortable: true,
         sortType: 'string',
         render: (_v: any, row: any) => {
@@ -74,7 +75,7 @@ export function renderFaqList(data: FaqListData): string {
       },
       {
         key: 'isPublished',
-        label: 'Status',
+        label: t('Status'),
         sortable: true,
         sortType: 'boolean',
         render: (_v: any, row: any) => {

@@ -237,7 +237,7 @@ export function renderAnalyticsPage(data: AnalyticsPageData): string {
   `
 
   const layoutData: AdminLayoutData = {
-    title: 'Analytics',
+    title: t('Analytics'),
     pageTitle: 'Analytics',
     currentPath: '/admin/analytics',
     user: data.user,

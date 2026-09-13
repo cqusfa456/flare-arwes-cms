@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderPagination, PaginationData } from '../pagination.template'
 import { renderAlert } from '../alert.template'
@@ -60,7 +61,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
     },
     {
       key: 'name',
-      label: 'Name',
+      label: t('Name'),
       sortable: true,
       sortType: 'string',
       render: (_value: any, row: User) => {
@@ -90,7 +91,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
     },
     {
       key: 'email',
-      label: 'Email',
+      label: t('Email'),
       sortable: true,
       sortType: 'string',
       render: (value: string) => {

@@ -85,7 +85,7 @@ export function renderPagination(data: PaginationData): string {
       <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
         <div class="flex items-center gap-4">
           <p class="text-sm text-zinc-500 dark:text-zinc-400">
-            Showing <span class="font-medium text-zinc-950 dark:text-white">${data.startItem}</span> to
+            ${t('Showing')} <span class="font-medium text-zinc-950 dark:text-white">${data.startItem}</span> to
             <span class="font-medium text-zinc-950 dark:text-white">${data.endItem}</span> of
             <span class="font-medium text-zinc-950 dark:text-white">${data.totalItems}</span> results
           </p>

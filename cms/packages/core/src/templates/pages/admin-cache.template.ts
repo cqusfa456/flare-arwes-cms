@@ -223,7 +223,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
       title: 'Clear All Cache',
       message: 'Are you sure you want to clear all cache entries? This cannot be undone.',
       confirmText: 'Clear All',
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'yellow',
       confirmClass: 'bg-yellow-500 hover:bg-yellow-400',
       onConfirm: 'performClearAllCaches()'
@@ -233,7 +233,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
       id: 'clear-namespace-cache-confirm',
       title: 'Clear Namespace Cache',
       message: 'Clear cache for this namespace?',
-      confirmText: 'Clear',
+      confirmText: t('Clear'),
       cancelText: 'Cancel',
       iconColor: 'yellow',
       confirmClass: 'bg-yellow-500 hover:bg-yellow-400',

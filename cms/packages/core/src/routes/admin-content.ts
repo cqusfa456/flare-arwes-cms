@@ -1,3 +1,4 @@
+import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import { html } from 'hono/html'
 import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
@@ -477,11 +478,11 @@ adminContentRoutes.get('/', async (c) => {
       const statusConfig: Record<string, { class: string; text: string }> = {
         draft: {
           class: 'bg-zinc-50 dark:bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 ring-1 ring-inset ring-zinc-600/20 dark:ring-zinc-500/20',
-          text: 'Draft'
+          text: t('Draft')
         },
         review: {
           class: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20 dark:ring-amber-500/20',
-          text: 'Under Review'
+          text: t('Under Review')
         },
         scheduled: {
           class: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-500/20',
@@ -1645,7 +1646,7 @@ adminContentRoutes.get('/bulk-actions', async (c) => {
     <div class="fixed inset-0 bg-zinc-950/50 dark:bg-zinc-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="this.remove()">
       <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-xl ring-1 ring-zinc-950/5 dark:ring-white/10 p-6 max-w-md w-full" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Bulk Actions</h3>
+          <h3 class="text-lg font-semibold text-zinc-950 dark:text-white">${t('Bulk Actions')}</h3>
           <button onclick="this.closest('.fixed').remove()" class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

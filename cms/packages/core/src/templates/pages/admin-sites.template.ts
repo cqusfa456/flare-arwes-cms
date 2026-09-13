@@ -455,7 +455,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
   `
 
   return renderAdminLayoutCatalyst({
-    title: 'Sites',
+    title: t('Sites'),
     pageTitle: 'Sites',
     currentPath: '/admin/sites',
     version: data.version,

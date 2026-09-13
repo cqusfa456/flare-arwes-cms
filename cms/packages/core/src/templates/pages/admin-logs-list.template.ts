@@ -77,7 +77,7 @@ export function renderLogsListPage(data: LogsListPageData) {
             href="/admin/logs/export?${new URLSearchParams(filters).toString()}"
             class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
           >
-            Export
+            ${t('Export')}
           </a>
         </div>
       </div>
@@ -184,7 +184,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                     type="submit"
                     class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
                   >
-                    Apply Filters
+                    ${t('Apply Filters')}
                   </button>
                   <a
                     href="/admin/logs"
@@ -257,7 +257,7 @@ export function renderLogsListPage(data: LogsListPageData) {
                   </td>
                   <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium sm:pr-6">
                     <a href="/admin/logs/${log.id}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                      View Details
+                      ${t('View Details')}
                     </a>
                   </td>
                 </tr>
@@ -309,7 +309,7 @@ export function renderLogsListPage(data: LogsListPageData) {
           <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p class="text-sm text-zinc-700 dark:text-zinc-300">
-                Showing <span class="font-medium">${pagination.startItem}</span> to <span class="font-medium">${pagination.endItem}</span> of{' '}
+                ${t('Showing')} <span class="font-medium">${pagination.startItem}</span> to <span class="font-medium">${pagination.endItem}</span> of{' '}
                 <span class="font-medium">${pagination.totalItems}</span> results
               </p>
             </div>

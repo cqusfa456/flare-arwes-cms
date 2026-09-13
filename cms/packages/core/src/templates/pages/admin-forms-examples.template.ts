@@ -677,7 +677,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
             { type: 'email', key: 'email', label: 'Email Address', placeholder: 'you@example.com', validate: { required: true } },
             { type: 'phoneNumber', key: 'phone', label: 'Phone Number', placeholder: '(555) 555-5555' },
             { type: 'number', key: 'age', label: 'Age', placeholder: '18', validate: { min: 18, max: 120 } },
-            { type: 'password', key: 'password', label: 'Password', placeholder: 'Enter password', validate: { required: true } },
+            { type: 'password', key: 'password', label: t('Password'), placeholder: 'Enter password', validate: { required: true } },
             { type: 'url', key: 'website', label: 'Website', placeholder: 'https://example.com' },
             { type: 'textarea', key: 'bio', label: 'Biography', rows: 4, placeholder: 'Tell us about yourself' },
             
@@ -929,7 +929,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
                   key: 'contactMethod', 
                   label: 'Preferred Contact Method',
                   values: [
-                    { label: 'Email', value: 'email' },
+                   label: t('Email')il', value: 'email' },
                     { label: 'Phone', value: 'phone' },
                     { label: 'SMS', value: 'sms' }
                   ],
@@ -951,7 +951,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
             { type: 'textfield', key: 'companyName', label: 'Company Name', 
               conditional: { show: true, when: 'hasCompany', eq: true }
             },
-            { type: 'button', action: 'submit', label: 'Submit', theme: 'primary' }
+            { type: 'button', action: 'sublabel: t('Submit')ubmit', theme: 'primary' }
           ]
         };
         Formio.createForm(document.getElementById('form-conditional'), conditionalSchema);
@@ -1008,7 +1008,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
             { type: 'textfield', key: 'city', label: 'City' },
             { type: 'textfield', key: 'state', label: 'State' },
             { type: 'textfield', key: 'zip', label: 'ZIP Code' },
-            { type: 'button', action: 'submit', label: 'Submit', theme: 'primary' }
+            { type: 'button', action: 'label: t('Submit') 'Submit', theme: 'primary' }
           ]
         };
         Formio.createForm(document.getElementById('form-address'), addressSchema);
@@ -1019,7 +1019,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
           components: [
             { type: 'textfield', key: 'name', label: 'Your Name' },
             { type: 'signature', key: 'signature', label: 'Sign Here', width: '100%', height: '150px' },
-            { type: 'button', action: 'submit', label: 'Submit', theme: 'primary' }
+            { type: 'button', actionlabel: t('Submit')el: 'Submit', theme: 'primary' }
           ]
         };
         Formio.createForm(document.getElementById('form-signature'), signatureSchema);
@@ -1037,7 +1037,7 @@ export function renderFormsExamplesPage(data: FormsExamplesPageData): string {
                 { type: 'number', key: 'quantity', label: 'Quantity' }
               ]
             },
-            { type: 'button', action: 'submit', label: 'Submit', theme: 'primary' }
+            { type: 'button', actlabel: t('Submit')label: t('Submit'), theme: 'primary' }
           ]
         };
         Formio.createForm(document.getElementById('form-data-grid'), dataGridSchema);

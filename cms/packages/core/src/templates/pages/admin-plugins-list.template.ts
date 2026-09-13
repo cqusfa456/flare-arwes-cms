@@ -39,8 +39,8 @@ export interface PluginsListPageData {
 
 export function renderPluginsListPage(data: PluginsListPageData): string {
   const categories = [
-    { value: 'content', label: 'Content Management' },
-    { value: 'media', label: 'Media' },
+    { value: 'content', label: t('Content Management') },
+    { value: 'media', label: t('Media') },
     { value: 'editor', label: 'Editors' },
     { value: 'seo', label: 'SEO & Analytics' },
     { value: 'security', label: 'Security' },

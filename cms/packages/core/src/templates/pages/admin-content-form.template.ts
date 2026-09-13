@@ -464,8 +464,8 @@ export function renderContentFormPage(data: ContentFormData): string {
       id: 'duplicate-content-confirm',
       title: 'Duplicate Content',
       message: 'Create a copy of this content?',
-      confirmText: 'Duplicate',
-      cancelText: 'Cancel',
+      confirmText: t('Duplicate'),
+      cancelText: t('Cancel'),
       iconColor: 'blue',
       confirmClass: 'bg-blue-500 hover:bg-blue-400',
       onConfirm: 'performDuplicateContent()'

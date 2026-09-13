@@ -53,7 +53,7 @@ const LANGUAGES = [
 const ROLES = [
   { value: 'admin', label: 'Administrator' },
   { value: 'editor', label: 'Editor' },
-  { value: 'author', label: 'Author' },
+  { value: 'author', label: t('Author') },
   { value: 'viewer', label: 'Viewer' }
 ]
 

@@ -124,7 +124,7 @@ adminApiTokensRoutes.get('/', async (c) => {
     `
 
     return c.html(renderAdminLayoutCatalyst({
-      title: 'API Tokens',
+      title: t('API Tokens'),
       currentPath: '/admin/api-tokens',
       user: user ? { name: user.email, email: user.email, role: user.role } : undefined,
       content,

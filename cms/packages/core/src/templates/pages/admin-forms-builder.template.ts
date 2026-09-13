@@ -1554,7 +1554,7 @@ ${getTurnstileComponentScript()}
                 },
                 advanced: {
                   // Customize advanced components
-                  title: 'Advanced',
+                  title: t('Advanced'),
                   weight: 20,
                   components: {
                     // Keep all open-source advanced components
@@ -1860,7 +1860,7 @@ ${getTurnstileComponentScript()}
                 }
               },
               advanced: {
-                title: 'Advanced',
+             title: t('Advanced')ed',
                 weight: 20,
                 components: {
                   email: true,

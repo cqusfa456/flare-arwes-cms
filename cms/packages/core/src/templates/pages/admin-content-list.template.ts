@@ -54,7 +54,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     filters: [
       {
         name: 'model',
-        label: 'Model',
+        label: t('Model'),
         options: [
           { value: 'all', label: 'All Models', selected: data.modelName === 'all' },
           ...data.models.map(model => ({
@@ -66,7 +66,7 @@ export function renderContentListPage(data: ContentListPageData): string {
       },
       {
         name: 'status',
-        label: 'Status',
+        label: t('Status'),
         options: [
           { value: 'all', label: 'All Status', selected: data.status === 'all' },
           { value: 'draft', label: 'Draft', selected: data.status === 'draft' },
@@ -255,7 +255,7 @@ export function renderContentListPage(data: ContentListPageData): string {
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Content Management</h1>
+          <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Content Management')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Manage and organize your content items</p>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -278,14 +278,14 @@ export function renderContentListPage(data: ContentListPageData): string {
               <div class="flex items-center space-x-4 flex-1">
                 <!-- Model Filter -->
                 <div>
-                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Model</label>
+                  <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Model')}</label>
                   <div class="grid grid-cols-1">
                     <select
                       name="model"
                       onchange="updateContentFilters('model', this.value)"
                       class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-2 pl-3 pr-8 text-sm text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-blue-500/30 dark:outline-blue-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 min-w-40"
                     >
-                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>All Models</option>
+                      <option value="all" ${data.modelName === 'all' ? 'selected' : ''}>${t('All Models')}</option>
                       ${data.models.map(model => `
                         <option value="${model.name}" ${data.modelName === model.name ? 'selected' : ''}>
                           ${model.displayName}
@@ -431,7 +431,7 @@ export function renderContentListPage(data: ContentListPageData): string {
                       class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/60 backdrop-blur-sm text-zinc-400 dark:text-zinc-600 text-sm font-medium rounded-lg ring-1 ring-inset ring-zinc-200/50 dark:ring-zinc-700/50 cursor-not-allowed"
                       disabled
                     >
-                      Bulk Actions
+                      ${t('Bulk Actions')}
                       <svg viewBox="0 0 20 20" fill="currentColor" class="size-4">
                         <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
                       </svg>

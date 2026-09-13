@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAdminLayout, AdminLayoutData } from '../layouts/admin-layout-v2.template'
 
 export interface FieldTypeDefinition {
@@ -351,7 +352,7 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
     },
     {
       name: 'date',
-      displayName: 'Date',
+      displayName: t('Date'),
       description: 'Date picker for selecting calendar dates',
       category: 'Basic',
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,7 +491,7 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
           title: 'Status Dropdown',
           configuration: { 
             options: [
-              { value: 'draft', label: 'Draft' },
+              { value: 'draft', label: t('Draft') },
               { value: 'published', label: 'Published' },
               { value: 'archived', label: 'Archived' }
             ]

@@ -457,8 +457,8 @@ export function renderUserEditPage(data: UserEditPageData): string {
       id: 'delete-user-confirm',
       title: 'Delete User',
       message: 'Are you sure you want to delete this user? Check the "Hard Delete" option to permanently remove all data from the database. This action cannot be undone!',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      confirmText: t('Delete'),
+      cancelText: t('Cancel'),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: 'performDeleteUser()'

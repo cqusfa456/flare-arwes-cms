@@ -118,7 +118,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                          ? "bg-zinc-950 dark:bg-blue-600 text-white dark:text-white font-medium"
                          : "text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                      }">
-                    All Types
+                    ${t('All Types')}
                   </a>
                 </li>
                 ${data.types
@@ -243,7 +243,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                       class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm text-zinc-950 dark:text-white text-sm font-medium rounded-lg ring-1 ring-inset ring-blue-200/50 dark:ring-blue-700/50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-red-50 dark:hover:from-blue-900/30 dark:hover:to-red-900/30 hover:ring-blue-300 dark:hover:ring-blue-600 transition-all duration-200"
                       onclick="toggleSelectAll()"
                     >
-                      Select All
+                      ${t('Select All')}
                     </button>
                     <div class="relative inline-block z-50" id="bulk-actions-dropdown">
                       <button
@@ -252,7 +252,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                         class="inline-flex items-center gap-x-1.5 px-3 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/60 backdrop-blur-sm text-zinc-400 dark:text-zinc-600 text-sm font-medium rounded-lg ring-1 ring-inset ring-zinc-200/50 dark:ring-zinc-700/50 cursor-not-allowed"
                         disabled
                       >
-                        Bulk Actions
+                        ${t('Bulk Actions')}
                         <svg viewBox="0 0 20 20" fill="currentColor" class="size-4">
                           <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
                         </svg>

@@ -149,9 +149,9 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
           rowClickable: true,
           rowClickUrl: (row: any) => `/admin/testimonials/${row.id}`,
           columns: [
-            { key: 'author', label: 'Author', sortable: true, sortType: 'string' },
+            { key: 'author', label: t('Author'), sortable: true, sortType: 'string' },
             { key: 'testimonial', label: 'Testimonial', sortable: false },
-            { key: 'status', label: 'Status', sortable: true, sortType: 'boolean' },
+            { key: 'status', label: t('Status'), sortable: true, sortType: 'boolean' },
             { key: 'sortOrder', label: 'Order', sortable: true, sortType: 'number' },
             { key: 'created_at', label: 'Created', sortable: true, sortType: 'date' }
           ],

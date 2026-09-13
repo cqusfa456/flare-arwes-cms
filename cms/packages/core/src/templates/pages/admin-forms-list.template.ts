@@ -35,7 +35,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
     columns: [
       {
         key: 'name',
-        label: 'Name',
+        label: t('Name'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, form: any) => `
@@ -54,7 +54,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
       },
       {
         key: 'category',
-        label: 'Category',
+        label: t('Category'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, form: any) => {

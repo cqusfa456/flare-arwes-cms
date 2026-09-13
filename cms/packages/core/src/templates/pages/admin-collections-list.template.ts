@@ -34,7 +34,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
     columns: [
       {
         key: 'name',
-        label: 'Name',
+        label: t('Name'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, collection: any) => `
@@ -89,7 +89,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       },
       {
         key: 'description',
-        label: 'Description',
+        label: t('Description'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, collection: any) => collection.description || '<span class="text-zinc-500 dark:text-zinc-400">-</span>'

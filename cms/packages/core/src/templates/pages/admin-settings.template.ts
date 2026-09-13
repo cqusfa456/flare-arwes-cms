@@ -613,7 +613,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
       title: 'Run Migrations',
       message: 'Are you sure you want to run pending migrations? This action cannot be undone.',
       confirmText: 'Run Migrations',
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'blue',
       confirmClass: 'bg-blue-500 hover:bg-blue-400',
       onConfirm: 'performRunMigrations()'
@@ -623,7 +623,7 @@ export function renderSettingsPage(data: SettingsPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Settings',
+    title: t('Settings'),
     pageTitle: 'Settings',
     currentPath: '/admin/settings',
     user: data.user,
@@ -1320,7 +1320,7 @@ function renderStorageSettings(
             onclick="testStorageConnection()"
             class="inline-flex items-center justify-center rounded-lg border border-zinc-950/10 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm font-medium text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors"
           >
-            Test connection
+            ${t('Test connection')}
           </button>
           <span class="text-xs text-zinc-500 dark:text-zinc-400">Runs an authenticated request against the bucket. A missing probe key still counts as success.</span>
         </div>

@@ -127,13 +127,13 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
               type="submit"
               class="px-6 py-2 bg-gradient-to-r from-blue-600 to-slate-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-slate-700 transition-all"
             >
-              Apply Filters
+              ${t('Apply Filters')}
             </button>
             <a 
               href="/admin/activity-logs"
               class="px-6 py-2 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-white/20 transition-all"
             >
-              Clear Filters
+              ${t('Clear Filters')}
             </a>
           </div>
         </form>
@@ -190,7 +190,7 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
                   <td class="px-6 py-4 text-sm text-gray-300">
                     ${log.details ? `
                       <details class="cursor-pointer">
-                        <summary class="text-blue-400 hover:text-blue-300">View Details</summary>
+                        <summary class="text-blue-400 hover:text-blue-300">${t('View Details')}</summary>
                         <pre class="mt-2 text-xs bg-black/20 p-2 rounded overflow-x-auto">${JSON.stringify(log.details, null, 2)}</pre>
                       </details>
                     ` : 'N/A'}
@@ -238,7 +238,7 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
   `
 
   const layoutData: AdminLayoutData = {
-    title: 'Activity Logs',
+    title: t('Activity Logs'),
     pageTitle: 'Activity Logs',
     currentPath: '/admin/activity-logs',
     user: data.user,

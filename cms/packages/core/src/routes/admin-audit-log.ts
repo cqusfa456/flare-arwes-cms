@@ -215,7 +215,7 @@ adminAuditLogRoutes.get('/', async (c) => {
   `
 
   return c.html(renderAdminLayoutCatalyst({
-    title: 'Audit Log',
+    title: t('Audit Log'),
     currentPath: '/admin/audit-log',
     content,
     user: user ? {

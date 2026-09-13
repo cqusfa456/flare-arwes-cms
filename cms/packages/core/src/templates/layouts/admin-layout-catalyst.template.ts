@@ -459,7 +459,7 @@ export function renderAdminLayoutCatalyst(
         </div>
         <div class="flex items-center gap-2">
           <a href="/admin/settings/migrations" class="text-xs font-semibold text-white hover:text-amber-100 underline">
-            View Details
+            ${t('View Details')}
           </a>
           <button onclick="closeMigrationBanner()" class="p-1 rounded-md text-white hover:bg-amber-600 dark:hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-white">
             ${icon(X, 'h-5 w-5')}

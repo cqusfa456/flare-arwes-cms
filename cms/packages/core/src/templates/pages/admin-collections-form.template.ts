@@ -114,7 +114,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
     },
     {
       name: 'description',
-      label: 'Description',
+      label: t('Description'),
       type: 'textarea',
       value: data.description || '',
       placeholder: 'Description of this collection...',
@@ -1173,7 +1173,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
       title: 'Remove Field',
       message: '<span class="dialog-message"><p class="text-sm text-gray-400">Are you sure you want to delete this field? This action cannot be undone.</p></span>',
       confirmText: 'Remove Field',
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: 'performDeleteField()'

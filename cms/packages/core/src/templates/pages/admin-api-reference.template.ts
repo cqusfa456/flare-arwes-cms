@@ -37,7 +37,7 @@ export function renderAPIReferencePage(data: APIReferencePageData): string {
       icon: '🔐'
     },
     'Content': {
-      title: 'Content Management',
+      title: t('Content Management'),
       description: 'Content creation, retrieval, and management',
       icon: '📝'
     },
