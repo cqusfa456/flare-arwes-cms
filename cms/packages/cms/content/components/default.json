@@ -3,7 +3,7 @@
   "name": "Default menu",
   "items": [
     { "label": "Home", "href": "/" },
-    { "label": "Docs", "href": "/docs/" },
+    { "label": "Docs", "href": "https://arwes-docs-content.pages.dev/" },
     { "label": "Blog", "href": "https://arwes-blog.pages.dev/" },
     { "label": "Demos", "href": "/demos" }
   ]
