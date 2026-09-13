@@ -72,13 +72,24 @@ export function bootstrapMiddleware(config: SciFiConfig = {}, app?: Hono<any>) {
 
     // Adopt the marker a previous isolate wrote, so a cold start does not
     // replay migrations, collection sync and plugin bootstrap.
+    //
+    // The marker only proves that the *previous* bootstrap finished. A deployment
+    // that brings new migrations still has to apply them, and skipping the whole
+    // bootstrap on the marker meant a new migration could ship and never reach the
+    // database. Pending migrations are therefore checked before the early return.
     const cache = c.env.CACHE_KV ?? c.env.KV;
     if (cache) {
       try {
         const marker = await cache.get(BOOTSTRAP_MARKER_KEY);
         if (marker) {
-          bootstrapComplete = true;
-          return next();
+          const pending = await new MigrationService(c.env.DB).getMigrationStatus();
+          if (pending.pendingMigrations === 0) {
+            bootstrapComplete = true;
+            return next();
+          }
+          console.log(
+            `[Bootstrap] ${pending.pendingMigrations} pending migration(s) despite the bootstrap marker; running them`
+          );
         }
       } catch (error) {
         console.error("[Bootstrap] Error reading bootstrap marker:", error);
