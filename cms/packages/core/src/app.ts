@@ -33,6 +33,7 @@ import {
   adminTestimonialsRoutes,
   adminCodeExamplesRoutes,
   adminDeployRoutes,
+  adminLanguageRoutes,
   adminSitesRoutes,
   adminSyncRoutes,
   adminAuditLogRoutes,
@@ -296,6 +297,7 @@ export function createSciFiApp(config: SciFiConfig = {}): SciFiApp {
   app.route('/admin/collections', adminCollectionsRoutes)
   app.route('/admin/forms', adminFormsRoutes)
   app.route('/admin/settings', adminSettingsRoutes)
+  app.route('/admin', adminLanguageRoutes)
   app.route('/admin/faq', adminFaqRoutes)
   app.route('/api/faq', apiFaqRoutes)
   app.route('/forms', publicFormsRoutes)

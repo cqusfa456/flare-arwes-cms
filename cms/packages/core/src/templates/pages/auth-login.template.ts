@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAlert } from '../alert.template'
 import { renderLogo } from '../components/logo.template'
 
@@ -58,8 +59,8 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                     <div class="flex justify-center mb-8 text-white">
             ${renderLogo({ size: 'xl', variant: 'white' })}
           </div>
-          <h2 class="mt-6 text-xl font-medium text-white">Welcome Back</h2>
-          <p class="mt-2 text-sm text-zinc-400">Sign in to your account to continue</p>
+          <h2 class="mt-6 text-xl font-medium text-white">${t('Welcome Back')}</h2>
+          <p class="mt-2 text-sm text-zinc-400">${t('Sign in to your account to continue')}</p>
         </div>
 
         <!-- Form Container -->
@@ -87,7 +88,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                 <!-- Email -->
                 <div>
                   <label for="email" class="block text-sm font-medium text-zinc-300 mb-2">
-                    Email Address
+                    ${t('Email Address')}
                   </label>
                   <input
                     id="email"
@@ -97,14 +98,14 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                     required
                     autofocus
                     class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
-                    placeholder="Enter your email"
+                    placeholder="${t('Enter your email')}"
                   >
                 </div>
 
                 <!-- Password -->
                 <div>
                   <label for="password" class="block text-sm font-medium text-zinc-300 mb-2">
-                    Password
+                    ${t('Password')}
                   </label>
                   <input
                     id="password"
@@ -113,7 +114,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                     autocomplete="current-password"
                     required
                     class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
-                    placeholder="Enter your password"
+                    placeholder="${t('Enter your password')}"
                   >
                 </div>
 
@@ -122,7 +123,7 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
                   type="submit"
                   class="w-full rounded-lg bg-gradient-to-r from-scifi-500 to-scifi-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-scifi-600 hover:to-scifi-500 focus:outline-none focus:ring-2 focus:ring-scifi-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-scifi-500/25"
                 >
-                  Sign In
+                  ${t('Sign In')}
                 </button>
               </form>
 
@@ -130,8 +131,8 @@ export function renderLoginPage(data: LoginPageData, demoLoginActive: boolean = 
               <!-- Links -->
               <div class="mt-6 text-center">
                 <p class="text-sm text-zinc-400">
-                  Don't have an account?
-                  <a href="/auth/register" class="font-semibold text-scifi-400 hover:text-scifi-300 transition-colors">Create one here</a>
+                  ${t("Don't have an account?")}
+                  <a href="/auth/register" class="font-semibold text-scifi-400 hover:text-scifi-300 transition-colors">${t('Create one here')}</a>
                 </p>
               </div>
               ` : ''}

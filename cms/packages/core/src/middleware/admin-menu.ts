@@ -6,6 +6,7 @@
  */
 
 import type { Context, Next } from 'hono'
+import { ADMIN_LANGUAGE_COOKIE, resolveAdminLocale, setAdminLocale } from '../i18n/admin'
 import { icon, collectionIcon } from '../templates/icons'
 import { setDynamicMenuItems } from '../templates/layouts/admin-layout-v2.template'
 import { setCatalystDynamicMenuItems } from '../templates/layouts/admin-layout-catalyst.template'
@@ -27,6 +28,11 @@ export function adminMenuMiddleware() {
   let cachedItems: AdminMenuItem[] | null = null
   let cacheTimestamp = 0
   const CACHE_TTL = 60_000 // 1 minute
+
+  // The language setting is the fallback for requests that carry no cookie, so it
+  // is cached the same way rather than read on every page.
+  let cachedLanguage: string | null = null
+  let languageTimestamp = 0
 
   return async (c: Context, next: Next) => {
     const now = Date.now()
@@ -54,10 +60,42 @@ export function adminMenuMiddleware() {
       }
     }
 
+    // Which language the admin is read in: the switcher's cookie wins, the
+    // `language` setting is the default. The templates read it synchronously below.
+    if (!cachedLanguage || now - languageTimestamp > CACHE_TTL) {
+      try {
+        const db = c.env.DB
+        if (db) {
+          const row: any = await db
+            .prepare(`SELECT value FROM settings WHERE category = 'general' AND key = 'language'`)
+            .first()
+          cachedLanguage = row?.value ? String(row.value).replace(/^"|"$/g, '') : 'en'
+          languageTimestamp = now
+        }
+      } catch (err) {
+        console.error('adminMenuMiddleware: failed to read the language setting', err)
+      }
+    }
+
+    const cookie = getCookie(c, ADMIN_LANGUAGE_COOKIE)
+    setAdminLocale(resolveAdminLocale(cookie ?? cachedLanguage))
+
     const items = cachedItems || []
     c.set('adminMenuItems', items)
     setDynamicMenuItems(items)
     setCatalystDynamicMenuItems(items)
     await next()
   }
+}
+
+/** Read one cookie without pulling in another dependency. */
+const getCookie = (c: Context, name: string): string | null => {
+  const header = c.req.header('Cookie') ?? ''
+  for (const part of header.split(';')) {
+    const [key, ...rest] = part.trim().split('=')
+    if (key === name) {
+      return decodeURIComponent(rest.join('='))
+    }
+  }
+  return null
 }

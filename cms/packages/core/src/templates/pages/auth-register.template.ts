@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import { renderAlert } from '../alert.template'
 import { renderLogo } from '../components/logo.template'
 
@@ -55,8 +56,8 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     <div class="flex justify-center mb-8 text-white">
             ${renderLogo({ size: 'xl', variant: 'white' })}
           </div>
-          <h2 class="mt-6 text-xl font-medium text-white">Create Your Account</h2>
-          <p class="mt-2 text-sm text-zinc-400">Get started with Sci-Fi CMS</p>
+          <h2 class="mt-6 text-xl font-medium text-white">${t('Create Your Account')}</h2>
+          <p class="mt-2 text-sm text-zinc-400">${t('Get started with Sci-Fi CMS')}</p>
         </div>
 
         <!-- Form Container -->
@@ -125,7 +126,7 @@ export function renderRegisterPage(data: RegisterPageData): string {
                 <!-- Email -->
                 <div>
                   <label for="email" class="block text-sm font-medium text-zinc-300 mb-2">
-                    Email Address
+                    ${t('Email Address')}
                   </label>
                   <input
                     id="email"
@@ -134,14 +135,14 @@ export function renderRegisterPage(data: RegisterPageData): string {
                     autocomplete="email"
                     required
                     class="w-full rounded-lg bg-zinc-900/80 px-3.5 py-2.5 text-sm text-white shadow-sm border border-white/10 placeholder:text-zinc-500 focus:outline-none focus:border-scifi-500/50 focus:ring-1 focus:ring-scifi-500/50 transition-all"
-                    placeholder="Enter your email"
+                    placeholder="${t('Enter your email')}"
                   >
                 </div>
 
                 <!-- Password -->
                 <div>
                   <label for="password" class="block text-sm font-medium text-zinc-300 mb-2">
-                    Password
+                    ${t('Password')}
                   </label>
                   <input
                     id="password"
@@ -160,14 +161,14 @@ export function renderRegisterPage(data: RegisterPageData): string {
                   type="submit"
                   class="w-full rounded-lg bg-gradient-to-r from-scifi-500 to-scifi-400 px-4 py-2.5 text-sm font-semibold text-white hover:from-scifi-600 hover:to-scifi-500 focus:outline-none focus:ring-2 focus:ring-scifi-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all shadow-lg shadow-scifi-500/25"
                 >
-                  Create Account
+                  ${t('Create account')}
                 </button>
               </form>
 
               <!-- Links -->
               <div class="mt-6 text-center">
                 <p class="text-sm text-zinc-400">
-                  Already have an account?
+                  ${t('Already have an account?')}
                   <a href="/auth/login" class="font-semibold text-scifi-400 hover:text-scifi-300 transition-colors">Sign in here</a>
                 </p>
               </div>

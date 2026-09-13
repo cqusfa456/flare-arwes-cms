@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 import {
   AdminLayoutData,
   renderAdminLayout,
@@ -51,8 +52,8 @@ export function renderDashboardPage(data: DashboardPageData): string {
   const pageContent = `
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Dashboard</h1>
-        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">Welcome to your Sci-Fi CMS admin dashboard</p>
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Dashboard')}</h1>
+        <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('Welcome to your Sci-Fi CMS admin dashboard')}</p>
       </div>
       <div class="mt-4 sm:mt-0 flex items-center gap-x-3">
         <a href="https://flarecms.dev" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
@@ -260,7 +261,7 @@ export function renderStatsCards(stats: DashboardStats): string {
 
   return `
     <div>
-      <h3 class="text-base font-semibold text-zinc-950 dark:text-white">Last 30 days</h3>
+      <h3 class="text-base font-semibold text-zinc-950 dark:text-white">${t('Last 30 days')}</h3>
       <dl class="mt-5 grid grid-cols-1 divide-zinc-950/5 dark:divide-white/10 overflow-hidden rounded-lg bg-white dark:bg-zinc-800/75 ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 md:grid-cols-4 md:divide-x md:divide-y-0">
         ${cards.map((card, index) => `
           <div class="px-4 py-5 sm:p-6">
@@ -314,12 +315,12 @@ function renderAnalyticsChart(): string {
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
           <div>
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Real-Time Analytics</h3>
-            <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">Requests per second (live)</p>
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('Real-Time Analytics')}</h3>
+            <p class="mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('Requests per second (live)')}</p>
           </div>
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span class="text-xs text-zinc-500 dark:text-zinc-400">Live</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400">${t('Live')}</span>
           </div>
         </div>
         <div class="mt-4 flex items-baseline gap-2">
@@ -586,7 +587,7 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Recent Activity</h3>
+          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('Recent Activity')}</h3>
           <button class="text-xs/5 font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors">
             View all
           </button>
@@ -651,7 +652,7 @@ function renderQuickActions(): string {
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
-        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Quick Actions</h3>
+        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('Quick Actions')}</h3>
       </div>
 
       <div class="p-6">
@@ -685,7 +686,7 @@ function renderSystemStatus(): string {
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 overflow-hidden">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">System Status</h3>
+          <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('System Status')}</h3>
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
             <span class="text-xs text-zinc-500 dark:text-zinc-400">Live</span>
@@ -787,7 +788,7 @@ export function renderStorageUsage(
   return `
     <div class="rounded-lg bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10">
       <div class="border-b border-zinc-950/5 dark:border-white/10 px-6 py-6">
-        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">Storage Usage</h3>
+        <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('Storage Usage')}</h3>
       </div>
 
       <div class="px-6 py-6">

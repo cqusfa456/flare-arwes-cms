@@ -1,5 +1,6 @@
 import { HtmlEscapedString } from "hono/utils/html";
-import { renderLogo } from "../components/logo.template";
+import { renderLogo } from "../components/logo.template"
+import { getAdminLocale, otherAdminLocale, t } from "../../i18n/admin";
 import { getVersionDisplay } from "../../utils/version";
 import {
   icon,
@@ -212,12 +213,14 @@ export function renderAdminLayoutCatalyst(
     data = { ...data, dynamicMenuItems: _pendingMenuItems }
   }
   if (!data.version) data.version = getVersionDisplay();
+  const locale = getAdminLocale()
+  const otherLocaleMobile = otherAdminLocale(locale);
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${getAdminLocale()}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.title} - Sci-Fi CMS Admin</title>
+  <title>${t(data.title)} - ${t('Sci-Fi CMS Admin')}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
   <!-- Dark mode init (before any rendering to prevent FOUC) -->
@@ -422,6 +425,9 @@ export function renderAdminLayoutCatalyst(
         <div class="ml-4 flex-1 text-zinc-900 dark:text-white">
           ${renderLogo({ size: "sm", showText: true, href: "/admin" })}
         </div>
+        <a href="/admin/language/${otherLocaleMobile.value}?next=${encodeURIComponent(data.currentPath || '/admin')}" class="rounded-lg p-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-950/5 dark:text-zinc-300 dark:hover:bg-white/5">
+          ${otherLocaleMobile.short}
+        </a>
       </header>
 
       <!-- Content -->
@@ -1083,8 +1089,8 @@ function renderCatalystSidebar(
         </button>
       </span>
       <div x-show="open" x-cloak class="ml-8 mt-0.5 flex flex-col gap-0.5">
-        <a href="/admin/content?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">All ${item.label}</a>
-        <a href="/admin/content/new?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">Add New</a>
+        <a href="/admin/content?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">${t('All {name}', { name: item.label })}</a>
+        <a href="/admin/content/new?collection=${item.collectionId}" class="rounded-lg px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200">${t('Add New')}</a>
       </div>
     </div>
     `
@@ -1098,6 +1104,9 @@ function renderCatalystSidebar(
   `
 
   // --- Check active states ---
+  const locale = getAdminLocale()
+  const otherLocale = otherAdminLocale(locale)
+
   const isActivePath = (path: string) =>
     currentPath === path || (path !== '/admin' && currentPath?.startsWith(path))
 
@@ -1105,7 +1114,7 @@ function renderCatalystSidebar(
 
   // Dashboard (top, no section header)
   const dashboardItem = navLink(
-    { label: 'Dashboard', path: '/admin', iconHtml: icon(LayoutDashboard, 'h-5 w-5') },
+    { label: t('Dashboard'), path: '/admin', iconHtml: icon(LayoutDashboard, 'h-5 w-5') },
     currentPath === '/admin' || currentPath === '/admin/dashboard'
   )
 
@@ -1120,27 +1129,27 @@ function renderCatalystSidebar(
     ? dynamicMenuItems!.map(item => collectionNavItem(item)).join('')
     : ''
   const contentAllItem = navLink(
-    { label: 'Content', path: '/admin/content', iconHtml: icon(FileText, 'h-5 w-5') },
+    { label: t('Content'), path: '/admin/content', iconHtml: icon(FileText, 'h-5 w-5') },
     isActivePath('/admin/content') && !currentPath?.includes('collection=')
   )
   const mediaItem = navLink(
-    { label: 'Media', path: '/admin/media', iconHtml: icon(Image, 'h-5 w-5') },
+    { label: t('Media'), path: '/admin/media', iconHtml: icon(Image, 'h-5 w-5') },
     isActivePath('/admin/media')
   )
   const trashItem = navLink(
-    { label: 'Trash', path: '/admin/content?status=deleted', iconHtml: icon(Trash2, 'h-5 w-5') },
+    { label: t('Trash'), path: '/admin/content?status=deleted', iconHtml: icon(Trash2, 'h-5 w-5') },
     currentPath?.includes('status=deleted') || false
   )
 
   // Analytics (between content and system)
   const analyticsItem = navLink(
-    { label: 'Analytics', path: '/admin/analytics', iconHtml: icon(BarChart3, 'h-5 w-5') },
+    { label: t('Analytics'), path: '/admin/analytics', iconHtml: icon(BarChart3, 'h-5 w-5') },
     isActivePath('/admin/analytics')
   )
 
   // Workflow (admin/editor only, between analytics and system)
   const workflowItem = isEditorOrAbove ? navLink(
-    { label: 'Workflow', path: '/admin/workflow/dashboard', iconHtml: icon(GitBranch, 'h-5 w-5') },
+    { label: t('Workflow'), path: '/admin/workflow/dashboard', iconHtml: icon(GitBranch, 'h-5 w-5') },
     isActivePath('/admin/workflow')
   ) : ''
 
@@ -1149,19 +1158,19 @@ function renderCatalystSidebar(
   // Editor+: Forms, FAQs
   const systemItemsList: Array<{ label: string; path: string; iconHtml: string }> = []
   if (isAdmin) {
-    systemItemsList.push({ label: 'Users', path: '/admin/users', iconHtml: icon(Users, 'h-5 w-5') })
-    systemItemsList.push({ label: 'Collections', path: '/admin/collections', iconHtml: icon(Layers, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Users'), path: '/admin/users', iconHtml: icon(Users, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Collections'), path: '/admin/collections', iconHtml: icon(Layers, 'h-5 w-5') })
   }
   if (isEditorOrAbove) {
-    systemItemsList.push({ label: 'Forms', path: '/admin/forms', iconHtml: icon(ClipboardList, 'h-5 w-5') })
-    systemItemsList.push({ label: 'FAQs', path: '/admin/faq', iconHtml: icon(CircleHelp, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Forms'), path: '/admin/forms', iconHtml: icon(ClipboardList, 'h-5 w-5') })
+    systemItemsList.push({ label: t('FAQs'), path: '/admin/faq', iconHtml: icon(CircleHelp, 'h-5 w-5') })
   }
   if (isAdmin) {
-    systemItemsList.push({ label: 'Audit Log', path: '/admin/audit-log', iconHtml: icon(ClipboardList, 'h-5 w-5') })
-    systemItemsList.push({ label: 'Sites', path: '/admin/sites', iconHtml: icon(Globe, 'h-5 w-5') })
-    systemItemsList.push({ label: 'Plugins', path: '/admin/plugins', iconHtml: icon(Plug, 'h-5 w-5') })
-    systemItemsList.push({ label: 'Cache', path: '/admin/cache', iconHtml: icon(HardDrive, 'h-5 w-5') })
-    systemItemsList.push({ label: 'Migrations', path: '/admin/schema-migrations', iconHtml: icon(Database, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Audit Log'), path: '/admin/audit-log', iconHtml: icon(ClipboardList, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Sites'), path: '/admin/sites', iconHtml: icon(Globe, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Plugins'), path: '/admin/plugins', iconHtml: icon(Plug, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Cache'), path: '/admin/cache', iconHtml: icon(HardDrive, 'h-5 w-5') })
+    systemItemsList.push({ label: t('Migrations'), path: '/admin/schema-migrations', iconHtml: icon(Database, 'h-5 w-5') })
   }
   const systemItems = systemItemsList.map(item => navLink(item, isActivePath(item.path))).join('')
 
@@ -1184,7 +1193,7 @@ function renderCatalystSidebar(
 
   // Settings (admin only, pinned bottom)
   const settingsItem = isAdmin ? navLink(
-    { label: 'Settings', path: '/admin/settings', iconHtml: icon(Settings, 'h-5 w-5') },
+    { label: t('Settings'), path: '/admin/settings', iconHtml: icon(Settings, 'h-5 w-5') },
     isActivePath('/admin/settings')
   ) : ''
 
@@ -1193,7 +1202,7 @@ function renderCatalystSidebar(
     <div class="-mb-3 px-4 pt-3">
       <button onclick="closeMobileSidebar()" class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/5 sm:text-sm/5" aria-label="Close navigation">
         ${icon(X, 'h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500')}
-        <span>Close menu</span>
+        <span>${t('Close navigation')}</span>
       </button>
     </div>
   ` : ''
@@ -1218,7 +1227,7 @@ function renderCatalystSidebar(
         </div>
 
         <!-- CONTENT -->
-        ${sectionHeader('Content')}
+        ${sectionHeader(t('Content'))}
         <div class="flex flex-col gap-0.5">
           ${collectionItems}
           ${contentAllItem}
@@ -1234,7 +1243,7 @@ function renderCatalystSidebar(
 
         <!-- SYSTEM -->
         ${systemItemsList.length > 0 ? `
-          ${sectionHeader('System')}
+          ${sectionHeader(t('System'))}
           <div class="flex flex-col gap-0.5">
             ${systemItems}
           </div>
@@ -1251,6 +1260,10 @@ function renderCatalystSidebar(
       <!-- Sidebar Footer (User) -->
       ${user ? `
         <div class="flex flex-col border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
+          <a href="/admin/language/${otherLocale.value}?next=${encodeURIComponent(currentPath || '/admin')}" class="mb-1 flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
+            ${icon(Globe, 'h-4 w-4')}
+            <span>${otherLocale.label}</span>
+          </a>
           <div class="relative">
             <button
               data-user-menu
@@ -1271,19 +1284,23 @@ function renderCatalystSidebar(
                   <p class="text-sm font-medium text-zinc-900 dark:text-white">${user.name || user.email || 'User'}</p>
                   <p class="text-xs text-zinc-500 dark:text-zinc-400">${user.email || ''}</p>
                 </div>
+                <a href="/admin/language/${otherLocale.value}?next=${encodeURIComponent(currentPath || '/admin')}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
+                  ${icon(Globe, 'h-4 w-4')}
+                  ${otherLocale.label}
+                </a>
                 <a href="/admin/profile" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
                   ${icon(User, 'h-4 w-4')}
-                  My Profile
+                  ${t('My Profile')}
                 </a>
                 <button onclick="toggleDarkMode()" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
                   <span class="dark:hidden">${icon(Moon, 'h-4 w-4')}</span>
                   <span class="hidden dark:inline">${icon(Sun, 'h-4 w-4')}</span>
-                  <span class="dark:hidden">Dark Mode</span>
-                  <span class="hidden dark:inline">Light Mode</span>
+                  <span class="dark:hidden">${t('Dark Mode')}</span>
+                  <span class="hidden dark:inline">${t('Light Mode')}</span>
                 </button>
                 <a href="/auth/logout" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
                   ${icon(LogOut, 'h-4 w-4')}
-                  Sign Out
+                  ${t('Sign Out')}
                 </a>
               </div>
             </div>

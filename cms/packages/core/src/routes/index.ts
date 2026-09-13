@@ -29,6 +29,7 @@ export { default as adminCodeExamplesRoutes } from './admin-code-examples'
 export { adminDashboardRoutes } from './admin-dashboard'
 export { adminCollectionsRoutes } from './admin-collections'
 export { adminSettingsRoutes } from './admin-settings'
+export { adminLanguageRoutes } from './admin-language'
 export { adminFormsRoutes } from './admin-forms'
 export { adminFaqRoutes } from './admin-faq'
 export { default as apiFaqRoutes } from './api-faq'
@@ -68,6 +69,7 @@ export const ROUTES_INFO = {
     'adminDashboardRoutes',
     'adminCollectionsRoutes',
     'adminSettingsRoutes',
+    'adminLanguageRoutes',
     'adminFormsRoutes',
     'adminFaqRoutes',
     'apiFaqRoutes',

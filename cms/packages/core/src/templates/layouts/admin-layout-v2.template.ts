@@ -1,5 +1,6 @@
 import { HtmlEscapedString } from "hono/utils/html";
-import { renderLogo } from "../components/logo.template";
+import { renderLogo } from "../components/logo.template"
+import { getAdminLocale, otherAdminLocale, t } from "../../i18n/admin";
 
 export interface AdminLayoutData {
   title: string;
@@ -49,11 +50,11 @@ export function renderAdminLayout(data: AdminLayoutData): string {
 
 export function adminLayoutV2(data: AdminLayoutData): string {
   return `<!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="${getAdminLocale()}" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.title} - Sci-Fi CMS Admin</title>
+  <title>${t(data.title)} - ${t('Sci-Fi CMS Admin')}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   
   <!-- Tailwind CSS -->
@@ -285,7 +286,7 @@ export function adminLayoutV2(data: AdminLayoutData): string {
   <!-- Main container -->
   <div class="relative z-10 min-h-screen">
     <!-- Header -->
-    ${renderTopBar(data.pageTitle || "Dashboard", data.user)}
+    ${renderTopBar(data.pageTitle || t("Dashboard"), data.user, data.currentPath)}
 
     <!-- Main content area -->
     <div class="px-4 sm:px-6 lg:px-8 py-8">
@@ -524,56 +525,56 @@ function renderSidebar(
 ): string {
   const baseMenuItems = [
     {
-      label: "Dashboard",
+      label: t("Dashboard"),
       path: "/admin",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
       </svg>`,
     },
     {
-      label: "Content",
+      label: t("Content"),
       path: "/admin/content",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>`,
     },
     {
-      label: "Collections",
+      label: t("Collections"),
       path: "/admin/collections",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
       </svg>`,
     },
     {
-      label: "Media",
+      label: t("Media"),
       path: "/admin/media",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
       </svg>`,
     },
     {
-      label: "Analytics",
+      label: t("Analytics"),
       path: "/admin/analytics",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
       </svg>`,
     },
     {
-      label: "Users",
+      label: t("Users"),
       path: "/admin/users",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
       </svg>`,
     },
     {
-      label: "Plugins",
+      label: t("Plugins"),
       path: "/admin/plugins",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
       </svg>`,
     },
     {
-      label: "Cache",
+      label: t("Cache"),
       path: "/admin/cache",
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -594,7 +595,7 @@ function renderSidebar(
       </svg>`,
     },
     {
-      label: "Settings",
+      label: t("Settings"),
       path: "/admin/settings",
       icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
@@ -668,7 +669,9 @@ function renderSidebar(
   `;
 }
 
-function renderTopBar(pageTitle: string, user?: any): string {
+function renderTopBar(pageTitle: string, user?: any, currentPath?: string): string {
+  const switcherLocale = otherAdminLocale(getAdminLocale())
+  const switcherNext = encodeURIComponent(currentPath || "/admin")
   return `
     <header class="backdrop-blur-md bg-white/10 border-b border-white/20 shadow-lg relative z-[9998]">
       <div class="px-4 sm:px-6 lg:px-8">
@@ -678,6 +681,11 @@ function renderTopBar(pageTitle: string, user?: any): string {
           </div>
           
           <div class="flex items-center space-x-4">
+            <!-- Language -->
+            <a href="/admin/language/${switcherLocale.value}?next=${switcherNext}" class="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10 text-sm font-semibold" title="${switcherLocale.label}">
+              ${switcherLocale.short}
+            </a>
+
             <!-- Dark Mode Toggle -->
             <button onclick="toggleDarkMode()" class="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10" aria-label="Toggle dark mode">
               <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -857,7 +865,7 @@ function renderTopBar(pageTitle: string, user?: any): string {
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                       </svg>
-                      Sign Out
+                      ${t('Sign Out')}
                     </a>
                   </div>
                 </div>
