@@ -10,7 +10,7 @@ import { routes, getTitle } from '@/router/routes'
 import { CmsPage } from '@/cms/CmsPage'
 import { DocsCmsPage } from '@/cms/DocsCmsPage'
 import { BlogPostPage } from '@/cms/BlogPostPage'
-import { BlogIndexPage } from '@/cms/BlogIndexPage'
+import { CollectionIndexPage } from '@/cms/CollectionIndexPage'
 import {
   collectionIndexPath,
   contentPath,
@@ -215,43 +215,67 @@ export async function getStaticPaths() {
     ]
   })
 
-  // 5. The blog index, at its collection's prefix (the host root on a blog site).
+  // 5. A collection's index: the blog on its own host, the docs on theirs. Every
+  //    collection this site publishes gets one, unless an app route or a CMS page
+  //    already owns that path (which is what happens on the app site, where the
+  //    documentation's index is one of its own routes).
+  const indexPaths: Array<{ params: { path: string | undefined }; props: Record<string, unknown> }> = []
+
   const blogIndexPath = collectionIndexPath(postsPrefix)
-  const hasBlogIndex = blogIndexPath !== null && claim(blogIndexPath)
-  const indexPaths = hasBlogIndex
-    ? [
-        {
-          params: { path: blogIndexPath === '/' ? undefined : blogIndexPath.replace(/^\//, '') },
-          props: {
-            pathname: blogIndexPath,
-            blogIndex: true,
-            // The blog index is not an app route, so `getTitle()` cannot name it.
-            pageTitle: `Blog | ${settings.title}`,
-            posts: [...cmsPosts]
-              .sort(
-                (a, b) =>
-                  (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0)
-              )
-              .map((post) => ({
-                // The link is resolved here, at build time: the island must not
-                // import the routing helper (it reads build-only env).
-                href: contentPath(postsPrefix, post.data.slug),
-                slug: post.data.slug,
-                title: post.data.title,
-                publishedAt: post.data._publishedAt
-                  ? new Date(post.data._publishedAt).toISOString().slice(0, 10)
-                  : undefined,
-                summary: post.data.excerpt ?? post.data.meta_description
-              }))
-          }
-        }
-      ]
-    : []
+  if (blogIndexPath !== null && claim(blogIndexPath)) {
+    indexPaths.push({
+      params: { path: blogIndexPath === '/' ? undefined : blogIndexPath.replace(/^\//, '') },
+      props: {
+        pathname: blogIndexPath,
+        collectionIndex: true,
+        heading: 'Blog',
+        // An index is not an app route, so `getTitle()` cannot name it.
+        pageTitle: `Blog | ${settings.title}`,
+        entries: [...cmsPosts]
+          .sort(
+            (a, b) => (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0)
+          )
+          .map((post) => ({
+            // The link is resolved here, at build time: the island must not import
+            // the routing helper (it reads build-only env).
+            href: contentPath(postsPrefix, post.data.slug),
+            slug: post.data.slug,
+            title: post.data.title,
+            publishedAt: post.data._publishedAt
+              ? new Date(post.data._publishedAt).toISOString().slice(0, 10)
+              : undefined,
+            summary: post.data.excerpt ?? post.data.meta_description
+          }))
+      }
+    })
+  }
+
+  const docsIndexPath = collectionIndexPath(docsPrefix)
+  if (docsIndexPath !== null && claim(docsIndexPath)) {
+    indexPaths.push({
+      params: { path: docsIndexPath === '/' ? undefined : docsIndexPath.replace(/^\//, '') },
+      props: {
+        pathname: docsIndexPath,
+        collectionIndex: true,
+        heading: 'Documentation',
+        pageTitle: `Documentation | ${settings.title}`,
+        entries: [...cmsDocs]
+          .sort((a: any, b: any) => Number(a.data.order ?? 0) - Number(b.data.order ?? 0))
+          .map((doc: any) => ({
+            href: contentPath(docsPrefix, doc.data.slug),
+            slug: doc.data.slug,
+            title: doc.data.title,
+            summary: doc.data.excerpt ?? doc.data.meta_description
+          }))
+      }
+    })
+  }
 
   return [...appPaths, ...pagePaths, ...postPaths, ...docsPaths, ...indexPaths]
 }
 
-const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = Astro.props
+const { pathname, cmsPage, docs, blog, collectionIndex, heading, entries, navData, pageTitle } =
+  Astro.props
 ---
 
 <Layout
@@ -260,7 +284,7 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
   pathname={pathname}
   layout={cmsPage?.layout}
   navKey={cmsPage?.navKey}
-  hasServerContent={!!(cmsPage || blogIndex)}
+  hasServerContent={!!(cmsPage || collectionIndex)}
 >
   {/*
     `navData` must be passed explicitly: `{...cmsPage}` only spreads the page
@@ -269,6 +293,6 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
   */}
   {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} navData={navData} pathname={pathname} />}
   {blog && cmsPage && <BlogPostPage client:load {...cmsPage} />}
-  {!docs && !blog && !blogIndex && cmsPage && <CmsPage client:load {...cmsPage} />}
-  {blogIndex && <BlogIndexPage client:load posts={posts} />}
+  {!docs && !blog && !collectionIndex && cmsPage && <CmsPage client:load {...cmsPage} />}
+  {collectionIndex && <CollectionIndexPage client:load heading={heading} entries={entries} />}
 </Layout>

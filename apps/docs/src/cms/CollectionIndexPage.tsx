@@ -6,8 +6,8 @@ import { animate, stagger } from 'motion'
 import { Link } from '@/router'
 import { CmsAnimator } from './CmsAnimator'
 
-export type BlogPostSummary = {
-  /** Public path of the post, resolved from the collection's URL prefix. */
+export type CollectionEntrySummary = {
+  /** Public path of the entry, resolved from the collection's URL prefix. */
   href: string | null
   slug: string
   title: string
@@ -15,16 +15,19 @@ export type BlogPostSummary = {
   summary?: string
 }
 
-type BlogIndexPageProps = {
-  posts: BlogPostSummary[]
+type CollectionIndexPageProps = {
+  /** Name of the collection being listed, e.g. Blog or Documentation. */
+  heading?: string
+  entries: CollectionEntrySummary[]
 }
 
-// Blog index: the CMS *pages*, newest first (the order is decided at build time
-// by the Astro route). It is a React island like every other page so the list
-// animates in with the rest of the site; as static Astro markup it appeared
-// instantly with no enter animation at all.
-const BlogIndexPage = memo((props: BlogIndexPageProps): JSX.Element => {
-  const { posts } = props
+// A collection's index: the entries a site publishes, in the order the Astro route
+// decided (newest first for a blog, the collection's own order for documentation).
+// It is a React island like every other page so the list animates in with the rest
+// of the site; as static Astro markup it appeared instantly with no enter animation
+// at all.
+const CollectionIndexPage = memo((props: CollectionIndexPageProps): JSX.Element => {
+  const { heading = 'Index', entries } = props
 
   return (
     <CmsAnimator>
@@ -37,19 +40,19 @@ const BlogIndexPage = memo((props: BlogIndexPageProps): JSX.Element => {
                 className="font-header text-size-2 text-primary-main-3"
                 animated={['flicker']}
               >
-                Blog
+                {heading}
               </Animated>
             </Animator>
 
-            {posts.length === 0 && (
+            {entries.length === 0 && (
               <Animator>
                 <Animated as="p" className="text-primary-low-2" animated={['flicker']}>
-                  No posts yet.
+                  Nothing published yet.
                 </Animated>
               </Animator>
             )}
 
-            {posts.length > 0 && (
+            {entries.length > 0 && (
               <Animator>
                 <Animated
                   as="ul"
@@ -66,24 +69,24 @@ const BlogIndexPage = memo((props: BlogIndexPageProps): JSX.Element => {
                     }
                   }}
                 >
-                  {posts.map((post) => (
-                    <li key={post.slug} className="flex flex-col gap-1">
+                  {entries.map((entry) => (
+                    <li key={entry.slug} className="flex flex-col gap-1">
                       <Link
                         className="font-header text-size-5 text-secondary-low-2 hover:text-secondary-high-3"
-                        href={post.href ?? '#'}
+                        href={entry.href ?? '#'}
                       >
-                        {post.title}
+                        {entry.title}
                       </Link>
-                      {post.publishedAt && (
+                      {entry.publishedAt && (
                         <time
                           className="font-code text-size-10 text-primary-low-2"
-                          dateTime={post.publishedAt}
+                          dateTime={entry.publishedAt}
                         >
-                          {post.publishedAt}
+                          {entry.publishedAt}
                         </time>
                       )}
-                      {post.summary && (
-                        <p className="text-primary-low-2 text-size-8">{post.summary}</p>
+                      {entry.summary && (
+                        <p className="text-primary-low-2 text-size-8">{entry.summary}</p>
                       )}
                     </li>
                   ))}
@@ -97,4 +100,4 @@ const BlogIndexPage = memo((props: BlogIndexPageProps): JSX.Element => {
   )
 })
 
-export { BlogIndexPage }
+export { CollectionIndexPage }

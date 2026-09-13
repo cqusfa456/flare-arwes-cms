@@ -26,7 +26,7 @@
  * Usage (normally via scripts/setup.sh, before the build):
  *   node scripts/sync-cms-pages.mjs [--verbose]
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 import { SciFiClient, SciFiD1Client } from '@sci-fi-cms/astro'
@@ -95,6 +95,35 @@ const cleanPrevious = () => {
   }
 }
 
+/**
+ * Every page file in the repository this script wrote, recognised by its header
+ * (see the bottom of a generated file). Hand-written pages carry no such header and
+ * are never returned.
+ */
+const listGeneratedPageFiles = () => {
+  const found = []
+  const walk = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const full = join(directory, entry.name)
+      if (entry.isDirectory()) {
+        walk(full)
+      } else if (entry.name.endsWith('.astro')) {
+        try {
+          if (readFileSync(full, 'utf-8').includes('Generated from the CMS page')) {
+            found.push(full)
+          }
+        } catch {
+          // An unreadable file is not this script's to remove.
+        }
+      }
+    }
+  }
+  if (existsSync(PAGES_DIR)) {
+    walk(PAGES_DIR)
+  }
+  return found
+}
+
 const run = async () => {
   const client = createClient()
 
@@ -105,8 +134,16 @@ const run = async () => {
   const routes = routing?.contentRoutes ?? null
   const publishesPages = !(routes && routes.pages === undefined)
   if (!publishesPages) {
+    // A content-only site publishes no pages at all: every file this script wrote
+    // on a previous run goes, manifest or not (the manifest of a content-only site
+    // is empty, so a file another site generated would otherwise linger and be
+    // built here).
     for (const path of cleanPrevious()) {
       rmSync(fileForPath(path), { force: true })
+    }
+    for (const file of listGeneratedPageFiles()) {
+      rmSync(file, { force: true })
+      log(`removed ${file.replace(APP_DIR, '.')} (this site publishes no pages)`)
     }
     writeFileSync(MANIFEST, JSON.stringify({ generated: [] }, null, 2) + '\n')
     log(`"${routing.slug}" does not publish pages; generating its chrome only`)
