@@ -62,9 +62,9 @@ export function renderLogo(data: LogoData = {}): string {
   // The wordmark is set in text: it is the product's name, and keeping it out of
   // the artwork means it follows the interface's font and colour.
   const wordmark = `
-    <span class="font-semibold leading-none tracking-tight whitespace-nowrap ${textSizeClass}" style="color: inherit">
-      ${BRAND_NAME}<span style="color: ${sparkColor}">${BRAND_SUFFIX}</span>
-    </span>
+    <span class="font-semibold leading-none tracking-tight whitespace-nowrap ${textSizeClass}" style="color: inherit"
+      >${BRAND_NAME}&nbsp;<span style="color: ${sparkColor}">${BRAND_SUFFIX}</span></span
+    >
   `
 
   const versionBadge =
