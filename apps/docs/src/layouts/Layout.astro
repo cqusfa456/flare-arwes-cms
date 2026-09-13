@@ -118,6 +118,35 @@ const serverPaths = cmsPages
       {`html, body { background: ${settings.background}; }`}
     </style>
 
+    {/*
+      Page transitions. A navigation to a server page (a CMS page, a collection
+      index, the blog on its own host) is a document load, and the browser
+      cross-fades between the two pages instead of flashing. The app's own
+      navigations reuse the same animation through the View Transitions API (see
+      src/router/Router.tsx), so every page change looks the same.
+
+      Kept out of the stylesheet on purpose: the rule is new enough that the CSS
+      pipeline of the moment may drop what it does not recognise.
+    */}
+    <style is:inline>
+      @view-transition {
+        navigation: auto;
+      }
+
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 180ms;
+        animation-timing-function: ease-out;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+          animation: none;
+        }
+      }
+    </style>
+
     <title>{title}</title>
   </head>
   <body>
