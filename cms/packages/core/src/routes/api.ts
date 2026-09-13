@@ -1,4 +1,3 @@
-import { t } from '../i18n/admin'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { schemaDefinitions } from '../schemas'
@@ -366,7 +365,7 @@ apiRoutes.get('/', (c) => {
           responses: {
             '201': { description: 'Content created successfully' },
             '400': { description: 'Invalid request body' },
-            '401': { description: t('Unauthorized') }
+            '401': { description: 'Unauthorized' }
           }
         }
       },
@@ -382,12 +381,12 @@ apiRoutes.get('/', (c) => {
               in: 'path',
               required: true,
               schema: { type: 'string' },
-              description: t('Content item ID')
+              description: 'Content item ID'
             }
           ],
           responses: {
             '200': { description: 'Content item' },
-            '404': { description: t('Content not found') }
+            '404': { description: 'Content not found' }
           }
         },
         put: {
@@ -402,13 +401,13 @@ apiRoutes.get('/', (c) => {
               in: 'path',
               required: true,
               schema: { type: 'string' },
-              description: t('Content item ID')
+              description: 'Content item ID'
             }
           ],
           responses: {
             '200': { description: 'Content updated successfully' },
-            '401': { description: t('Unauthorized') },
-            '404': { description: t('Content not found') }
+            '401': { description: 'Unauthorized' },
+            '404': { description: 'Content not found' }
           }
         },
         delete: {
@@ -423,13 +422,13 @@ apiRoutes.get('/', (c) => {
               in: 'path',
               required: true,
               schema: { type: 'string' },
-              description: t('Content item ID')
+              description: 'Content item ID'
             }
           ],
           responses: {
             '200': { description: 'Content deleted successfully' },
-            '401': { description: t('Unauthorized') },
-            '404': { description: t('Content not found') }
+            '401': { description: 'Unauthorized' },
+            '404': { description: 'Content not found' }
           }
         }
       },
@@ -466,7 +465,7 @@ apiRoutes.get('/', (c) => {
           },
           responses: {
             '201': { description: 'Media uploaded successfully' },
-            '401': { description: t('Unauthorized') }
+            '401': { description: 'Unauthorized' }
           }
         }
       }
