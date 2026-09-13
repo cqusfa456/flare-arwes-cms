@@ -30,6 +30,10 @@ cd "$ROOT"
 echo "==> [1/3] Building the CMS workspace (core + astro integration)"
 cd "$ROOT/cms"
 pnpm install --frozen-lockfile --ignore-scripts
+# The runtime migration bundle is generated from cms/packages/core/migrations. pnpm
+# does not run pre/post scripts, so core's `prebuild` hook does not fire: invoke the
+# generator explicitly, or a new migration never reaches the Worker that applies it.
+pnpm --filter @sci-fi-cms/core generate:migrations
 pnpm build
 pnpm --filter @sci-fi-cms/astro build
 

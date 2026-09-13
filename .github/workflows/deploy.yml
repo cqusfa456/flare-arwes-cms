@@ -79,6 +79,15 @@ jobs:
         working-directory: cms
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      # The runtime migration bundle (cms/packages/core/src/db/migrations-bundle.ts)
+      # is generated from the SQL files in cms/packages/core/migrations. pnpm does
+      # not run pre/post scripts, so core's `prebuild` hook does not fire here: the
+      # generator has to be invoked explicitly or a new migration ships in the
+      # repository but never reaches the Worker.
+      - name: Generate the runtime migration bundle
+        working-directory: cms
+        run: pnpm --filter @sci-fi-cms/core generate:migrations
+
       - name: Build core
         working-directory: cms
         run: pnpm build
