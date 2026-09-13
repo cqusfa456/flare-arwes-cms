@@ -5,6 +5,7 @@ import { settings } from '@/config/settings'
 import { routes } from '@/router/routes'
 import { AppShell } from '@/AppShell'
 import CmsLayout from '@/components/CmsLayout.astro'
+import { CONTENT_ELEMENT_ID } from '@/lib/page-content'
 import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
 import { getLayout, getNavigation } from '@/lib/site-content'
 
@@ -20,11 +21,25 @@ interface LayoutProps {
   navKey?: string
   /** Layout version framing this page; `default` when it names none. */
   layout?: string
+  /**
+   * Whether the markup this page passes in its slot is the whole content for this
+   * path. A CMS page or a collection index says so; an app route does not, because
+   * its content is rendered by the app itself (see `AppShell`).
+   */
+  hasServerContent?: boolean
   /** Override for the rule below: the shell never renders a menu of its own. */
   hideMenu?: boolean
 }
 
-const { title, pageTitle, pathname, navKey, layout, hideMenu: hideMenuProp } = Astro.props
+const {
+  title,
+  pageTitle,
+  pathname,
+  navKey,
+  layout,
+  hasServerContent,
+  hideMenu: hideMenuProp
+} = Astro.props
 
 // Every page is injected through the same layout: the version it names (a page
 // field in the CMS, the `default` fallback). The layout composes the site's shared
@@ -106,11 +121,17 @@ const serverPaths = cmsPages
       serverPaths={serverPaths}
       navItems={navItems}
       hideMenu={hideMenu}
+      hasServerContent={!!hasServerContent}
     >
       {/*
         The page is framed by the layout it selected. `navKey` travels with it so a
         layout can render the menu the page asked for (<CmsNav navKey={navKey} />),
         and `pageTitle` is its own title rather than the document's.
+
+        The frame decides where the content goes, and the marker inside marks that
+        spot: a page with server content is rendered there by Astro, while an app
+        route is rendered there by the app (`AppShell` portals into it), so the
+        chrome the layout composes stays around either of them.
       */}
       <CmsLayout
         name={layout}
@@ -119,7 +140,9 @@ const serverPaths = cmsPages
         pathname={pathname}
         navKey={navKey}
       >
-        <slot />
+        <div id={CONTENT_ELEMENT_ID} class="contents">
+          <slot />
+        </div>
       </CmsLayout>
     </AppShell>
   </body>

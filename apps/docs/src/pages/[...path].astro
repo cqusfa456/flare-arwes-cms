@@ -260,6 +260,7 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
   pathname={pathname}
   layout={cmsPage?.layout}
   navKey={cmsPage?.navKey}
+  hasServerContent={!!(cmsPage || blogIndex)}
 >
   {/*
     `navData` must be passed explicitly: `{...cmsPage}` only spreads the page

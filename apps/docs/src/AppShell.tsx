@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Provider, createStore } from 'jotai'
 
 import { Router, usePathname } from '@/router'
 import { atomPathname } from '@/router/store'
+import { CONTENT_ELEMENT_ID } from '@/lib/page-content'
 import { LayoutRoot } from '@/app/LayoutRoot'
 import { App } from '@/App'
 
@@ -26,36 +28,50 @@ type AppShellProps = {
   navItems?: Array<{ label: string; href: string }>
   /** The page's layout owns the chrome, so the shell renders no menu. */
   hideMenu?: boolean
+  /**
+   * Whether the slot holds the whole content for this path (a CMS page or a
+   * collection index). When it does not, the path is one of the app's own routes
+   * and the app renders it.
+   */
+  hasServerContent?: boolean
   children?: ReactNode
 }
 
 // Which content the shell shows.
 //
-// The island's slot holds the page content Astro server-rendered for CMS pages
-// and collections; app routes have none, because their content comes from React.
+// The island's slot holds the frame Astro rendered for this page — the layout the
+// page selected, with the site's chrome in it — and, in its content region, the
+// markup Astro rendered for the page itself.
 //
-// The decision follows the live pathname compared with the one this document was
-// built for: the server content belongs to that path only. Deciding from the
-// route table alone was wrong twice over — a CMS page can own an app route (the
-// front page, or a collection's index on a content-only host), and after a
-// client-side navigation the previous page's HTML must not linger.
+// The server markup belongs to the path this document was built for, and only to
+// it: after a client-side navigation the previous page's content must not linger.
+// When it does not apply, the app renders the route — into the frame's content
+// region, so the chrome stays and only the content changes.
 const PageContent = (props: {
   serverContent?: ReactNode
   initialPathname: string
+  hasServerContent: boolean
 }): JSX.Element => {
   const pathname = usePathname()
+  const [contentElement, setContentElement] = useState<HTMLElement | null>(null)
+
+  // The marker is server-rendered, so it only exists after mount.
+  useEffect(() => {
+    setContentElement(document.getElementById(CONTENT_ELEMENT_ID))
+  }, [])
 
   const normalize = (value: string): string =>
     value.length > 1 ? value.replace(/\/+$/, '') : value
 
-  if (
-    props.serverContent === undefined ||
-    normalize(pathname) !== normalize(props.initialPathname)
-  ) {
-    return <App />
-  }
+  const showsServerContent =
+    props.hasServerContent && normalize(pathname) === normalize(props.initialPathname)
 
-  return <>{props.serverContent}</>
+  return (
+    <>
+      {props.serverContent}
+      {!showsServerContent && contentElement ? createPortal(<App />, contentElement) : null}
+    </>
+  )
 }
 
 // The root component of the app rendered as a single Astro island. It
@@ -64,7 +80,16 @@ const PageContent = (props: {
 // The `children` are the CMS-managed page content rendered by Astro
 // (SSR) and passed through the slot.
 const AppShell = (props: AppShellProps): JSX.Element => {
-  const { pathname, blogPath, appBaseUrl, serverPaths, navItems, hideMenu, children } = props
+  const {
+    pathname,
+    blogPath,
+    appBaseUrl,
+    serverPaths,
+    navItems,
+    hideMenu,
+    hasServerContent,
+    children
+  } = props
 
   const store = useMemo(() => {
     const store = createStore()
@@ -76,7 +101,11 @@ const AppShell = (props: AppShellProps): JSX.Element => {
     <Provider store={store}>
       <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>
         <LayoutRoot blogPath={blogPath} navItems={navItems} hideMenu={hideMenu}>
-          <PageContent serverContent={children} initialPathname={pathname} />
+          <PageContent
+            serverContent={children}
+            initialPathname={pathname}
+            hasServerContent={!!hasServerContent}
+          />
         </LayoutRoot>
       </Router>
     </Provider>
