@@ -2,21 +2,20 @@
 /**
  * The site's navigation bar.
  *
- * It is a shared component: a layout renders it with
- * `<CmsComponent name="nav" navKey={navKey} />`, and its menu items come from the
- * `navigation` collection (Admin -> Content -> Navigation), so both the bar and
- * what is in it are edited in the CMS. The page's own menu choice arrives as the
- * `navKey` prop; without one the site rule picks the menu (`home` for the front
- * page, `default` elsewhere) and it renders nothing when the site has no menu.
+ * A shared component, like the footer: the site layout hands it to the app shell,
+ * which renders it in the header next to the logo, so the menu sits in the same
+ * place on every page of the site.
+ *
+ * Its items come from the `navigation` collection (Admin -> Content -> Navigation),
+ * so both the bar and what is in it are edited in the CMS.
+ *
+ * Props the site layout passes down:
+ *   navKey    the menu the page selected with its `nav` field, when it names one
+ *   pathname  the path being rendered, so the active item can be marked
  */
 import CmsNav from '@/components/CmsNav.astro'
 
-const { navKey } = Astro.props
+const { navKey, pathname } = Astro.props
 ---
 
-<header
-  class="shrink-0 border-b border-primary-main-8/40 bg-primary-main-11/30"
-  aria-label="Site"
->
-  <CmsNav navKey={navKey} class="mx-auto w-full max-w-screen-3xl px-4 py-1 md:py-2" />
-</header>
+<CmsNav navKey={navKey} pathname={pathname} class="flex-nowrap justify-start" />

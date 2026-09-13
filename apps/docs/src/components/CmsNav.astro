@@ -24,11 +24,13 @@ interface Props {
   navKey?: string
   /** Alias of `navKey`, for layouts that read better with the short name. */
   key?: string
+  /** Path being rendered, so the active item can be marked. */
+  pathname?: string
   class?: string
 }
 
-const { navKey, key, class: className } = Astro.props
-const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/'
+const { navKey, key, pathname: pathnameProp, class: className } = Astro.props
+const pathname = (pathnameProp ?? Astro.url.pathname).replace(/\/+$/, '') || '/'
 const items = await getNavigation(pathname, navKey ?? key)
 
 // On a content-only host (a blog subdomain) the app's own routes are published by

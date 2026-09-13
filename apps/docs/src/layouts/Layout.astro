@@ -5,6 +5,7 @@ import { settings } from '@/config/settings'
 import { routes } from '@/router/routes'
 import { AppShell } from '@/AppShell'
 import CmsLayout from '@/components/CmsLayout.astro'
+import CmsComponent from '@/components/CmsComponent.astro'
 import { CONTENT_ELEMENT_ID } from '@/lib/page-content'
 import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
 import { getLayout, getNavigation } from '@/lib/site-content'
@@ -42,17 +43,24 @@ const {
 } = Astro.props
 
 // Every page is injected through the same layout: the version it names (a page
-// field in the CMS, the `default` fallback). The layout composes the site's shared
-// components — the navigation bar, the footer bar — so pages bring content only.
+// field in the CMS, the `default` fallback), which frames the content and composes
+// the footer.
 const layoutEntry = await getLayout(layout)
 
 // The header's menu is a CMS setting (see src/lib/site-content.ts). An empty
 // result means the site's own built-in navigation is used.
 const navItems = await getNavigation(pathname, navKey)
 
-// Whichever renders the menu owns it: with a layout in place and a CMS menu to
-// show, the shell's own header menu stays hidden so the two never double up.
-const hideMenu = hideMenuProp ?? (!!layoutEntry && navItems.length > 0)
+// The navigation bar is a shared component too, but it belongs in the header —
+// that is where a menu sits on this site, on every page — so the site layout hands
+// it to the shell, which renders it in place of its own menu. Without such a
+// component the shell falls back to the CMS menus above, then to the built-in
+// navigation, so a site that manages no chrome still has a menu.
+const hasNavComponent = Object.keys(import.meta.glob('/src/cms-components/nav.astro')).length > 0
+
+// A page's layout may render the chrome itself; then the shell keeps its menu out
+// of the way. By default the header owns the menu.
+const hideMenu = hideMenuProp ?? false
 
 // Two CMS settings shape the shell's navigation:
 //   * the blog link follows the `blog-posts` collection's prefix, and points at
@@ -123,6 +131,18 @@ const serverPaths = cmsPages
       hideMenu={hideMenu}
       hasServerContent={!!hasServerContent}
     >
+      {/*
+        The navigation bar, in the header where a menu belongs. It arrives as a
+        named slot so the shell can place it next to the logo, and it is a CMS
+        component like the footer: `components/nav` in Admin → Content → Components.
+      */}
+      {
+        hasNavComponent && (
+          <Fragment slot="nav">
+            <CmsComponent name="nav" navKey={navKey} pathname={pathname} />
+          </Fragment>
+        )
+      }
       {/*
         The page is framed by the layout it selected. `navKey` travels with it so a
         layout can render the menu the page asked for (<CmsNav navKey={navKey} />),

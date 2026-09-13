@@ -4,19 +4,19 @@
  *
  * A second version of the frame, selected by a page's `layout` field. It is what a
  * CMS page wants — a title, a readable column, its own scrolling — while pages that
- * manage their own layout (the documentation, a dashboard) use `default`.
+ * manage their own layout (the documentation, a dashboard) use `default`. The
+ * navigation bar is placed by the site layout in the header; the footer bar is
+ * composed here.
  *
  * Props the page passes down: `title` (the document title), `pageTitle` (the
  * page's own title), `pathname`, `navKey`.
  */
 import CmsComponent from '@/components/CmsComponent.astro'
 
-const { title, pageTitle, navKey } = Astro.props
+const { title, pageTitle } = Astro.props
 ---
 
 <div class="flex-1 flex flex-col min-w-0 min-h-0">
-  <CmsComponent name="nav" navKey={navKey} />
-
   <div class="flex-1 min-h-0 overflow-y-auto">
     <div class="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg p-4 md:p-8">
       <h1 class="font-header text-size-2 text-primary-main-3">{pageTitle ?? title}</h1>

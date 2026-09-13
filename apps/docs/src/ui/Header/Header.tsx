@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, type ReactNode } from 'react'
 import { usePathname, Link } from '@/router'
 import { useAtom } from 'jotai'
 import {
@@ -45,6 +45,12 @@ interface HeaderProps {
   blogPath?: string
   /** Menu items from the CMS; empty means the built-in navigation is used. */
   navItems?: Array<{ label: string; href: string }>
+  /**
+   * The site's navigation bar, rendered from the CMS `nav` component by the site
+   * layout. It is shown here, where the menu belongs, and takes precedence over
+   * `navItems`.
+   */
+  navContent?: ReactNode
   /** Set when the page's layout renders the chrome: no menu from the shell. */
   hideMenu?: boolean
 }
@@ -52,8 +58,9 @@ interface HeaderProps {
 const HEIGHT_CLASS = 'h-10 md:h-12'
 
 const Header = memo((props: HeaderProps): JSX.Element => {
-  const { className, animated, blogPath, navItems, hideMenu } = props
-  const hasCmsNav = !!navItems && navItems.length > 0
+  const { className, animated, blogPath, navItems, navContent, hideMenu } = props
+  const hasCmsNav = !navContent && !!navItems && navItems.length > 0
+  const hasNavContent = !!navContent
 
   const pathname = usePathname()
   const [isMotionEnabled, setIsMotionEnabled] = useAtom(atomMotionEnabled)
@@ -145,90 +152,110 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                   manager="stagger"
                   // The front page hides the menu unless the CMS provides one for it:
                   // a site that manages its navigation decides what the home menu is.
-                  condition={(!isIndex || hasCmsNav) && !hideMenu}
+                  condition={(!isIndex || hasCmsNav || hasNavContent) && !hideMenu}
                   unmountOnExited
-                  unmountOnDisabled={(isIndex && !hasCmsNav) || !!hideMenu}
+                  unmountOnDisabled={(isIndex && !hasCmsNav && !hasNavContent) || !!hideMenu}
                 >
-                  <Menu className={HEIGHT_CLASS}>
-                    {/*
-                      The menu is a CMS setting when the site provides one: the
-                      items come from the `navigation` collection (a page picks the
-                      menu by key, e.g. `home` for the front page). Without one, the
-                      built-in navigation below is used.
-                    */}
-                    {hasCmsNav &&
-                      navItems.map((item) => (
-                        <Animator key={item.href}>
-                          <MenuItem
-                            active={
-                              pathname === item.href.replace(/\/+$/, '') ||
-                              pathname.startsWith(`${item.href.replace(/\/+$/, '')}/`)
-                            }
-                            animated={['flicker']}
-                          >
-                            <Link href={item.href} title={item.label}>
-                              <span className="hidden md:block">{item.label}</span>
-                            </Link>
-                          </MenuItem>
-                        </Animator>
-                      ))}
-                    {!hasCmsNav && (
-                      <>
-                        <Animator>
-                          <MenuItem active={pathname.startsWith('/docs')} animated={['flicker']}>
-                            <Link href="/docs" title="Go to Documentation">
-                              <Page /> <span className="hidden md:block">Docs</span>
-                            </Link>
-                          </MenuItem>
-                        </Animator>
-                        {blogPath && (
+                  {/*
+                    The navigation bar is a CMS component (Admin → Content →
+                    Components): the site layout passes it in and it sits here, in
+                    the header, on every page. Without one, the menu is built from
+                    the CMS `navigation` collection, and without that from the
+                    site's own built-in navigation.
+                  */}
+                  {hasNavContent && (
+                    <div
+                      className={cx(
+                        'flex flex-row items-center gap-2 overflow-x-auto',
+                        HEIGHT_CLASS
+                      )}
+                    >
+                      {navContent}
+                    </div>
+                  )}
+
+                  {!hasNavContent && (
+                    <Menu className={HEIGHT_CLASS}>
+                      {hasCmsNav &&
+                        navItems.map((item) => (
+                          <Animator key={item.href}>
+                            <MenuItem
+                              active={
+                                pathname === item.href.replace(/\/+$/, '') ||
+                                pathname.startsWith(`${item.href.replace(/\/+$/, '')}/`)
+                              }
+                              animated={['flicker']}
+                            >
+                              <Link href={item.href} title={item.label}>
+                                <span className="hidden md:block">{item.label}</span>
+                              </Link>
+                            </MenuItem>
+                          </Animator>
+                        ))}
+                      {!hasCmsNav && (
+                        <>
                           <Animator>
-                            {/*
+                            <MenuItem active={pathname.startsWith('/docs')} animated={['flicker']}>
+                              <Link href="/docs" title="Go to Documentation">
+                                <Page /> <span className="hidden md:block">Docs</span>
+                              </Link>
+                            </MenuItem>
+                          </Animator>
+                          {blogPath && (
+                            <Animator>
+                              {/*
                           The link carries the canonical trailing slash, while the
                           active state compares against the prefix itself: the
                           app's pathname never has a trailing slash.
                         */}
-                            <MenuItem
-                              active={
-                                pathname === blogPath.replace(/\/+$/, '') ||
-                                pathname.startsWith(`${blogPath.replace(/\/+$/, '')}/`)
-                              }
-                              animated={['flicker']}
-                            >
-                              <Link href={blogPath} title="Go to Blog">
-                                <Post /> <span className="hidden md:block">Blog</span>
+                              <MenuItem
+                                active={
+                                  pathname === blogPath.replace(/\/+$/, '') ||
+                                  pathname.startsWith(`${blogPath.replace(/\/+$/, '')}/`)
+                                }
+                                animated={['flicker']}
+                              >
+                                <Link href={blogPath} title="Go to Blog">
+                                  <Post /> <span className="hidden md:block">Blog</span>
+                                </Link>
+                              </MenuItem>
+                            </Animator>
+                          )}
+                          <Animator>
+                            <MenuItem active={pathname.startsWith('/demos')} animated={['flicker']}>
+                              <Link href="/demos" title="Go to Demos">
+                                <CollageFrame /> <span className="hidden md:block">Demos</span>
                               </Link>
                             </MenuItem>
                           </Animator>
-                        )}
-                        <Animator>
-                          <MenuItem active={pathname.startsWith('/demos')} animated={['flicker']}>
-                            <Link href="/demos" title="Go to Demos">
-                              <CollageFrame /> <span className="hidden md:block">Demos</span>
-                            </Link>
-                          </MenuItem>
-                        </Animator>
-                        {settings.apps.play.url && (
-                          <Animator>
-                            <MenuItem active={pathname.startsWith('/play')} animated={['flicker']}>
-                              <a href={settings.apps.play.url} title="Go to Playground">
-                                <Codepen /> <span className="hidden md:block">Play</span>
-                              </a>
-                            </MenuItem>
-                          </Animator>
-                        )}
-                        {settings.apps.perf.url && (
-                          <Animator>
-                            <MenuItem active={pathname.startsWith('/perf')} animated={['flicker']}>
-                              <a href={settings.apps.perf.url} title="Go to Performance">
-                                <DashboardSpeed /> <span className="hidden md:block">Perf</span>
-                              </a>
-                            </MenuItem>
-                          </Animator>
-                        )}
-                      </>
-                    )}
-                  </Menu>
+                          {settings.apps.play.url && (
+                            <Animator>
+                              <MenuItem
+                                active={pathname.startsWith('/play')}
+                                animated={['flicker']}
+                              >
+                                <a href={settings.apps.play.url} title="Go to Playground">
+                                  <Codepen /> <span className="hidden md:block">Play</span>
+                                </a>
+                              </MenuItem>
+                            </Animator>
+                          )}
+                          {settings.apps.perf.url && (
+                            <Animator>
+                              <MenuItem
+                                active={pathname.startsWith('/perf')}
+                                animated={['flicker']}
+                              >
+                                <a href={settings.apps.perf.url} title="Go to Performance">
+                                  <DashboardSpeed /> <span className="hidden md:block">Perf</span>
+                                </a>
+                              </MenuItem>
+                            </Animator>
+                          )}
+                        </>
+                      )}
+                    </Menu>
+                  )}
                 </Animator>
               </Animated>
             </Animator>
