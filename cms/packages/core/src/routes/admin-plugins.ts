@@ -81,6 +81,19 @@ const AVAILABLE_PLUGINS = [
     is_core: true
   },
   {
+    id: 'astro-editor',
+    name: 'astro-editor',
+    display_name: 'Astro Editor',
+    description: 'CodeMirror 6 editor for astro fields. Holds the source of a whole .astro file (frontmatter, markup and expressions) verbatim so the website build can write it to a real page and let Astro compile it.',
+    version: '1.0.0',
+    author: 'Sci-Fi CMS Team',
+    category: 'editor',
+    icon: '🚀',
+    permissions: [],
+    dependencies: [],
+    is_core: true
+  },
+  {
     id: 'tinymce-plugin',
     name: 'tinymce-plugin',
     display_name: 'TinyMCE Rich Text Editor',
@@ -534,6 +547,34 @@ adminPluginRoutes.post('/install', async (c) => {
       })
 
       return c.json({ success: true, plugin: quillPlugin })
+    }
+
+    // Handle Astro Editor plugin installation
+    if (body.name === 'astro-editor') {
+      const astroEditorPlugin = await pluginService.installPlugin({
+        id: 'astro-editor',
+        name: 'astro-editor',
+        display_name: 'Astro Editor',
+        description: 'CodeMirror 6 editor for astro fields. Holds the source of a whole .astro file (frontmatter, markup and expressions) verbatim so the website build can write it to a real page and let Astro compile it.',
+        version: '1.0.0',
+        author: 'Sci-Fi CMS Team',
+        category: 'editor',
+        icon: '🚀',
+        permissions: [],
+        dependencies: [],
+        is_core: true,
+        settings: {
+          theme: 'auto',
+          fontSize: 13,
+          tabSize: 2,
+          lineNumbers: true,
+          // Empty means "use the built-in starter template" (exported as
+          // DEFAULT_ASTRO_TEMPLATE by the plugin).
+          defaultTemplate: ''
+        }
+      })
+
+      return c.json({ success: true, plugin: astroEditorPlugin })
     }
 
     // Handle TinyMCE plugin installation

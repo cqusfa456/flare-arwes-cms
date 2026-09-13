@@ -5,6 +5,8 @@ import { renderConfirmationDialog, getConfirmationDialogScript } from '../confir
 import { getTinyMCEScript, getTinyMCEInitScript } from '../../plugins/available/tinymce-plugin'
 import { getQuillCDN, getQuillInitScript } from '../../plugins/core-plugins/quill-editor'
 import { getMDXEditorScripts, getMDXEditorInitScript } from '../../plugins/available/easy-mdx'
+import { getAstroEditorScript } from '../../plugins/core-plugins/astro-editor'
+import type { AstroEditorOptions } from '../../plugins/core-plugins/astro-editor'
 import { escapeHtml } from '../../utils/sanitize'
 
 export interface Collection {
@@ -65,6 +67,8 @@ export interface ContentFormData {
     toolbar?: string
     placeholder?: string
   }
+  astroEditorEnabled?: boolean // Flag to indicate if the Astro Editor plugin is active
+  astroEditorSettings?: AstroEditorOptions
   referrerParams?: string // URL parameters to preserve filters when returning to list
   user?: {
     name: string
@@ -99,7 +103,8 @@ export function renderContentFormPage(data: ContentFormData): string {
   const pluginStatuses = {
     quillEnabled: data.quillEnabled || false,
     mdxeditorEnabled: data.mdxeditorEnabled || false,
-    tinymceEnabled: data.tinymceEnabled || false
+    tinymceEnabled: data.tinymceEnabled || false,
+    astroEditorEnabled: data.astroEditorEnabled || false
   }
 
   // Render field groups
@@ -485,6 +490,8 @@ export function renderContentFormPage(data: ContentFormData): string {
     ${data.quillEnabled ? getQuillInitScript() : '<!-- Quill init script not needed -->'}
 
     ${data.mdxeditorEnabled ? getMDXEditorScripts() : '<!-- MDXEditor plugin not active -->'}
+
+    ${data.astroEditorEnabled ? getAstroEditorScript(data.astroEditorSettings || {}) : '<!-- Astro Editor plugin not active -->'}
 
     <!-- Dynamic Field Scripts -->
     <script>

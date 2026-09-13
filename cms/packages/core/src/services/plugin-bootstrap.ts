@@ -100,6 +100,27 @@ export class PluginBootstrapService {
       },
     },
     {
+      id: "astro-editor",
+      name: "astro-editor",
+      display_name: "Astro Editor",
+      description:
+        "CodeMirror 6 editor for astro fields. Holds the source of a whole .astro file (frontmatter, markup and expressions) verbatim.",
+      version: "1.0.0",
+      author: "Sci-Fi CMS Team",
+      category: "editor",
+      icon: "🚀",
+      permissions: [],
+      dependencies: [],
+      settings: {
+        theme: "auto",
+        fontSize: 13,
+        tabSize: 2,
+        lineNumbers: true,
+        // Empty means "use the built-in starter template" (DEFAULT_ASTRO_TEMPLATE).
+        defaultTemplate: "",
+      },
+    },
+    {
       id: "ai-search",
       name: "ai-search-plugin",
       display_name: "AI Search",

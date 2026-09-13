@@ -31,6 +31,7 @@ export type FieldType =
   | 'quill'
   | 'tinymce'
   | 'mdxeditor'
+  | 'astro'
 
 export interface BlockDefinition {
   label?: string

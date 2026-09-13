@@ -543,6 +543,40 @@ describe('renderDynamicField - Quill Editor Fields', () => {
   });
 });
 
+describe('renderDynamicField - Astro Editor Fields', () => {
+  it('should render the astro editor container when the plugin is active', () => {
+    const field = createTestField({
+      field_type: 'astro',
+      field_options: { theme: 'dark' },
+    });
+    const html = renderDynamicField(field, {
+      value: '---\nimport Layout from "@/layouts/Layout.astro"\n---\n\n<Layout>{title}</Layout>',
+      pluginStatuses: { astroEditorEnabled: true },
+    });
+
+    expect(html).toContain('astro-editor-container');
+    expect(html).toContain('data-astro-surface');
+    expect(html).toContain('data-astro-textarea');
+    expect(html).toContain('data-theme="dark"');
+    expect(html).toContain('id="field-test_field"');
+    expect(html).toContain('name="test_field"');
+    expect(html).not.toContain('plugin is inactive');
+  });
+
+  it('should fallback to textarea when the astro editor plugin is disabled', () => {
+    const field = createTestField({
+      field_type: 'astro',
+    });
+    const html = renderDynamicField(field, {
+      pluginStatuses: { astroEditorEnabled: false },
+    });
+
+    expect(html).toContain('<textarea');
+    expect(html).toContain('Astro Editor plugin is inactive');
+    expect(html).not.toContain('astro-editor-container');
+  });
+});
+
 describe('renderDynamicField - Unknown Field Type', () => {
   it('should render unknown field type as text input', () => {
     const field = createTestField({ field_type: 'unknown_type' as any });

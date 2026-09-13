@@ -15,6 +15,7 @@ import { logAudit, getClientIP } from '../services/audit-log'
 import type { Bindings, Variables } from '../app'
 import { PluginService } from '../services/plugin-service'
 import { getBlocksFieldConfig, parseBlocksValue } from '../utils/blocks'
+import { analyzeAstroSource } from '../plugins/core-plugins/astro-editor'
 import { SettingsService } from '../services/settings'
 import { resolveSiteId } from '../services/content-site-scope'
 
@@ -183,6 +184,19 @@ function parseFieldValue(
         }
         return { value: null, errors }
       }
+    }
+
+    case 'astro': {
+      // Whole .astro file source (Astro Editor plugin). Stored verbatim: no
+      // trimming, no reformatting. Invalid frontmatter/expressions are reported
+      // so the build never receives a page Astro cannot compile.
+      const source = value === null || value === undefined ? '' : value.toString()
+      if (!skipValidation && source.trim() !== '') {
+        for (const problem of analyzeAstroSource(source)) {
+          errors.push(`Line ${problem.line}: ${problem.message}`)
+        }
+      }
+      return { value: source, errors }
     }
 
     default:
@@ -704,10 +718,20 @@ adminContentRoutes.get('/new', async (c) => {
       mdxeditorSettings = mdxeditorPlugin?.settings
     }
 
+    // Check if the Astro Editor plugin is active and get settings
+    const astroEditorEnabled = await isPluginActive(db, 'astro-editor')
+    let astroEditorSettings
+    if (astroEditorEnabled) {
+      const pluginService = new PluginService(db)
+      const astroEditorPlugin = await pluginService.getPlugin('astro-editor')
+      astroEditorSettings = astroEditorPlugin?.settings
+    }
+
     console.log('[Content Form /new] Editor plugins status:', {
       tinymce: tinymceEnabled,
       quill: quillEnabled,
       mdxeditor: mdxeditorEnabled,
+      astroEditor: astroEditorEnabled,
       mdxeditorSettings
     })
 
@@ -723,6 +747,8 @@ adminContentRoutes.get('/new', async (c) => {
       quillSettings,
       mdxeditorEnabled,
       mdxeditorSettings,
+      astroEditorEnabled,
+      astroEditorSettings,
       user: user ? {
         name: user.email,
         email: user.email,
@@ -888,6 +914,15 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       mdxeditorSettings = mdxeditorPlugin?.settings
     }
 
+    // Check if the Astro Editor plugin is active and get settings
+    const astroEditorEnabled = await isPluginActive(db, 'astro-editor')
+    let astroEditorSettings
+    if (astroEditorEnabled) {
+      const pluginService = new PluginService(db)
+      const astroEditorPlugin = await pluginService.getPlugin('astro-editor')
+      astroEditorSettings = astroEditorPlugin?.settings
+    }
+
     const formData: ContentFormData = {
       sites: siteOptions,
       id: content.id,
@@ -911,6 +946,8 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       quillSettings,
       mdxeditorEnabled,
       mdxeditorSettings,
+      astroEditorEnabled,
+      astroEditorSettings,
       referrerParams,
       user: user ? {
         name: user.email,

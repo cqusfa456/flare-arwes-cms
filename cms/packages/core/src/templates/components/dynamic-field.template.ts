@@ -1,4 +1,6 @@
 import { getDragSortableScript } from './drag-sortable.template'
+import { renderAstroField } from '../../plugins/core-plugins/astro-editor'
+import type { AstroEditorOptions } from '../../plugins/core-plugins/astro-editor'
 
 /**
  * Returns shared readFieldValue function used by both blocks and structured fields.
@@ -45,7 +47,7 @@ function getReadFieldValueScript(): string {
             return select.value;
           }
 
-          if (fieldType === 'quill' || fieldType === 'media') {
+          if (fieldType === 'quill' || fieldType === 'media' || fieldType === 'astro') {
             return hiddenInput ? hiddenInput.value : '';
           }
 
@@ -85,6 +87,7 @@ export interface FieldRenderOptions {
     quillEnabled?: boolean
     mdxeditorEnabled?: boolean
     tinymceEnabled?: boolean
+    astroEditorEnabled?: boolean
   }
   collectionId?: string
   contentId?: string
@@ -114,6 +117,9 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
   } else if (field.field_type === 'tinymce' && !pluginStatuses.tinymceEnabled) {
     fallbackToTextarea = true
     fallbackWarning = '⚠️ TinyMCE plugin is inactive. Using textarea fallback.'
+  } else if (field.field_type === 'astro' && !pluginStatuses.astroEditorEnabled) {
+    fallbackToTextarea = true
+    fallbackWarning = '⚠️ Astro Editor plugin is inactive. Using plain textarea fallback — activate “Astro Editor” under Admin → Plugins for the code editor.'
   }
 
   // If falling back to textarea, render it with a warning
@@ -300,6 +306,25 @@ export function renderDynamicField(field: FieldDefinition, options: FieldRenderO
         </div>
       `
       break
+
+    case 'astro': {
+      // Astro code editor (CodeMirror 6, provided by the astro-editor plugin).
+      // The hidden input holds the whole .astro file source; the field markup's
+      // textarea is the fallback until (or unless) CodeMirror mounts.
+      // Only options the field explicitly sets are forwarded — everything else
+      // falls back to the plugin's page-wide settings.
+      const astroOptions: AstroEditorOptions = {}
+      if (opts.theme === 'auto' || opts.theme === 'dark' || opts.theme === 'light') {
+        astroOptions.theme = opts.theme
+      }
+      if (typeof opts.fontSize === 'number') astroOptions.fontSize = opts.fontSize
+      if (typeof opts.tabSize === 'number') astroOptions.tabSize = opts.tabSize
+      if (typeof opts.lineNumbers === 'boolean') astroOptions.lineNumbers = opts.lineNumbers
+      if (typeof opts.height === 'number') astroOptions.height = opts.height
+      if (typeof opts.placeholder === 'string' && opts.placeholder) astroOptions.placeholder = opts.placeholder
+      fieldHTML = renderAstroField(fieldId, fieldName, value, astroOptions)
+      break
+    }
 
     case 'number':
       fieldHTML = `

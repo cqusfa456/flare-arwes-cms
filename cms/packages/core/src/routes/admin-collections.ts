@@ -41,6 +41,7 @@ interface CollectionFormData {
     tinymce: boolean
     quill: boolean
     easyMdx: boolean
+    astroEditor?: boolean
   }
 }
 
@@ -207,16 +208,18 @@ adminCollectionsRoutes.get('/new', async (c) => {
   const db = c.env.DB
 
   // Check which editor plugins are active
-  const [tinymceActive, quillActive, mdxeditorActive] = await Promise.all([
+  const [tinymceActive, quillActive, mdxeditorActive, astroEditorActive] = await Promise.all([
     isPluginActive(db, 'tinymce-plugin'),
     isPluginActive(db, 'quill-editor'),
-    isPluginActive(db, 'easy-mdx')
+    isPluginActive(db, 'easy-mdx'),
+    isPluginActive(db, 'astro-editor')
   ])
 
   console.log('[Collections /new] Editor plugins status:', {
     tinymce: tinymceActive,
     quill: quillActive,
-    easyMdx: mdxeditorActive
+    easyMdx: mdxeditorActive,
+    astroEditor: astroEditorActive
   })
 
   const formData: CollectionFormData = {
@@ -230,7 +233,8 @@ adminCollectionsRoutes.get('/new', async (c) => {
     editorPlugins: {
       tinymce: tinymceActive,
       quill: quillActive,
-      easyMdx: mdxeditorActive
+      easyMdx: mdxeditorActive,
+      astroEditor: astroEditorActive
     }
   }
 
@@ -434,10 +438,11 @@ adminCollectionsRoutes.get('/:id', async (c) => {
 
     if (!collection) {
       // Check which editor plugins are active
-      const [tinymceActive, quillActive, mdxeditorActive] = await Promise.all([
+      const [tinymceActive, quillActive, mdxeditorActive, astroEditorActive] = await Promise.all([
         isPluginActive(db, 'tinymce-plugin'),
         isPluginActive(db, 'quill-editor'),
-        isPluginActive(db, 'easy-mdx')
+        isPluginActive(db, 'easy-mdx'),
+        isPluginActive(db, 'astro-editor')
       ])
 
       const formData: CollectionFormData = {
@@ -452,7 +457,8 @@ adminCollectionsRoutes.get('/:id', async (c) => {
         editorPlugins: {
           tinymce: tinymceActive,
           quill: quillActive,
-          easyMdx: mdxeditorActive
+          easyMdx: mdxeditorActive,
+          astroEditor: astroEditorActive
         }
       }
       return c.html(renderCollectionFormPage(formData))
@@ -532,16 +538,18 @@ adminCollectionsRoutes.get('/:id', async (c) => {
     }
 
     // Check which editor plugins are active
-    const [tinymceActive, quillActive, mdxeditorActive] = await Promise.all([
+    const [tinymceActive, quillActive, mdxeditorActive, astroEditorActive] = await Promise.all([
       isPluginActive(db, 'tinymce-plugin'),
       isPluginActive(db, 'quill-editor'),
-      isPluginActive(db, 'easy-mdx')
+      isPluginActive(db, 'easy-mdx'),
+      isPluginActive(db, 'astro-editor')
     ])
 
     console.log('[Collections /:id] Editor plugins status:', {
       tinymce: tinymceActive,
       quill: quillActive,
-      easyMdx: mdxeditorActive
+      easyMdx: mdxeditorActive,
+      astroEditor: astroEditorActive
     })
 
     const formData: CollectionFormData = {
@@ -562,7 +570,8 @@ adminCollectionsRoutes.get('/:id', async (c) => {
       editorPlugins: {
         tinymce: tinymceActive,
         quill: quillActive,
-        easyMdx: mdxeditorActive
+        easyMdx: mdxeditorActive,
+        astroEditor: astroEditorActive
       }
     }
 
@@ -572,10 +581,11 @@ adminCollectionsRoutes.get('/:id', async (c) => {
     const user = c.get('user')
 
     // Check which editor plugins are active (even in error state)
-    const [tinymceActive, quillActive, mdxeditorActive] = await Promise.all([
+    const [tinymceActive, quillActive, mdxeditorActive, astroEditorActive] = await Promise.all([
       isPluginActive(db, 'tinymce-plugin'),
       isPluginActive(db, 'quill-editor'),
-      isPluginActive(db, 'easy-mdx')
+      isPluginActive(db, 'easy-mdx'),
+      isPluginActive(db, 'astro-editor')
     ])
 
     const formData: CollectionFormData = {
@@ -590,7 +600,8 @@ adminCollectionsRoutes.get('/:id', async (c) => {
       editorPlugins: {
         tinymce: tinymceActive,
         quill: quillActive,
-        easyMdx: mdxeditorActive
+        easyMdx: mdxeditorActive,
+        astroEditor: astroEditorActive
       }
     }
     return c.html(renderCollectionFormPage(formData))
@@ -797,6 +808,9 @@ adminCollectionsRoutes.post('/:id/fields', async (c) => {
         fieldConfig.type = 'quill'
       } else if (fieldType === 'mdxeditor') {
         fieldConfig.type = 'mdxeditor'
+      } else if (fieldType === 'astro') {
+        // Whole .astro file source, edited with the astro-editor plugin
+        fieldConfig.type = 'astro'
       } else if (fieldType === 'reference') {
         fieldConfig.type = 'reference'
       }

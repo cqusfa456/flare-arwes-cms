@@ -1,5 +1,7 @@
 import { renderDynamicField, renderFieldGroup, FieldDefinition } from '../components/dynamic-field.template'
 import { getQuillCDN, getQuillInitScript } from '../../plugins/core-plugins/quill-editor'
+import { getAstroEditorScript } from '../../plugins/core-plugins/astro-editor'
+import type { AstroEditorOptions } from '../../plugins/core-plugins/astro-editor'
 
 export interface PreviewPageData {
   collection: {
@@ -25,6 +27,8 @@ export interface PreviewPageData {
     defaultToolbar?: string
     theme?: string
   }
+  astroEditorEnabled?: boolean
+  astroEditorSettings?: AstroEditorOptions
 }
 
 function escapeHtml(str: string): string {
@@ -60,7 +64,8 @@ export function renderAdminPreviewPage(data: PreviewPageData): string {
   const pluginStatuses = {
     quillEnabled: data.quillEnabled || false,
     mdxeditorEnabled: false,
-    tinymceEnabled: false
+    tinymceEnabled: false,
+    astroEditorEnabled: data.astroEditorEnabled || false
   }
 
   // Group fields same as content form
@@ -251,6 +256,8 @@ export function renderAdminPreviewPage(data: PreviewPageData): string {
   </div>
 
   ${data.quillEnabled ? getQuillInitScript() : '<!-- Quill init not needed -->'}
+
+  ${data.astroEditorEnabled ? getAstroEditorScript(data.astroEditorSettings || {}) : '<!-- Astro Editor not active -->'}
 
   <script>
     // --- Config ---

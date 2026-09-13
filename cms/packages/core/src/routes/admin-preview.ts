@@ -208,6 +208,15 @@ adminPreviewRoutes.get('/:collectionId/:contentId', requireAuth(), async (c) => 
       quillSettings = quillPlugin?.settings
     }
 
+    // Check if the Astro Editor plugin is active
+    const astroEditorEnabled = await isPluginActive(db, 'astro-editor')
+    let astroEditorSettings
+    if (astroEditorEnabled) {
+      const pluginService = new PluginService(db)
+      const astroEditorPlugin = await pluginService.getPlugin('astro-editor')
+      astroEditorSettings = astroEditorPlugin?.settings
+    }
+
     const html = renderAdminPreviewPage({
       collection,
       content,
@@ -215,7 +224,9 @@ adminPreviewRoutes.get('/:collectionId/:contentId', requireAuth(), async (c) => 
       siteUrl,
       apiUrl,
       quillEnabled,
-      quillSettings
+      quillSettings,
+      astroEditorEnabled,
+      astroEditorSettings
     })
 
     return c.html(html)

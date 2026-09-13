@@ -33,6 +33,8 @@ export type FieldType =
   | 'quill'
   | 'tinymce'
   | 'mdxeditor'
+  // A whole `.astro` file's source (see the CMS's astro-editor plugin).
+  | 'astro'
 
 export interface BlockDefinition {
   label?: string

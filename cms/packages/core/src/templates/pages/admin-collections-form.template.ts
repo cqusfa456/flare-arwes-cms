@@ -35,6 +35,7 @@ export interface CollectionFormData {
     tinymce: boolean
     quill: boolean
     easyMdx: boolean
+    astroEditor?: boolean
   }
 }
 
@@ -46,6 +47,7 @@ function getFieldTypeBadge(fieldType: string): string {
     'richtext': 'Rich Text (TinyMCE)',
     'quill': 'Rich Text (Quill)',
     'mdxeditor': 'EasyMDX',
+    'astro': 'Astro',
     'number': 'Number',
     'boolean': 'Boolean',
     'date': 'Date',
@@ -59,6 +61,7 @@ function getFieldTypeBadge(fieldType: string): string {
     'richtext': 'bg-slate-500/10 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300 ring-slate-500/20 dark:ring-slate-400/20',
     'quill': 'bg-slate-500/10 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300 ring-slate-500/20 dark:ring-slate-400/20',
     'mdxeditor': 'bg-slate-500/10 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300 ring-slate-500/20 dark:ring-slate-400/20',
+    'astro': 'bg-fuchsia-500/10 dark:bg-fuchsia-400/10 text-fuchsia-700 dark:text-fuchsia-300 ring-fuchsia-500/20 dark:ring-fuchsia-400/20',
     'number': 'bg-green-500/10 dark:bg-green-400/10 text-green-700 dark:text-green-300 ring-green-500/20 dark:ring-green-400/20',
     'boolean': 'bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 ring-amber-500/20 dark:ring-amber-400/20',
     'date': 'bg-blue-500/10 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 ring-blue-500/20 dark:ring-blue-400/20',
@@ -566,6 +569,7 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
                 ${data.editorPlugins?.tinymce ? '<option value="richtext">Rich Text (TinyMCE)</option>' : ''}
                 ${data.editorPlugins?.quill ? '<option value="quill">Rich Text (Quill)</option>' : ''}
                 ${data.editorPlugins?.easyMdx ? '<option value="mdxeditor">EasyMDX</option>' : ''}
+                ${data.editorPlugins?.astroEditor ? '<option value="astro">Astro</option>' : ''}
                 <option value="number">Number</option>
                 <option value="boolean">Boolean</option>
                 <option value="date">Date</option>
@@ -934,6 +938,9 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
             case 'date':
               helpText.textContent = 'Date and time picker field';
               break;
+            case 'astro':
+              helpText.textContent = 'Complete .astro file source (frontmatter, markup and expressions) edited with the Astro code editor';
+              break;
             default:
               helpText.textContent = '';
           }
@@ -1134,6 +1141,9 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
               break;
             case 'date':
               helpText.textContent = 'Date and time picker field';
+              break;
+            case 'astro':
+              helpText.textContent = 'Complete .astro file source (frontmatter, markup and expressions) edited with the Astro code editor';
               break;
             default:
               helpText.textContent = '';

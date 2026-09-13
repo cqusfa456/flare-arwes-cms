@@ -13,6 +13,16 @@ export { demoLoginPlugin } from './demo-login'
 export { seedDataPlugin, createSeedDataPlugin } from './seed-data-plugin'
 export { databaseToolsPlugin } from './database-tools-plugin'
 export { quillEditorPlugin, createQuillEditorPlugin } from './quill-editor'
+export {
+  astroEditorPlugin,
+  createAstroEditorPlugin,
+  renderAstroField,
+  getAstroEditorScript,
+  getAstroEditorStyles,
+  analyzeAstroSource,
+  DEFAULT_ASTRO_TEMPLATE
+} from './astro-editor'
+export type { AstroEditorOptions, AstroSourceProblem } from './astro-editor'
 export { emailPlugin, createEmailPlugin } from './email-plugin'
 export { otpLoginPlugin, createOTPLoginPlugin } from './otp-login-plugin'
 export { turnstilePlugin } from './turnstile-plugin'
@@ -28,6 +38,7 @@ export const CORE_PLUGIN_IDS = [
   'seed-data',
   'database-tools',
   'quill-editor',
+  'astro-editor',
   'email',
   'otp-login',
   'turnstile',

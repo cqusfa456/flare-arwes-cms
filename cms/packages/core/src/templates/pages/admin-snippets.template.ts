@@ -42,6 +42,7 @@ function tsType(fieldType: string): string {
     case 'quill':
     case 'tinymce':
     case 'mdxeditor':
+    case 'astro':
     case 'richtext':
     case 'markdown':
     case 'media':

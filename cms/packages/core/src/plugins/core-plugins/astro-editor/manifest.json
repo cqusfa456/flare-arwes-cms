@@ -1,0 +1,52 @@
+{
+  "id": "astro-editor",
+  "name": "Astro Editor",
+  "version": "1.0.0",
+  "description": "CodeMirror 6 editor for astro fields. Holds the source of a whole .astro file (frontmatter, markup and {expressions}) verbatim so the website build can write it to a real page and let Astro compile it.",
+  "author": "Sci-Fi CMS Team",
+  "homepage": "https://codemirror.net/",
+  "repository": "https://github.com/cqusfa456/sci-fi-cms",
+  "license": "MIT",
+  "category": "editor",
+  "tags": ["editor", "astro", "code", "codemirror", "content"],
+  "dependencies": [],
+  "settings": {
+    "theme": {
+      "type": "select",
+      "label": "Editor Theme",
+      "description": "Visual theme for the editor. 'auto' follows the admin dark mode.",
+      "default": "auto",
+      "options": ["auto", "dark", "light"]
+    },
+    "fontSize": {
+      "type": "number",
+      "label": "Font Size",
+      "description": "Editor font size in pixels",
+      "default": 13
+    },
+    "tabSize": {
+      "type": "number",
+      "label": "Tab Size",
+      "description": "Number of spaces used for indentation (and Tab-to-indent)",
+      "default": 2
+    },
+    "lineNumbers": {
+      "type": "boolean",
+      "label": "Line Numbers",
+      "description": "Show the line number gutter",
+      "default": true
+    },
+    "defaultTemplate": {
+      "type": "string",
+      "label": "Default Template",
+      "description": "Astro source inserted into a new, empty astro field. Leave empty to use the built-in starter template (frontmatter plus a Layout wrapper).",
+      "default": ""
+    }
+  },
+  "hooks": {
+    "onActivate": "activate",
+    "onDeactivate": "deactivate"
+  },
+  "routes": [],
+  "permissions": {}
+}
