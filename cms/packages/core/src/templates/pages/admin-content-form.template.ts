@@ -201,7 +201,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             </div>
             <div>
               <h2 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${data.collection.display_name}</h2>
-              <p class="text-sm/6 text-zinc-500 dark:text-zinc-400">${isEdit ? 'Update your content' : 'Create new content'}</p>
+              <p class="text-sm/6 text-zinc-500 dark:text-zinc-400">${isEdit ? t('Update your content') : t('Create new content')}</p>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export function renderContentFormPage(data: ContentFormData): string {
 
           <!-- Publishing Options -->
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">Publishing</h3>
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">${t('Publishing')}</h3>
 
             ${data.workflowEnabled ? `
               <!-- Workflow Status (when workflow plugin is enabled) -->
@@ -281,12 +281,12 @@ export function renderContentFormPage(data: ContentFormData): string {
                   value="${data.scheduled_publish_at ? new Date(data.scheduled_publish_at).toISOString().slice(0, 16) : ''}"
                   class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-950 dark:text-white shadow-sm ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-950 dark:focus:ring-white transition-shadow"
                 >
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Leave empty to publish immediately</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">${t('Leave empty to publish immediately')}</p>
               </div>
 
               <!-- Scheduled Unpublishing -->
               <div class="mb-6">
-                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">Schedule Unpublish</label>
+                <label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">${t('Schedule Unpublish')}</label>
                 <input
                   type="datetime-local"
                   name="scheduled_unpublish_at"
@@ -430,7 +430,7 @@ export function renderContentFormPage(data: ContentFormData): string {
           <a href="${backUrl}" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-sm font-semibold text-zinc-950 dark:text-white ring-1 ring-inset ring-zinc-950/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm">
             ${t('Cancel')}
           </a>
-          <span x-show="dirty" x-cloak class="text-xs text-amber-600 dark:text-amber-400 font-medium">Unsaved changes</span>
+          <span x-show="dirty" x-cloak class="text-xs text-amber-600 dark:text-amber-400 font-medium">${t('Unsaved changes')}</span>
         </div>
 
         <div class="flex items-center gap-x-3">
@@ -452,7 +452,7 @@ export function renderContentFormPage(data: ContentFormData): string {
             value="save"
             class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
           >
-            ${isEdit ? 'Update' : 'Save Draft'}
+            ${isEdit ? t('Update') : t('Save Draft')}
           </button>
 
         </div>

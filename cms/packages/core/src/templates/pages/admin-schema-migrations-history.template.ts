@@ -59,7 +59,7 @@ function statusBadge(status: string): string {
     case 'rolled_back':
       return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset bg-amber-400/10 text-amber-400 ring-amber-400/30">Rolled Back</span>`
     case 'failed':
-      return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset bg-red-400/10 text-red-400 ring-red-400/30">Failed</span>`
+      return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset bg-red-400/10 text-red-400 ring-red-400/30">${t('Failed')}</span>`
     default:
       return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset bg-zinc-400/10 text-zinc-400 ring-zinc-400/30">${escapeHtml(status)}</span>`
   }

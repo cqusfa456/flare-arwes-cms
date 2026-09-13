@@ -94,7 +94,7 @@ const buildBadge = (site: Site): string => {
     return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">Never built</span>`
   }
   if (status === 'failed') {
-    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">Failed</span>`
+    return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">${t('Failed')}</span>`
   }
   if (status === 'queued' || status === 'building') {
     return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">Queued</span>`
