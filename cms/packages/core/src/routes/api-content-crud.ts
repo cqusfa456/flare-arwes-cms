@@ -179,13 +179,18 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
     // Create new content
     const contentId = crypto.randomUUID()
     const now = Date.now()
+    const initialStatus = status || 'draft'
+    // An item created straight into "published" needs a publish date: nothing
+    // else fills this column, and it is what a blog build orders and dates
+    // posts by, so leaving it NULL makes every API-created post undated.
+    const publishedAt = initialStatus === 'published' ? now : null
 
     const insertStmt = db.prepare(`
       INSERT INTO content (
         id, collection_id, slug, title, data, status,
-        author_id, site_id, created_at, updated_at
+        author_id, site_id, created_at, updated_at, published_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -194,11 +199,12 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       finalSlug,
       title,
       JSON.stringify(data || {}),
-      status || 'draft',
+      initialStatus,
       user?.userId || 'system',
       siteId,
       now,
       now,
+      publishedAt,
     ).run()
 
     // Log creation in audit trail (non-blocking)
@@ -406,8 +412,10 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
       updates.push('status = ?')
       params.push(body.status)
 
-      // Transitioning to published: record first publish timestamp if not already set
-      if (body.status === 'published' && existing.status !== 'published' && !existing.published_at) {
+      // Record the first publish timestamp. This also backfills a row that is
+      // already published but has no date (created as published before the
+      // column was written on create), which would otherwise stay undated.
+      if (body.status === 'published' && !existing.published_at) {
         updates.push('published_at = ?')
         params.push(Date.now())
       }

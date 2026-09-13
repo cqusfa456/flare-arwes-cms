@@ -6,7 +6,7 @@ import { renderContentFormPage, ContentFormData } from '../templates/pages/admin
 import { renderContentListPage, ContentListPageData } from '../templates/pages/admin-content-list.template'
 import { renderVersionHistory, VersionHistoryData, ContentVersion } from '../templates/components/version-history.template'
 import { isPluginActive } from '../middleware/plugin-middleware'
-import { getCacheService, CACHE_CONFIGS } from '../services/cache'
+import { getCacheService, CACHE_CONFIGS, invalidatePublicContentCache } from '../services/cache'
 import { validateStatusTransition, isSlugLocked } from '../services/content-state-machine'
 import { checkCollectionPermission, getCollectionPermissions, isAuthorAllowedToEdit } from '../services/rbac'
 import { logStatusChange, logContentEdit, computeFieldDiff } from '../services/audit-trail'
@@ -1043,9 +1043,9 @@ adminContentRoutes.post('/', async (c) => {
     const insertStmt = db.prepare(`
       INSERT INTO content (
         id, collection_id, slug, title, data, status,
-        author_id, site_id, created_at, updated_at
+        author_id, site_id, created_at, updated_at, published_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -1058,12 +1058,16 @@ adminContentRoutes.post('/', async (c) => {
       user?.userId || 'unknown',
       siteId,
       now,
-      now
+      now,
+      // Creating an entry as published has to record the date: nothing else
+      // fills this column, and a blog build orders and dates posts by it.
+      status === 'published' ? now : null
     ).run()
 
     // Invalidate collection content list cache
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.invalidate(`content:list:${collectionId}:*`)
+    await invalidatePublicContentCache()
 
     // Create initial version
     const versionStmt = db.prepare(`
@@ -1275,7 +1279,9 @@ adminContentRoutes.put('/:id', async (c) => {
 
     // Determine published_at: set on first publish, clear on unpublish, preserve otherwise
     let publishedAt: number | null = existingContent.published_at || null
-    if (status === 'published' && existingContent.status !== 'published' && !existingContent.published_at) {
+    // Not gated on a status change: an entry published without a date (created
+    // as published before the column was written on create) is backfilled here.
+    if (status === 'published' && !existingContent.published_at) {
       publishedAt = Date.now()
     } else if (isUnpublishing) {
       publishedAt = null
@@ -1369,6 +1375,7 @@ adminContentRoutes.put('/:id', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate(`content:list:${existingContent.collection_id}:*`)
+    await invalidatePublicContentCache()
     if (c.env.CACHE_KV) {
       const cv = await c.env.CACHE_KV.get('sci-fi:content_version')
       await c.env.CACHE_KV.put('sci-fi:content_version', String((cv ? parseInt(cv, 10) : 0) + 1))
@@ -1775,6 +1782,9 @@ adminContentRoutes.post('/bulk-action', async (c) => {
     }
     // Also invalidate list caches (they contain content from potentially multiple collections)
     await cache.invalidate('content:list:*')
+    // The public API caches its responses under its own namespace, so without
+    // this the next site build can still read the pre-change response.
+    await invalidatePublicContentCache()
 
     // Audit log for bulk actions
     const auditAction = action === 'delete' ? 'content.delete'
@@ -1838,6 +1848,9 @@ adminContentRoutes.delete('/:id', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate('content:list:*')
+    // The public API caches its responses under its own namespace, so without
+    // this the next site build can still read the pre-change response.
+    await invalidatePublicContentCache()
 
     logAudit(db, { userId: user!.userId, userEmail: user!.email, action: 'content.delete', resourceType: 'content', resourceId: id, resourceTitle: content.title, ipAddress: getClientIP(c.req) })
 
@@ -1892,6 +1905,9 @@ adminContentRoutes.post('/:id/restore', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate('content:list:*')
+    // The public API caches its responses under its own namespace, so without
+    // this the next site build can still read the pre-change response.
+    await invalidatePublicContentCache()
 
     return c.html(`
       <div id="content-list" hx-get="/admin/content?status=deleted" hx-trigger="load" hx-swap="outerHTML">
@@ -1940,6 +1956,9 @@ adminContentRoutes.delete('/:id/purge', async (c) => {
     const cache = getCacheService(CACHE_CONFIGS.content!)
     await cache.delete(cache.generateKey('content', id))
     await cache.invalidate('content:list:*')
+    // The public API caches its responses under its own namespace, so without
+    // this the next site build can still read the pre-change response.
+    await invalidatePublicContentCache()
 
     return c.html(`
       <div id="content-list" hx-get="/admin/content?status=deleted" hx-trigger="load" hx-swap="outerHTML">

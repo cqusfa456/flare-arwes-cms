@@ -264,3 +264,17 @@ export function getCacheService(config: CacheConfig): CacheService {
   }
   return cacheInstances.get(config.keyPrefix)!
 }
+
+/**
+ * Invalidate the cached responses of the public content API.
+ *
+ * Every content mutation must call this. The admin flows invalidated only the
+ * `content` namespace while the public API files its responses under `api`, so
+ * an edit could leave the API — and therefore the next site build — serving the
+ * pre-edit response until its TTL expired.
+ */
+export async function invalidatePublicContentCache(): Promise<void> {
+  const cache = getCacheService(CACHE_CONFIGS.api!)
+  await cache.invalidate('content-filtered:*')
+  await cache.invalidate('content:list:*')
+}
