@@ -72,6 +72,9 @@ const run = async () => {
   log(
     `${components.length} component(s), ${componentMenus.length} menu(s), ${layouts.length} layout(s) in the repository`
   )
+  // Said before anything is written: an entry with the same key is replaced by the
+  // repository's fixture, so an edit made in the admin is lost.
+  log('note: entries with the same key are overwritten by the repository fixtures')
 
   const login = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
