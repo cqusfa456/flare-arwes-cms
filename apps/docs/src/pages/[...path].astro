@@ -155,6 +155,8 @@ export async function getStaticPaths() {
             title: post.data.title,
             contentHtml: md.render(String(post.data.content ?? '')),
             metaDescription: post.data.excerpt ?? post.data.meta_description,
+            // The layout version this post chose in the CMS, if any.
+            layout: typeof post.data.layout === 'string' ? post.data.layout : undefined,
             // The loader exposes the publish date as the `_publishedAt` system
             // field (`published_at` never reaches the page: the API transform
             // dropped the column and Astro strips undeclared schema keys).
@@ -204,7 +206,9 @@ export async function getStaticPaths() {
           cmsPage: {
             title: doc.data.title,
             contentHtml: md.render(String(doc.data.content ?? '')),
-            metaDescription: doc.data.excerpt
+            metaDescription: doc.data.excerpt,
+            // The layout version this doc chose in the CMS, if any.
+            layout: typeof doc.data.layout === 'string' ? doc.data.layout : undefined
           }
         }
       }
