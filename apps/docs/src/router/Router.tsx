@@ -2,11 +2,16 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useAtom } from 'jotai'
 
 import { atomPathname } from './store'
-import { NavigateContext } from './context'
+import { AppBaseContext, NavigateContext } from './context'
 import { isRoute } from './routes'
 
 type RouterProps = {
   children: ReactNode
+  /**
+   * Base URL of the site that serves the app's own routes, when this build is a
+   * content-only host (see `Link`). Undefined on the main site.
+   */
+  appBaseUrl?: string
 }
 
 // Normalize a pathname: remove trailing slashes (except for the root path)
@@ -28,7 +33,7 @@ const normalizePathname = (pathname: string): string => {
 // navigated with a full page load since their content is only available
 // in the server-rendered HTML.
 const Router = (props: RouterProps): JSX.Element => {
-  const { children } = props
+  const { children, appBaseUrl } = props
 
   const [pathname, setPathname] = useAtom(atomPathname)
 
@@ -88,7 +93,11 @@ const Router = (props: RouterProps): JSX.Element => {
 
   const navigateValue = useMemo(() => navigate, [navigate])
 
-  return <NavigateContext.Provider value={navigateValue}>{children}</NavigateContext.Provider>
+  return (
+    <AppBaseContext.Provider value={appBaseUrl}>
+      <NavigateContext.Provider value={navigateValue}>{children}</NavigateContext.Provider>
+    </AppBaseContext.Provider>
+  )
 }
 
 export { Router }

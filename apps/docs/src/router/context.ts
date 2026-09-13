@@ -8,4 +8,15 @@ const NavigateContext = createContext<NavigateFn>(() => {})
 
 const useNavigate = (): NavigateFn => useContext(NavigateContext)
 
-export { NavigateContext, useNavigate }
+/**
+ * Base URL of the site that serves the app's own routes.
+ *
+ * A content-only host (for example a blog subdomain) does not generate those
+ * routes, so links to them have to point at the main site instead. Undefined on
+ * the main site, where every link is local.
+ */
+const AppBaseContext = createContext<string | undefined>(undefined)
+
+const useAppBase = (): string | undefined => useContext(AppBaseContext)
+
+export { NavigateContext, useNavigate, AppBaseContext, useAppBase }

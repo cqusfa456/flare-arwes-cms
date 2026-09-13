@@ -16,5 +16,6 @@ export type {
   SciFiContentItem,
   SciFiApiResponse,
   SciFiD1Options,
-  SciFiCollectionInfo
+  SciFiCollectionInfo,
+  SciFiSiteRouting
 } from './types'

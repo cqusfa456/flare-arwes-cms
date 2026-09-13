@@ -15,7 +15,7 @@ import type { Context } from 'hono'
 import { requireAuth, requireRole } from '../middleware'
 import { SettingsService } from '../services/settings'
 import { SitesService, SitesConfigError, buildSiteEnvironment } from '../services/sites'
-import type { Site, SiteInput, SiteDeployMode } from '../services/sites'
+import type { Site, SiteInput, SiteDeployMode, SiteContentRoutesInput } from '../services/sites'
 import { SITE_DEPLOY_MODES, deployModeLabel, defaultDeployMode } from '../services/sites'
 import { SITE_PROVIDERS, getSiteProvider } from '../services/site-providers'
 import { ARWES_SITE_PRESETS } from '../services/site-presets'
@@ -87,6 +87,32 @@ const readJson = async (c: SitesContext): Promise<Record<string, unknown>> => {
 
 const str = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
+
+/**
+ * Read a site payload's content-routes field.
+ *
+ * The admin form posts it as `content_routes` — the column name, matching the
+ * collections API's `url_prefix` — while a JSON API client may use the camelCase
+ * `contentRoutes` that the rest of a site payload uses; both are accepted. The
+ * value may be an object, a JSON string or null/absent, and is normalised and
+ * validated against `collections.name` by `services/sites.ts`. Returning
+ * `undefined` for an absent field is what makes a PATCH leave the stored value
+ * alone (so an old client cannot silently clear it).
+ */
+const contentRoutesInput = (body: Record<string, unknown>): SiteContentRoutesInput | undefined => {
+  const value = body.contentRoutes !== undefined ? body.contentRoutes : body.content_routes
+  if (value === undefined) return undefined
+  return value as SiteContentRoutesInput
+}
+
+/** Site payloads, with `content_routes` folded onto the camelCase input field. */
+const siteInputFrom = (body: Record<string, unknown>): SiteInput => {
+  const contentRoutes = contentRoutesInput(body)
+  return {
+    ...body,
+    ...(contentRoutes === undefined ? {} : { contentRoutes })
+  } as unknown as SiteInput
+}
 
 /** Read an optional string binding without widening the Bindings type. */
 const envString = (c: SitesContext, key: string): string => {
@@ -190,7 +216,7 @@ adminSitesRoutes.get('/api/sites', async (c) => {
 adminSitesRoutes.post('/api/sites', async (c) => {
   const body = await readJson(c)
   try {
-    const site = await sitesService(c).create(body as unknown as SiteInput)
+    const site = await sitesService(c).create(siteInputFrom(body))
     return c.json({ success: true, site: toPublicSite(site) }, 201)
   } catch (error) {
     return errorResponse(c, error, 'Failed to register site')
@@ -200,7 +226,10 @@ adminSitesRoutes.post('/api/sites', async (c) => {
 adminSitesRoutes.patch('/api/sites/:id', async (c) => {
   const body = await readJson(c)
   try {
-    const site = await sitesService(c).update(c.req.param('id'), body as Partial<SiteInput>)
+    const site = await sitesService(c).update(
+      c.req.param('id'),
+      siteInputFrom(body) as Partial<SiteInput>
+    )
     return c.json({ success: true, site: toPublicSite(site) })
   } catch (error) {
     return errorResponse(c, error, 'Failed to update site')

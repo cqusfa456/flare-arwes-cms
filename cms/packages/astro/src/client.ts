@@ -9,7 +9,8 @@ import type {
   SciFiLoaderOptions,
   SciFiContentItem,
   SciFiApiResponse,
-  SciFiCollectionInfo
+  SciFiCollectionInfo,
+  SciFiSiteRouting
 } from './types'
 
 interface CollectionMeta {
@@ -104,6 +105,46 @@ export class SciFiClient {
       console.warn(
         `[sci-fi-cms/astro] "${collection}" was scoped to site "${scope.siteSlug}" but no \`site\` option is set; the scope came from the request.`
       )
+    }
+  }
+
+  /**
+   * How this build's site is wired: the collections it publishes on itself, the
+   * absolute URLs of collections published on other sites, and the website's own
+   * base URL. Returns null when the CMS does not know the site.
+   */
+  async fetchSiteRouting(site?: string): Promise<SciFiSiteRouting | null> {
+    const target = site ?? this.site
+    if (!target) {
+      return null
+    }
+
+    try {
+      const res = await fetch(`${this.apiUrl}/api/site`, {
+        headers: { ...this.headers(), 'X-Site': target }
+      })
+      if (!res.ok) {
+        console.error(`[sci-fi-cms/astro] Failed to fetch site routing: ${res.status} ${res.statusText}`)
+        return null
+      }
+
+      const json = (await res.json()) as { data?: Record<string, unknown> | null }
+      const data = json.data
+      if (!data) {
+        return null
+      }
+
+      return {
+        slug: String(data.slug ?? target),
+        name: String(data.name ?? data.slug ?? target),
+        domain: (data.domain ?? null) as string | null,
+        contentRoutes: (data.contentRoutes ?? null) as Record<string, string> | null,
+        external: (data.external ?? {}) as Record<string, string>,
+        appBaseUrl: (data.appBaseUrl ?? null) as string | null
+      }
+    } catch (err) {
+      console.error('[sci-fi-cms/astro] Network error fetching site routing:', err)
+      return null
     }
   }
 

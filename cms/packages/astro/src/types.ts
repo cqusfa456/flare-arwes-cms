@@ -84,6 +84,37 @@ export interface SciFiCollectionInfo {
 }
 
 /**
+ * How a site is wired: which collections it publishes, under which prefixes, and
+ * where the rest of the deployment lives.
+ *
+ * Read from the CMS at build time, so one repository can build the website and a
+ * content-only host (e.g. a blog subdomain) from the same code.
+ */
+export interface SciFiSiteRouting {
+  slug: string
+  name: string
+
+  /** The site's primary custom domain, when it has one. */
+  domain: string | null
+
+  /**
+   * Collection name → the prefix it is published under **on this site**.
+   *
+   * `null` means this is the "app site": it publishes the site's own routes plus
+   * every routed collection at the collection's own `url_prefix`. An object means
+   * a content-only site that publishes only those collections (`''` is that
+   * host's root).
+   */
+  contentRoutes: Record<string, string> | null
+
+  /** Absolute base URL of a collection published on another site, by collection name. */
+  external: Record<string, string>
+
+  /** Base URL of the site that builds the website, for a content-only site's links home. */
+  appBaseUrl: string | null
+}
+
+/**
  * Shape of a content item returned by the Sci-Fi CMS API.
  */
 export interface SciFiContentItem {

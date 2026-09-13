@@ -9,67 +9,117 @@ import { CmsPage } from '@/cms/CmsPage'
 import { DocsCmsPage } from '@/cms/DocsCmsPage'
 import { BlogPostPage } from '@/cms/BlogPostPage'
 import { BlogIndexPage } from '@/cms/BlogIndexPage'
-import { collectionIndexPath, contentPath, getCollectionPrefixes } from '@/lib/cms-collections'
-// Build the static paths: the app's own routes plus the CMS-managed entries.
+import {
+  collectionIndexPath,
+  contentPath,
+  getCollectionPrefixes,
+  isAppSite
+} from '@/lib/cms-collections'
+
+// Build the static paths.
 //
-// Where each collection is published comes from the CMS (`url_prefix`, editable
-// at Admin → Collections), so moving a content type is a CMS change plus a
-// rebuild instead of a code change. A path that would collide with an app route
-// (or with another CMS entry) is skipped, because the app owns its routes.
+// Where content is published comes from the CMS, in two layers (see
+// src/lib/cms-collections.ts): each collection's URL prefix, and the site's
+// `content_routes` when it is a content-only host such as a blog subdomain.
+//
+// Ownership rules:
+//   * documentation and the blog own their trees;
+//   * every other path — including the front page — can be claimed by a CMS page,
+//     and such a page wins over the app's own route, so those pages are managed in
+//     the CMS instead of in code;
+//   * a content-only site publishes only its collections and none of the app's
+//     routes.
 export async function getStaticPaths() {
+  // Kept inside the function: a module-scope helper does not survive the
+  // static-paths bundling.
+  const stripTrailing = (value: string): string =>
+    value.length > 1 ? value.replace(/\/+$/, '') : value
+
   // Markdown renderer for CMS content.
   const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
 
-  const prefixes = await getCollectionPrefixes()
+  const [prefixes, appSite, cmsPages, cmsDocs, cmsPosts, cmsSections] = await Promise.all([
+    getCollectionPrefixes(),
+    isAppSite(),
+    getCollection('pages'),
+    getCollection('docs'),
+    getCollection('posts'),
+    getCollection('docsSections')
+  ])
+
   const docsPrefix = prefixes.get('docs')
   const postsPrefix = prefixes.get('blog-posts')
   const pagesPrefix = prefixes.get('pages')
 
-  const cmsPages = await getCollection('pages')
-  const cmsDocs = await getCollection('docs')
-  const cmsPosts = await getCollection('posts')
-  const cmsSections = await getCollection('docsSections')
+  const docsBase = collectionIndexPath(docsPrefix)
+  const postsBase = collectionIndexPath(postsPrefix)
+  const isDocsOrBlog = (path: string): boolean =>
+    [docsBase, postsBase].some(
+      (base) => base !== null && (stripTrailing(path) === base || stripTrailing(path).startsWith(`${base}/`))
+    )
 
-  // Everything the app already serves, plus what the CMS claims as we go.
-  const claimed = new Set<string>(routes)
+  const claimed = new Set<string>()
   const claim = (path: string): boolean => {
-    if (!path || claimed.has(path)) {
+    const key = stripTrailing(path)
+    if (!key || claimed.has(key)) {
       return false
     }
-    claimed.add(path)
+    claimed.add(key)
     return true
   }
 
-  const appPaths = routes.map((route) => ({
+  const cmsPageProps = (page: { data: Record<string, any> }): Record<string, unknown> => ({
+    title: page.data.title,
+    contentHtml: md.render(String(page.data.content ?? '')),
+    // `excerpt` is the summary field of the CMS's built-in collections;
+    // `meta_description` is what pages created earlier carry.
+    metaDescription: page.data.excerpt ?? page.data.meta_description
+  })
+
+  // 1. CMS pages claim their paths first. Outside the docs and blog trees they
+  //    take precedence, so "everything that is not documentation or the blog" —
+  //    including the front page — can live in the `pages` collection.
+  const pageRoutes = new Map<string, Record<string, unknown>>()
+  for (const page of cmsPages) {
+    const slug = String(page.data.slug ?? '')
+    // `index` (or `home`) is the collection's own front page.
+    const path =
+      slug === 'index' || slug === 'home'
+        ? collectionIndexPath(pagesPrefix)
+        : contentPath(pagesPrefix, slug)
+
+    if (!path) {
+      continue
+    }
+    if (isDocsOrBlog(path)) {
+      console.warn(`[routing] page "${slug}" would sit inside docs or the blog; skipped (${path})`)
+      continue
+    }
+    if (!claim(path)) {
+      console.warn(`[routing] page "${slug}" duplicates ${path}; skipped`)
+      continue
+    }
+    pageRoutes.set(path, cmsPageProps(page))
+  }
+
+  // 2. The app's own routes, minus the ones a CMS page took over. A content-only
+  //    site has none: it serves its collections and nothing else.
+  const appRoutePaths = appSite ? routes.filter((route) => !claimed.has(stripTrailing(route))) : []
+  for (const route of appRoutePaths) {
+    claimed.add(stripTrailing(route))
+  }
+
+  const appPaths = appRoutePaths.map((route) => ({
     params: { path: route === '/' ? undefined : route.slice(1) },
     props: { pathname: route, cmsPage: undefined }
   }))
 
-  // Standalone CMS pages. Their prefix is normally empty, which publishes them at
-  // the site root.
-  const pagePaths = cmsPages.flatMap((page) => {
-    const path = contentPath(pagesPrefix, page.data.slug)
-    if (!path || !claim(path)) {
-      return []
-    }
-    return [
-      {
-        params: { path: path.replace(/^\//, '') },
-        props: {
-          pathname: path,
-          cmsPage: {
-            title: page.data.title,
-            contentHtml: md.render(String(page.data.content ?? '')),
-            // `excerpt` is the summary field of the CMS's built-in collections;
-            // `meta_description` is what pages created earlier carry.
-            metaDescription: page.data.excerpt ?? page.data.meta_description
-          }
-        }
-      }
-    ]
-  })
+  const pagePaths = [...pageRoutes.entries()].map(([path, cmsPage]) => ({
+    params: { path: path === '/' ? undefined : path.replace(/^\//, '') },
+    props: { pathname: stripTrailing(path), cmsPage }
+  }))
 
-  // Blog posts.
+  // 3. Blog posts.
   const postPaths = cmsPosts.flatMap((post) => {
     const path = contentPath(postsPrefix, post.data.slug)
     if (!path || !claim(path)) {
@@ -79,7 +129,7 @@ export async function getStaticPaths() {
       {
         params: { path: path.replace(/^\//, '') },
         props: {
-          pathname: path,
+          pathname: stripTrailing(path),
           blog: true,
           cmsPage: {
             title: post.data.title,
@@ -97,8 +147,9 @@ export async function getStaticPaths() {
     ]
   })
 
-  // Documentation. Sections only group content administratively, so a doc's URL
-  // does not include one: it can move between sections without breaking links.
+  // 4. Documentation. Sections only group content administratively, so a doc's
+  //    URL does not include one: it can move between sections without breaking
+  //    links.
   const sectionSlugById = new Map(cmsSections.map((section: any) => [section.id, section.data.slug]))
   const navSections = cmsSections.map((section: any) => ({
     slug: section.data.slug,
@@ -127,7 +178,7 @@ export async function getStaticPaths() {
       {
         params: { path: path.replace(/^\//, '') },
         props: {
-          pathname: path,
+          pathname: stripTrailing(path),
           docs: true,
           navData: JSON.stringify({ sections: navSections, docs: navDocs }),
           cmsPage: {
@@ -140,13 +191,13 @@ export async function getStaticPaths() {
     ]
   })
 
-  // The blog index lives at its collection's prefix (`/blog`).
+  // 5. The blog index, at its collection's prefix (the host root on a blog site).
   const blogIndexPath = collectionIndexPath(postsPrefix)
-  const hasBlogIndex = !!blogIndexPath && claim(blogIndexPath)
+  const hasBlogIndex = blogIndexPath !== null && claim(blogIndexPath)
   const indexPaths = hasBlogIndex
     ? [
         {
-          params: { path: blogIndexPath!.replace(/^\//, '') },
+          params: { path: blogIndexPath === '/' ? undefined : blogIndexPath.replace(/^\//, '') },
           props: {
             pathname: blogIndexPath,
             blogIndex: true,
@@ -180,8 +231,7 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
 ---
 
 <Layout
-  title={pageTitle ??
-    (cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname))}
+  title={pageTitle ?? (cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname))}
   pathname={pathname}
 >
   {/*

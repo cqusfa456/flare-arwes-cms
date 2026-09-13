@@ -64,7 +64,18 @@ export type {
   SiteBuildEnvVar,
   SyncBuildConfigResult,
   SitePresetImportResult,
+  SiteContentRoutes,
+  SiteContentRoutesInput,
 } from './sites'
+
+// Site routing — what a site publishes and where the rest of the deployment is
+// (backing the public `GET /api/site`; mirrored by the Astro D1 loader client)
+export {
+  buildSiteRouting,
+  resolveRequestSiteRouting,
+  siteBaseUrl,
+} from './site-routing'
+export type { SiteRouting, RequestSiteRouting } from './site-routing'
 
 // Provider metadata — labels, applicable fields and the capability matrix the
 // Admin → Sites pages group and gate on.

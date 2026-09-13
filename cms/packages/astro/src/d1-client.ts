@@ -11,7 +11,32 @@
  * rest of the build noticing.
  */
 import type { CollectionSchema } from './types-cms'
-import type { SciFiContentItem, SciFiD1Options, SciFiCollectionInfo } from './types'
+import type {
+  SciFiContentItem,
+  SciFiD1Options,
+  SciFiCollectionInfo,
+  SciFiSiteRouting
+} from './types'
+
+/**
+ * Parse a site's `content_routes` JSON column: an object mapping collection name
+ * to the prefix it is published under on that site. `null` means the site builds
+ * the whole website (see the CMS's site-routing service).
+ */
+function parseContentRoutes(value: string | null): Record<string, string> | null {
+  if (!value) {
+    return null
+  }
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null
+    }
+    return parsed as Record<string, string>
+  } catch {
+    return null
+  }
+}
 
 const API_BASE = 'https://api.cloudflare.com/client/v4'
 
@@ -214,6 +239,104 @@ export class SciFiD1Client {
       updated_at: row.updated_at,
       published_at: row.published_at ?? null
     }))
+  }
+
+  /**
+   * How this build's site is wired, read straight from the sites tables.
+   *
+   * This mirrors the CMS's `GET /api/site` (see `services/site-routing.ts` in
+   * @sci-fi-cms/core) so a D1 build and an API build route content identically.
+   */
+  async fetchSiteRouting(site?: string): Promise<SciFiSiteRouting | null> {
+    const target = site ?? this.site
+    if (!target) {
+      return null
+    }
+
+    const rows = await this.query<{
+      id: string
+      slug: string
+      name: string
+      provider: string
+      cf_project_name: string | null
+      content_routes: string | null
+    }>(
+      `SELECT id, slug, name, provider, cf_project_name, content_routes
+       FROM sites
+       WHERE is_active = 1 AND (slug = ? OR id = ?)
+       LIMIT 1`,
+      [target, target]
+    )
+    const current = rows[0]
+    if (!current) {
+      return null
+    }
+
+    // Every active site, with its primary active custom domain (if any).
+    const siteRows = await this.query<{
+      id: string
+      slug: string
+      provider: string
+      cf_project_name: string | null
+      content_routes: string | null
+    }>(
+      `SELECT id, slug, provider, cf_project_name, content_routes
+       FROM sites
+       WHERE is_active = 1`
+    )
+    const domainRows = await this.query<{ site_id: string; hostname: string; is_primary: number }>(
+      `SELECT site_id, hostname, is_primary
+       FROM site_domains
+       WHERE status = 'active'
+       ORDER BY is_primary DESC`
+    )
+
+    const baseUrlOf = (siteRow: { id: string; provider: string; cf_project_name: string | null }): string | null => {
+      const domain = domainRows.find((row) => row.site_id === siteRow.id)?.hostname
+      if (domain) {
+        return `https://${domain}`
+      }
+      if (siteRow.provider === 'cloudflare-pages' && siteRow.cf_project_name) {
+        return `https://${siteRow.cf_project_name}.pages.dev`
+      }
+      return null
+    }
+
+    const contentRoutes = parseContentRoutes(current.content_routes)
+    const published = new Set(Object.keys(contentRoutes ?? {}))
+
+    const external: Record<string, string> = {}
+    for (const other of siteRows) {
+      if (other.id === current.id) {
+        continue
+      }
+      const base = baseUrlOf(other)
+      if (!base) {
+        continue
+      }
+      for (const [collection, prefix] of Object.entries(parseContentRoutes(other.content_routes) ?? {})) {
+        if (published.has(collection) || external[collection]) {
+          continue
+        }
+        external[collection] = `${base}${prefix.replace(/\/+$/, '')}`
+      }
+    }
+
+    // The website itself is built by the active site that does not declare content
+    // routes; a content-only site links back to it.
+    const appSite = siteRows.find(
+      (row) => row.id !== current.id && parseContentRoutes(row.content_routes) === null
+    )
+    const appBaseUrl = contentRoutes === null || !appSite ? null : baseUrlOf(appSite)
+
+    return {
+      slug: current.slug,
+      name: current.name,
+      domain: domainRows.find((row) => row.site_id === current.id)?.hostname ?? null,
+      contentRoutes,
+      external,
+      appBaseUrl
+    }
   }
 
   /** The collections the CMS exposes, with the URL prefix of each. */

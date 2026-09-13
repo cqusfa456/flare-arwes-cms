@@ -8,6 +8,7 @@ import {
   describeSiteScope
 } from '../services/content-site-scope'
 import { QueryFilterBuilder, QueryFilter } from '../utils'
+import { resolveRequestSiteRouting } from '../services/site-routing'
 import { isPluginActive } from '../middleware'
 import { validateApiToken } from '../services/api-tokens'
 import apiContentCrudRoutes from './api-content-crud'
@@ -918,5 +919,48 @@ apiRoutes.get('/collections/:collection/content', async (c) => {
 
 // Mount CRUD routes for content
 apiRoutes.route('/content', apiContentCrudRoutes)
+
+/**
+ * How the requesting site is wired: which collections it publishes and where the
+ * other hosts live.
+ *
+ * A build identifies itself with `X-Site: <slug|id>` (what the deploy workflow
+ * sends as `PUBLIC_SCIFI_SITE`) or `?site=`. The answer is how one repository can
+ * build both the website and a content-only host (a blog subdomain): `data` is
+ * null — always with a 200, so the build can fall back cleanly — when no site was
+ * identified or the named site is unknown/inactive, and `meta.reason` says which.
+ * See `services/site-routing.ts` for the contract; the Astro D1 loader client
+ * mirrors it for D1 builds.
+ */
+apiRoutes.get('/site', async (c) => {
+  const routing = await resolveRequestSiteRouting(c.env.DB, {
+    header: c.req.header('X-Site'),
+    query: c.req.query('site'),
+    tokenSiteId: c.get('apiToken')?.site_id ?? null
+  })
+
+  const meta = {
+    siteScope: describeSiteScope(routing.scope)
+  }
+
+  if (!routing.routing || !routing.site) {
+    return c.json({
+      data: null,
+      meta: { ...meta, reason: routing.reason }
+    })
+  }
+
+  return c.json({
+    data: {
+      slug: routing.routing.slug,
+      name: routing.routing.name,
+      domain: routing.routing.domain,
+      contentRoutes: routing.routing.contentRoutes,
+      external: routing.routing.external,
+      appBaseUrl: routing.routing.appBaseUrl
+    },
+    meta
+  })
+})
 
 export default apiRoutes

@@ -1,7 +1,7 @@
 ---
 import { settings } from '@/config/settings'
 import { AppShell } from '@/AppShell'
-import { collectionIndexUrl, getCollectionPrefixes } from '@/lib/cms-collections'
+import { collectionIndexHref, getSiteRouting } from '@/lib/cms-collections'
 
 import '@/ui/globals.css'
 
@@ -12,9 +12,13 @@ interface LayoutProps {
 
 const { title, pathname } = Astro.props
 
-// The blog's path is a CMS setting (the `blog-posts` collection's URL prefix), so
-// the header link follows it instead of assuming /blog. Undefined hides the link.
-const blogPath = collectionIndexUrl((await getCollectionPrefixes()).get('blog-posts')) ?? undefined
+// Two CMS settings shape the shell's navigation:
+//   * the blog link follows the `blog-posts` collection's prefix, and points at
+//     another host when a secondary site publishes the blog there;
+//   * a content-only host (a blog subdomain) links the app's own routes back to
+//     the main site, because it does not generate them.
+const [blogPath, routing] = await Promise.all([collectionIndexHref('blog-posts'), getSiteRouting()])
+const appBaseUrl = routing.appBaseUrl ?? undefined
 ---
 
 <html lang="en">
@@ -53,7 +57,7 @@ const blogPath = collectionIndexUrl((await getCollectionPrefixes()).get('blog-po
     <title>{title}</title>
   </head>
   <body>
-    <AppShell client:load pathname={pathname} blogPath={blogPath}>
+    <AppShell client:load pathname={pathname} blogPath={blogPath ?? undefined} appBaseUrl={appBaseUrl}>
       <slot />
     </AppShell>
   </body>

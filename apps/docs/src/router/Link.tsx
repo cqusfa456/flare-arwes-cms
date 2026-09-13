@@ -1,7 +1,7 @@
 import { type AnchorHTMLAttributes, type ReactNode, useCallback } from 'react'
 
-import { useNavigate } from './context'
 import { isRoute } from './routes'
+import { useAppBase, useNavigate } from './context'
 
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
   href: string
@@ -16,6 +16,14 @@ const Link = (props: LinkProps): JSX.Element => {
   const { href, target, onClick, children, ...rest } = props
 
   const navigate = useNavigate()
+  const appBase = useAppBase()
+
+  // On a content-only host the app's own routes live on another site, so a link
+  // to one has to be absolute (and therefore a normal page load). The root is
+  // excluded: on such a host `/` is the collection's index, served locally.
+  const isAppRouteElsewhere = !!appBase && isRoute(href) && href !== '/'
+  const resolvedHref =
+    isAppRouteElsewhere && href.startsWith('/') ? `${appBase!.replace(/\/+$/, '')}${href}` : href
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -30,16 +38,16 @@ const Link = (props: LinkProps): JSX.Element => {
       const isModified =
         event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0
 
-      if (isInternal && isRoute(href) && !isNewTab && !isModified) {
+      if (isInternal && isRoute(href) && !isNewTab && !isModified && !isAppRouteElsewhere) {
         event.preventDefault()
         navigate(href)
       }
     },
-    [href, target, onClick, navigate]
+    [href, target, onClick, navigate, isAppRouteElsewhere]
   )
 
   return (
-    <a {...rest} href={href} target={target} onClick={handleClick}>
+    <a {...rest} href={resolvedHref} target={target} onClick={handleClick}>
       {children}
     </a>
   )

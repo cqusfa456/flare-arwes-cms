@@ -230,6 +230,40 @@ const providerFieldsScript = `
   }
 `
 
+/**
+ * Validate the Content Routes textarea locally before saving.
+ *
+ * `services/sites.ts` normalises and validates the value as well (an unknown
+ * collection is a 400 with the collection named), but this is a build contract
+ * typed by hand: invalid JSON should say so immediately instead of being posted.
+ * An empty textarea — or an explicit `null` — means "no content routes", i.e. the
+ * site builds the whole website. Returns `{ ok, value }` or `{ ok: false, error }`.
+ */
+const contentRoutesScript = `
+  function readContentRoutes(id) {
+    var el = document.getElementById(id);
+    var raw = el ? el.value.trim() : '';
+    if (raw === '') { return { ok: true, value: null }; }
+    var parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      return { ok: false, error: 'Content routes must be valid JSON: ' + (error && error.message ? error.message : 'parse error') };
+    }
+    if (parsed === null) { return { ok: true, value: null }; }
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { ok: false, error: 'Content routes must be a JSON object like {"blog-posts": ""}' };
+    }
+    var names = Object.keys(parsed);
+    for (var i = 0; i < names.length; i++) {
+      if (typeof parsed[names[i]] !== 'string') {
+        return { ok: false, error: 'The route for "' + names[i] + '" must be a string path prefix (use "" for that host\\'s root)' };
+      }
+    }
+    return { ok: true, value: parsed };
+  }
+`
+
 // ---------------------------------------------------------------------------
 // List page
 // ---------------------------------------------------------------------------
@@ -592,6 +626,17 @@ export function renderSiteNewPage(data: {
         </div>
 
         <div>
+          <label class="${LABEL}">Content routes <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+          <textarea id="site-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'></textarea>
+          <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            Leave empty (or use <code>null</code>) and this site builds <strong>the whole website</strong>: its own routes plus every collection at the collection's own prefix.
+            A JSON object makes it a <strong>content-only site</strong> that publishes only the listed collections — the key is the collection name, the value is the path prefix on this host
+            (<code>""</code> = that host's root, so <code>{"blog-posts": ""}</code> serves the blog index at the domain root and posts at <code>/&lt;slug&gt;</code>;
+            <code>{"blog-posts": "/blog"}</code> keeps them under <code>/blog</code>).
+          </p>
+        </div>
+
+        <div>
           <label class="${LABEL}">Description</label>
           <input id="site-description" class="${INPUT}" placeholder="Documentation site" />
         </div>
@@ -664,8 +709,17 @@ export function renderSiteNewPage(data: {
 
       ${providerFieldsScript}
 
+      ${contentRoutesScript}
+
       async function createSite() {
         var result = document.getElementById('create-result');
+        // Validated before anything is sent: a hand-typed build contract should
+        // not be posted just to come back as a 400.
+        var contentRoutes = readContentRoutes('site-content-routes');
+        if (!contentRoutes.ok) {
+          reportResult('create-result', false, contentRoutes.error);
+          return;
+        }
         result.className = 'text-sm text-zinc-500 dark:text-zinc-400';
         result.textContent = 'Saving...';
         // The backend normalises the slug, so substitute with what we sent: a
@@ -691,6 +745,8 @@ export function renderSiteNewPage(data: {
               rootDir: val('site-root-dir'),
               cfZoneId: val('site-zone'),
               contentPrefix: val('site-prefix'),
+              // null = this site builds the whole website (the column stays NULL).
+              content_routes: contentRoutes.value,
               // Omitted when empty so the site stays on its provider default.
               deployMode: val('site-deploy-mode') || undefined
             })
@@ -993,6 +1049,18 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <div data-provider-field="contentPrefix"><label class="${LABEL}">Content prefix</label><input id="s-prefix" class="${INPUT}" value="${escapeHtml(site.contentPrefix || '')}" placeholder="docs" /></div>
           <div data-provider-field="zoneId"><label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label><input id="s-zone" class="${INPUT}" value="${escapeHtml(site.cfZoneId || '')}" placeholder="auto-detected from the hostname" /></div>
         </div>
+        <div class="mt-5">
+          <label class="${LABEL}">Content routes <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+          <textarea id="s-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'>${escapeHtml(
+            site.contentRoutes ? JSON.stringify(site.contentRoutes, null, 2) : ''
+          )}</textarea>
+          <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            Empty (or <code>null</code>) means this site builds <strong>the whole website</strong>: its own routes plus every collection at the collection's own prefix.
+            A JSON object makes it a <strong>content-only site</strong> publishing just those collections, at the path prefix given for this host
+            (<code>""</code> = that host's root, e.g. <code>{"blog-posts": ""}</code> for a blog host or <code>{"blog-posts": "/blog"}</code> for a sub-path).
+            Collection names must already exist in Admin → Collections.
+          </p>
+        </div>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input type="checkbox" id="s-active" ${site.isActive ? 'checked' : ''} class="rounded border-zinc-300 dark:border-white/20" />
           Active (inactive sites cannot be built)
@@ -1076,6 +1144,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
 
       ${providerFieldsScript}
 
+      ${contentRoutesScript}
+
       async function triggerBuild(button, via) {
         var label = button ? button.textContent : '';
         if (button) { button.disabled = true; button.textContent = 'Triggering...'; }
@@ -1130,6 +1200,13 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       }
 
       async function saveSite(button) {
+        // Invalid JSON is reported here instead of being saved: the textarea is a
+        // build contract, and the server would reject it anyway (400).
+        var contentRoutes = readContentRoutes('s-content-routes');
+        if (!contentRoutes.ok) {
+          report('settings-result', false, contentRoutes.error);
+          return;
+        }
         if (button) button.disabled = true;
         var payload = {
           name: val('s-name'), slug: val('s-slug'),
@@ -1139,6 +1216,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           buildCommand: val('s-build'), deployCommand: val('s-deploy'),
           outputDir: val('s-output'), rootDir: val('s-root'),
           contentPrefix: val('s-prefix'), cfZoneId: val('s-zone'),
+          // null = back to an app site that builds the whole website.
+          content_routes: contentRoutes.value,
           // An empty select means "provider default": the API stores null and
           // effectiveDeployMode() falls back to the provider's own mode.
           deployMode: val('s-deploy-mode') || null,

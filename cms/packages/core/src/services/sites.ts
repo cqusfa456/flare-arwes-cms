@@ -138,6 +138,23 @@ export interface SiteDomain {
   updatedAt: number
 }
 
+/**
+ * How a site publishes content: collection name -> the path prefix that
+ * collection is published under **on that site** (`''` is that host's root).
+ *
+ * `null` means an "app site": it publishes the website's own routes plus every
+ * routed collection at the collection's own `url_prefix`. An object means a
+ * "content-only site" that publishes **only** the listed collections. See
+ * migration 043 and `services/site-routing.ts` for the contract.
+ */
+export type SiteContentRoutes = Record<string, string>
+
+/**
+ * What the admin API and forms may submit for `content_routes`: an object, a
+ * JSON string, or null/empty for "this site builds the whole website".
+ */
+export type SiteContentRoutesInput = SiteContentRoutes | string | null
+
 export interface Site {
   id: string
   slug: string
@@ -166,6 +183,12 @@ export interface Site {
   nodeVersion: string | null
   buildConfigSyncedAt: number | null
   contentPrefix: string | null
+  /**
+   * Which collections this site publishes, and under which prefix on this host
+   * (migration 043). `null` means "app site" — the website's own routes plus
+   * every collection at its own `url_prefix`.
+   */
+  contentRoutes: SiteContentRoutes | null
   /** Extra/overriding build-time env vars pushed to the trigger (migration 040). */
   buildEnv: Record<string, SiteBuildEnvVar>
   /** Read-only API token the CMS minted for this site's builds (never serialized). */
@@ -201,6 +224,12 @@ export interface SiteInput {
   rootDir?: string | null
   nodeVersion?: string | null
   contentPrefix?: string | null
+  /**
+   * Collections this site publishes (see {@link SiteContentRoutes}). Accepts an
+   * object, a JSON string (what the admin textarea sends) or null for "app
+   * site". Omitted on update means "leave the stored value alone".
+   */
+  contentRoutes?: SiteContentRoutesInput
   buildEnv?: Record<string, SiteBuildEnvVar> | null
   isActive?: boolean
 }
@@ -313,6 +342,113 @@ const parseBuildEnv = (raw: unknown): Record<string, SiteBuildEnvVar> => {
   }
 }
 
+/**
+ * Normalise one content-route prefix the way the collections API normalises
+ * `url_prefix`: `''` (or `'/'`) means that host's root, anything else gets a
+ * leading slash and loses its trailing one. A multi-segment prefix
+ * (`'/blog/2026'`) is kept as-is.
+ */
+export const normalizeContentPrefix = (value: string): string => {
+  const trimmed = value.trim()
+  if (trimmed === '' || trimmed === '/') return ''
+  return (trimmed.startsWith('/') ? trimmed : `/${trimmed}`).replace(/\/+$/, '')
+}
+
+/**
+ * Lenient read of the stored `content_routes` column.
+ *
+ * A malformed value must not break the whole site row — the admin page still has
+ * to render so an operator can fix it — so anything unparseable is read as
+ * `null` ("app site"), exactly like {@link parseBuildEnv} degrades to `{}`.
+ */
+export const parseSiteContentRoutes = (raw: unknown): SiteContentRoutes | null => {
+  if (raw === null || raw === undefined) return null
+
+  let parsed: unknown = raw
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (trimmed === '') return null
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      return null
+    }
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+
+  const out: SiteContentRoutes = {}
+  for (const [name, value] of Object.entries(parsed as Record<string, unknown>)) {
+    // Values are path prefixes; a non-string (a number, an object) is ignored
+    // rather than coerced, so a bad row degrades instead of inventing a path.
+    if (typeof value !== 'string') continue
+    const key = name.trim()
+    if (key === '') continue
+    out[key] = normalizeContentPrefix(value)
+  }
+
+  return Object.keys(out).length > 0 ? out : null
+}
+
+/**
+ * Strict read of a `content_routes` value submitted by the API or the admin form.
+ *
+ * Accepts an object, a JSON string or null/empty (all-empty means "app site", so
+ * clearing the textarea restores the historical behaviour). Anything malformed
+ * throws {@link SitesConfigError} so the caller answers 400 instead of storing a
+ * value a build would later misread.
+ */
+export const readContentRoutesInput = (raw: unknown): SiteContentRoutes | null => {
+  if (raw === null || raw === undefined) return null
+
+  let parsed: unknown = raw
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (trimmed === '') return null
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      throw new SitesConfigError(
+        `Content routes must be valid JSON, for example {"blog-posts": ""}`
+      )
+    }
+  }
+
+  // A JSON string of "null" explicitly means "app site".
+  if (parsed === null) return null
+
+  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new SitesConfigError(
+      `Content routes must be a JSON object mapping collection name to path prefix, for example {"blog-posts": ""}`
+    )
+  }
+
+  const out: SiteContentRoutes = {}
+  for (const [name, value] of Object.entries(parsed as Record<string, unknown>)) {
+    const key = name.trim()
+    if (key === '') {
+      throw new SitesConfigError('Content routes must not contain an empty collection name')
+    }
+    if (typeof value !== 'string') {
+      throw new SitesConfigError(
+        `The content route for "${key}" must be a string path prefix (use "" for that host's root)`
+      )
+    }
+    if (value.includes('://')) {
+      throw new SitesConfigError(
+        `The content route for "${key}" must be a path prefix, not a URL (the host comes from the site's domain)`
+      )
+    }
+    // `''` or `'/'` is that host's root; a missing leading slash is added, so
+    // "blog" and "/blog" store the same value.
+    out[key] = normalizeContentPrefix(value)
+  }
+
+  // An empty object would describe a content-only site that publishes nothing,
+  // which is never what an operator means — empty means "build the website".
+  return Object.keys(out).length > 0 ? out : null
+}
+
 const rowToSite = (row: Record<string, unknown>): Site => ({
   id: String(row.id),
   slug: String(row.slug),
@@ -334,6 +470,7 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   nodeVersion: (row.node_version as string | null) ?? null,
   buildConfigSyncedAt: (row.build_config_synced_at as number | null) ?? null,
   contentPrefix: (row.content_prefix as string | null) ?? null,
+  contentRoutes: parseSiteContentRoutes(row.content_routes),
   buildEnv: parseBuildEnv(row.build_env),
   contentToken: (row.content_token as string | null) ?? null,
   contentTokenId: (row.content_token_id as string | null) ?? null,
@@ -730,6 +867,48 @@ export class SitesService {
     return row ? rowToSite(row as Record<string, unknown>) : null
   }
 
+  /**
+   * Normalise a submitted `content_routes` value and check that every collection
+   * it names is registered.
+   *
+   * The collection lookup lives here rather than in the routes because it needs
+   * the database, and because every write path must store the same resolvable
+   * value: a route naming a collection that does not exist would make the site's
+   * build silently publish nothing.
+   *
+   * Returns `undefined` for "leave the stored value alone" (the input omitted the
+   * field), `null` for "app site".
+   */
+  private async resolveContentRoutes(
+    value: SiteContentRoutesInput | undefined
+  ): Promise<SiteContentRoutes | null | undefined> {
+    if (value === undefined) return undefined
+
+    const routes = readContentRoutesInput(value)
+    if (routes === null) return null
+
+    const names = Object.keys(routes)
+    const placeholders = names.map(() => '?').join(', ')
+    const { results } = await this.db
+      .prepare(`SELECT name FROM collections WHERE name IN (${placeholders})`)
+      .bind(...names)
+      .all()
+
+    const known = new Set(
+      (results ?? []).map((row) => String((row as { name: unknown }).name))
+    )
+    const unknown = names.filter((name) => !known.has(name))
+    if (unknown.length > 0) {
+      const list = unknown.map((name) => `"${name}"`).join(', ')
+      throw new SitesConfigError(
+        `Unknown collection${unknown.length === 1 ? '' : 's'} in content routes: ${list}. ` +
+          `Register ${unknown.length === 1 ? 'it' : 'them'} in Admin → Collections first.`
+      )
+    }
+
+    return routes
+  }
+
   async create(input: SiteInput): Promise<Site> {
     const slug = normalizeSiteSlug(input.slug || input.name)
     if (!slug) throw new SitesConfigError('A site slug is required')
@@ -744,6 +923,10 @@ export class SitesService {
     const id = crypto.randomUUID()
     const now = Date.now()
 
+    // Normalised (and checked against `collections.name`) before the INSERT so an
+    // unknown collection is a 400, not a stored route no build can resolve.
+    const contentRoutes = await this.resolveContentRoutes(input.contentRoutes)
+
     await this.db
       .prepare(
         `INSERT INTO sites (
@@ -751,9 +934,9 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, build_env, content_token, content_token_id, deploy_mode,
+           content_prefix, content_routes, build_env, content_token, content_token_id, deploy_mode,
            is_active, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
       )
       .bind(
         id,
@@ -774,6 +957,7 @@ export class SitesService {
         input.rootDir ?? null,
         input.nodeVersion ?? null,
         input.contentPrefix ?? null,
+        contentRoutes ? JSON.stringify(contentRoutes) : null,
         input.buildEnv && Object.keys(input.buildEnv).length > 0
           ? JSON.stringify(input.buildEnv)
           : null,
@@ -822,6 +1006,7 @@ export class SitesService {
       rootDir: 'root_dir',
       nodeVersion: 'node_version',
       contentPrefix: 'content_prefix',
+      contentRoutes: 'content_routes',
       buildEnv: 'build_env',
       isActive: 'is_active'
     }
@@ -836,7 +1021,10 @@ export class SitesService {
       if (key === 'slug') values.push(normalizeSiteSlug(String(value)))
       else if (key === 'isActive') values.push(value ? 1 : 0)
       else if (key === 'deployMode') values.push(normalizeDeployMode(value))
-      else if (key === 'buildEnv')
+      else if (key === 'contentRoutes') {
+        const routes = await this.resolveContentRoutes(value as SiteContentRoutesInput)
+        values.push(routes === undefined || routes === null ? null : JSON.stringify(routes))
+      } else if (key === 'buildEnv')
         values.push(
           value && typeof value === 'object' && Object.keys(value as object).length > 0
             ? JSON.stringify(value)

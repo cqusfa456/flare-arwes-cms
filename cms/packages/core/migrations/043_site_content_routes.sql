@@ -1,0 +1,33 @@
+-- Migration 043: Per-site content routes (one content type on its own host)
+--
+-- Why this exists
+-- ---------------
+-- Migration 042 moved the path a collection is published under onto the
+-- collection itself (`collections.url_prefix`), but every registered site still
+-- built and deployed the whole website: the same routes, on every host. Serving
+-- one content type on its own host/subdomain — a blog on blog.example.com while
+-- the marketing site stays on www.example.com — needs to say *which* collections
+-- a site publishes, and under which prefix **on that site**.
+--
+-- `content_routes` is a JSON object mapping collection name -> the path prefix
+-- that collection is published under on this site, for example:
+--
+--   {"blog-posts": ""}      a blog host: index at that host's root, posts at /<slug>
+--   {"blog-posts": "/blog"} the same blog, under /blog on this host
+--
+-- Semantics (read by `services/site-routing.ts` and the public `GET /api/site`,
+-- and mirrored by the Astro D1 loader client for builds that read D1 directly):
+--
+--   NULL      an "app site": it publishes the website's own routes (the Astro
+--             app's pages) plus every routed collection at the collection's own
+--             `url_prefix`. This is the historical behaviour, so every existing
+--             row keeps building exactly what it built before.
+--   set       a "content-only site": it publishes **only** the collections listed
+--             here, at the listed prefixes ('' is that host's root). It renders no
+--             website routes of its own.
+--
+-- The main site then links to the other host through each collection's absolute
+-- base URL, which is why the prefix stored here is host-relative and carries no
+-- domain.
+
+ALTER TABLE sites ADD COLUMN content_routes TEXT;
