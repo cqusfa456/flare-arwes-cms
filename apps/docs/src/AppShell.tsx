@@ -103,6 +103,16 @@ const AppShell = (props: AppShellProps): JSX.Element => {
     return store
   }, [pathname])
 
+  // The page frame waited for the shell (the `app-intro` rule in the layout keeps it
+  // invisible until then): lift the hold on the first frame after mount, so the
+  // chrome the shell animates in and the page itself arrive together.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      document.documentElement.classList.remove('app-intro')
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   return (
     <Provider store={store}>
       <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>

@@ -147,6 +147,36 @@ const serverPaths = cmsPages
       }
     </style>
 
+    {/*
+      The page opens in one piece. `app-intro` is added before the first paint and
+      removed when the shell mounts, so the frame does not show up before the header
+      that belongs with it; the timeout means a shell that never loads still leaves a
+      readable page.
+    */}
+    <script is:inline>
+      (() => {
+        const root = document.documentElement
+        root.classList.add('app-intro')
+        window.setTimeout(() => root.classList.remove('app-intro'), 2500)
+      })()
+    </script>
+
+    <style is:inline>
+      .app-frame {
+        transition: opacity 400ms ease-out;
+      }
+
+      html.app-intro .app-frame {
+        opacity: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .app-frame {
+          transition: none;
+        }
+      }
+    </style>
+
     <title>{title}</title>
   </head>
   <body>
@@ -177,22 +207,29 @@ const serverPaths = cmsPages
         layout can render the menu the page asked for (<CmsNav navKey={navKey} />),
         and `pageTitle` is its own title rather than the document's.
 
+        The frame is wrapped so it can be held back until the shell is ready: the
+        header is an island and animates itself in, so a frame that painted
+        immediately would show the page in two pieces. `app-intro` is set before the
+        first paint and lifted when the shell mounts (see AppShell).
+
         The frame decides where the content goes, and the marker inside marks that
         spot: a page with server content is rendered there by Astro, while an app
         route is rendered there by the app (`AppShell` portals into it), so the
         chrome the layout composes stays around either of them.
       */}
-      <CmsLayout
-        name={layout}
-        title={title}
-        pageTitle={pageTitle ?? title}
-        pathname={pathname}
-        navKey={navKey}
-      >
-        <div id={CONTENT_ELEMENT_ID} class="contents">
-          <slot />
-        </div>
-      </CmsLayout>
+      <div class="app-frame flex-1 flex min-w-0 min-h-0">
+        <CmsLayout
+          name={layout}
+          title={title}
+          pageTitle={pageTitle ?? title}
+          pathname={pathname}
+          navKey={navKey}
+        >
+          <div id={CONTENT_ELEMENT_ID} class="contents">
+            <slot />
+          </div>
+        </CmsLayout>
+      </div>
     </AppShell>
   </body>
 </html>
