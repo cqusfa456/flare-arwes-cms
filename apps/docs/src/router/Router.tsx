@@ -18,6 +18,18 @@ const normalizePathname = (pathname: string): string => {
   return pathname.replace(/\/+$/, '')
 }
 
+// Astro server-renders the content of CMS and blog pages into an
+// `<astro-slot>` element inside the AppShell island. App routes render their
+// content from React instead and never have slot content, so switching to one
+// has to discard the page being left behind. Those nodes are not React-managed,
+// so nothing else removes them: visiting /blog used to leave the blog list
+// visible on every route navigated to afterwards, under the new URL.
+const clearServerRenderedPage = (): void => {
+  for (const slot of document.querySelectorAll('astro-slot')) {
+    slot.replaceChildren()
+  }
+}
+
 // Client-side router. It keeps the current pathname in a jotai atom and
 // provides a `navigate` function to change it without a full page reload.
 // It also listens to the browser `popstate` event for back/forward
@@ -43,7 +55,15 @@ const Router = (props: RouterProps): JSX.Element => {
   // Listen to the browser back/forward navigation.
   useEffect(() => {
     const onPopState = (): void => {
-      setPathname(normalizePathname(window.location.pathname))
+      const next = normalizePathname(window.location.pathname)
+      // An entry the app did not render itself (a CMS or blog page) has its
+      // content only in the server HTML, and no copy of it is left in the
+      // document once the app navigated away. Reload so it renders correctly.
+      if (!isRoute(next)) {
+        window.location.reload()
+        return
+      }
+      setPathname(next)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -73,6 +93,7 @@ const Router = (props: RouterProps): JSX.Element => {
       }
 
       window.history.pushState({}, '', normalized)
+      clearServerRenderedPage()
       setPathname(normalized)
     },
     [setPathname]
