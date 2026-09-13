@@ -256,6 +256,7 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
 
 <Layout
   title={pageTitle ?? (cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname))}
+  pageTitle={cmsPage?.title ?? pageTitle ?? getTitle(pathname)}
   pathname={pathname}
   layout={cmsPage?.layout}
   navKey={cmsPage?.navKey}

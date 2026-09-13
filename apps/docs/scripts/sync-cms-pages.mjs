@@ -219,7 +219,7 @@ const run = async () => {
         `const pathname = ${JSON.stringify(path)}`,
         '---',
         '',
-        `<Layout title={\`\${title} | \${settings.title}\`} pathname={pathname}${navAttr}${layoutAttr}>`,
+        `<Layout title={\`\${title} | \${settings.title}\`} pageTitle={title} pathname={pathname}${navAttr}${layoutAttr}>`,
         body,
         '</Layout>',
         ''

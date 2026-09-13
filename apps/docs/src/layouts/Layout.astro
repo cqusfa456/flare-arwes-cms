@@ -11,7 +11,10 @@ import { getLayout, getNavigation } from '@/lib/site-content'
 import '@/ui/globals.css'
 
 interface LayoutProps {
+  /** Document title (`<title>`, Open Graph). */
   title: string
+  /** The page's own title, without the site suffix; layouts render this one. */
+  pageTitle?: string
   pathname: string
   /** Menu this page selects; the site rule picks one when it names none. */
   navKey?: string
@@ -21,7 +24,7 @@ interface LayoutProps {
   hideMenu?: boolean
 }
 
-const { title, pathname, navKey, layout, hideMenu: hideMenuProp } = Astro.props
+const { title, pageTitle, pathname, navKey, layout, hideMenu: hideMenuProp } = Astro.props
 
 // Every page is injected through the same layout: the version it names (a page
 // field in the CMS, the `default` fallback). The layout composes the site's shared
@@ -106,9 +109,16 @@ const serverPaths = cmsPages
     >
       {/*
         The page is framed by the layout it selected. `navKey` travels with it so a
-        layout can render the menu the page asked for (<CmsNav navKey={navKey} />).
+        layout can render the menu the page asked for (<CmsNav navKey={navKey} />),
+        and `pageTitle` is its own title rather than the document's.
       */}
-      <CmsLayout name={layout} title={title} pathname={pathname} navKey={navKey}>
+      <CmsLayout
+        name={layout}
+        title={title}
+        pageTitle={pageTitle ?? title}
+        pathname={pathname}
+        navKey={navKey}
+      >
         <slot />
       </CmsLayout>
     </AppShell>
