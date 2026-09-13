@@ -6,6 +6,7 @@ import Layout from '@/layouts/Layout.astro'
 import { settings } from '@/config/settings'
 import { routes, getTitle } from '@/router/routes'
 import { CmsPage } from '@/cms/CmsPage'
+import { DocsCmsPage } from '@/cms/DocsCmsPage'
 
 // Build the static paths: the app routes plus the CMS-managed pages.
 export async function getStaticPaths() {
@@ -41,6 +42,7 @@ export async function getStaticPaths() {
     params: { path: `docs/${doc.data.slug}` },
     props: {
       pathname: `/docs/${doc.data.slug}`,
+      docs: true,
       cmsPage: {
         title: doc.data.title,
         contentHtml: md.render(String(doc.data.content ?? '')),
@@ -52,9 +54,10 @@ export async function getStaticPaths() {
   return [...appPaths, ...cmsPaths, ...docsPaths]
 }
 
-const { pathname, cmsPage } = Astro.props
+const { pathname, cmsPage, docs } = Astro.props
 ---
 
 <Layout title={cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname)} pathname={pathname}>
-  {cmsPage && <CmsPage client:load {...cmsPage} />}
+  {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} />}
+  {!docs && cmsPage && <CmsPage client:load {...cmsPage} />}
 </Layout>
