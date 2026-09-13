@@ -14,10 +14,16 @@ type DocsCmsPageProps = {
    * the sidebar empty with no runtime error at all.
    */
   navData?: string
+  /**
+   * Pathname of this page, passed down from the Astro route. The sidebar is a
+   * different React root than `AppShell`, so it cannot read the app's router
+   * state and needs the value as a prop to highlight the current page.
+   */
+  pathname?: string
 }
 
 const DocsCmsPage = (props: DocsCmsPageProps): JSX.Element => {
-  const { title, contentHtml, navData } = props
+  const { title, contentHtml, navData, pathname } = props
 
   let sections: CmsNavSection[] = []
   let docs: CmsNavDoc[] = []
@@ -35,7 +41,7 @@ const DocsCmsPage = (props: DocsCmsPageProps): JSX.Element => {
   }
 
   return (
-    <LayoutDevelop nav={<CmsDocsNav sections={sections} docs={docs} />}>
+    <LayoutDevelop nav={<CmsDocsNav sections={sections} docs={docs} pathname={pathname} />}>
       <h1>{title}</h1>
       <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
     </LayoutDevelop>

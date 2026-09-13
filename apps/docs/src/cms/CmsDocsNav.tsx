@@ -21,6 +21,13 @@ export type CmsNavSection = {
 type CmsDocsNavProps = {
   docs: CmsNavDoc[]
   sections?: CmsNavSection[]
+  /**
+   * Current pathname. This island is a separate React root from `AppShell`, so
+   * it does not share that component's jotai store and `usePathname()` alone
+   * always reports the atom's initial value. Astro passes the real pathname;
+   * the hook stays as the fallback.
+   */
+  pathname?: string
 }
 
 // Sidebar for CMS-managed documentation. The links come from the CMS (docs +
@@ -29,7 +36,7 @@ type CmsDocsNavProps = {
 // is a real anchor, so a CMS path that the client router does not know still
 // opens (with a full page load).
 const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
-  const { docs, sections = [] } = props
+  const { docs, sections = [], pathname: pathnameProp } = props
   const pathname = usePathname()
 
   const bySection = new Map<string, CmsNavDoc[]>()
@@ -58,7 +65,7 @@ const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
     }
   }
 
-  const current = pathname.replace(/\/+$/, '')
+  const current = (pathnameProp ?? pathname).replace(/\/+$/, '')
 
   return (
     <nav className="flex flex-col gap-5 w-full text-sm">

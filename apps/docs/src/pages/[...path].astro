@@ -97,7 +97,7 @@ const { pathname, cmsPage, docs, blog, navData } = Astro.props
     fields, so spreading alone left the island with title/contentHtml only and
     rendered an empty sidebar with no error.
   */}
-  {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} navData={navData} />}
+  {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} navData={navData} pathname={pathname} />}
   {!docs && !blog && cmsPage && <CmsPage client:load {...cmsPage} />}
   {blog && cmsPage && <BlogPostPage client:load {...cmsPage} />}
 </Layout>
