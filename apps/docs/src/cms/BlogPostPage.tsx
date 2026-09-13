@@ -20,12 +20,18 @@ type BlogPostPageProps = {
 const BlogPostPage = (props: BlogPostPageProps): JSX.Element => {
   const { title, contentHtml, publishedAt } = props
 
+  // Posts normally open with their own `# Title`, which markdown has already
+  // rendered as an `<h1>`; rendering the wrapper title as well printed it twice.
+  const contentHasTitle = /^\s*<h1[\s>]/i.test(contentHtml)
+
   return (
     <Animator combine manager="sequence">
       <div className="flex-1 overflow-y-auto flex p-4 min-w-0 min-h-0 md:p-8">
         <div className="relative flex flex-col gap-6 m-auto w-full min-w-0 min-h-0 max-w-screen-lg">
           <Animator combine manager="stagger">
-            <h1 className="font-header text-size-2 text-primary-main-3">{title}</h1>
+            {!contentHasTitle && (
+              <h1 className="font-header text-size-2 text-primary-main-3">{title}</h1>
+            )}
             {publishedAt && (
               <p className="font-code text-size-10 text-primary-low-2">{publishedAt}</p>
             )}
