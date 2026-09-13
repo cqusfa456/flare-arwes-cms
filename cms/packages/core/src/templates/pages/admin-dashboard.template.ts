@@ -60,19 +60,19 @@ export function renderDashboardPage(data: DashboardPageData): string {
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>
           </svg>
-          Developer Docs
+          ${t('Developer Docs')}
         </a>
         <a href="/admin/api-reference" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
           </svg>
-          API Docs
+          ${t('API Docs')}
         </a>
         <a href="/api" target="_blank" class="inline-flex items-center justify-center gap-x-1.5 rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 shadow-sm ring-1 ring-inset ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
           </svg>
-          OpenAPI
+          ${t('OpenAPI')}
         </a>
       </div>
     </div>
@@ -232,25 +232,25 @@ export function renderDashboardPageWithDynamicMenu(
 export function renderStatsCards(stats: DashboardStats): string {
   const cards = [
     {
-      title: "Total Collections",
+      title: t("Total Collections"),
       value: stats.collections.toString(),
       change: "12.5",
       isPositive: true,
     },
     {
-      title: "Content Items",
+      title: t("Content Items"),
       value: stats.contentItems.toString(),
       change: "8.2",
       isPositive: true,
     },
     {
-      title: "Media Files",
+      title: t("Media Files"),
       value: stats.mediaFiles.toString(),
       change: "15.3",
       isPositive: true,
     },
     {
-      title: "Active Users",
+      title: t("Active Users"),
       value: stats.users.toString(),
       change: "2.4",
       isPositive: false,
@@ -571,7 +571,7 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
   if (formattedActivities.length === 0) {
     formattedActivities.push({
       type: 'content' as const,
-      description: 'No recent activity',
+      description: t('No recent activity'),
       user: 'System',
       time: '',
       initials: 'SY',
@@ -589,7 +589,7 @@ export function renderRecentActivity(activities?: ActivityItem[]): string {
         <div class="flex items-center justify-between">
           <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white">${t('Recent Activity')}</h3>
           <button class="text-xs/5 font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors">
-            View all
+            ${t('View all')}
           </button>
         </div>
       </div>
@@ -761,14 +761,14 @@ export function renderStorageUsage(
 
   const storageItems = [
     {
-      label: "Database",
+      label: t("Database"),
       used: dbUsedFormatted,
       total: "10 GB",
       percentage: dbPercentage,
       color: dbPercentage > 80 ? "bg-red-500 dark:bg-red-400" : dbPercentage > 60 ? "bg-amber-500 dark:bg-amber-400" : "bg-blue-500 dark:bg-blue-400",
     },
     {
-      label: "Media Files",
+      label: t("Media Files"),
       used: mediaUsedFormatted,
       total: "∞",
       percentage: 0,

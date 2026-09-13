@@ -1187,7 +1187,7 @@ function renderCatalystSidebar(
         <span>Sync</span>
         <span id="sync-badge" class="ml-auto hidden min-w-[20px] rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white"></span>
       </button>
-      <span id="sync-subtext" class="hidden pl-10 -mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Up to date</span>
+      <span id="sync-subtext" class="hidden pl-10 -mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">${t('Up to date')}</span>
     </div>
   `
 
