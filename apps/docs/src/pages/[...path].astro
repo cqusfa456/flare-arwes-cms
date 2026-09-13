@@ -61,8 +61,7 @@ export async function getStaticPaths() {
     props: {
       pathname: `/docs/${doc.data.slug}`,
       docs: true,
-      navSections,
-      navDocs,
+      navData: JSON.stringify({ sections: navSections, docs: navDocs }),
       cmsPage: {
         title: doc.data.title,
         contentHtml: md.render(String(doc.data.content ?? '')),
