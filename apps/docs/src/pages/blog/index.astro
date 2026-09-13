@@ -1,0 +1,33 @@
+---
+import { getCollection } from 'astro:content'
+
+import Layout from '@/layouts/Layout.astro'
+import { settings } from '@/config/settings'
+
+// Blog index: CMS *pages*, newest first. Posts live at /blog/<slug> (see
+// [...path].astro); this page only lists them.
+const posts = (await getCollection('pages')).sort((a, b) =>
+  String(b.data.published_at ?? '').localeCompare(String(a.data.published_at ?? ''))
+)
+---
+
+<Layout title={`Blog | ${settings.title}`} pathname="/blog">
+  <div className="flex-1 overflow-y-auto p-4 min-w-0 min-h-0 md:p-8">
+    <div className="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg">
+      <h1 className="text-3xl font-bold">Blog</h1>
+      {posts.length === 0 && <p className="opacity-70">No posts yet.</p>}
+      <ul className="flex flex-col gap-5">
+        {
+          posts.map((post) => (
+            <li key={post.data.slug} className="flex flex-col gap-1">
+              <a href={`/blog/${post.data.slug}/`} class="text-lg font-medium underline">
+                {post.data.title}
+              </a>
+              {post.data.excerpt && <p class="opacity-70 text-sm">{post.data.excerpt}</p>}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</Layout>

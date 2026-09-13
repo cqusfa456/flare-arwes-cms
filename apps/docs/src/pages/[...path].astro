@@ -7,6 +7,7 @@ import { settings } from '@/config/settings'
 import { routes, getTitle } from '@/router/routes'
 import { CmsPage } from '@/cms/CmsPage'
 import { DocsCmsPage } from '@/cms/DocsCmsPage'
+import { BlogPostPage } from '@/cms/BlogPostPage'
 
 // Build the static paths: the app routes plus the CMS-managed pages.
 export async function getStaticPaths() {
@@ -27,9 +28,10 @@ export async function getStaticPaths() {
   }))
 
   const cmsPaths = cmsPages.map((page) => ({
-    params: { path: page.data.slug },
+    params: { path: `blog/${page.data.slug}` },
     props: {
-      pathname: `/${page.data.slug}`,
+      pathname: `/blog/${page.data.slug}`,
+      blog: true,
       cmsPage: {
         title: page.data.title,
         contentHtml: md.render(String(page.data.content ?? '')),
@@ -38,11 +40,28 @@ export async function getStaticPaths() {
     }
   }))
 
+  // Sidebar data: sections for the headings, docs for the links. A page
+  // whose section is not in the CMS section list still appears (unlabelled),
+  // so content cannot become unreachable.
+  const navSections = (await getCollection('docsSections')).map((section: any) => ({
+    slug: section.data.slug,
+    name: section.data.name,
+    order: section.data.order
+  }))
+  const navDocs = cmsDocs.map((doc: any) => ({
+    slug: doc.data.slug,
+    title: doc.data.title,
+    section: doc.data.section ?? doc.data.sectionSlug,
+    order: doc.data.order
+  }))
+
   const docsPaths = cmsDocs.map((doc) => ({
     params: { path: `docs/${doc.data.slug}` },
     props: {
       pathname: `/docs/${doc.data.slug}`,
       docs: true,
+      navSections,
+      navDocs,
       cmsPage: {
         title: doc.data.title,
         contentHtml: md.render(String(doc.data.content ?? '')),
@@ -54,10 +73,11 @@ export async function getStaticPaths() {
   return [...appPaths, ...cmsPaths, ...docsPaths]
 }
 
-const { pathname, cmsPage, docs } = Astro.props
+const { pathname, cmsPage, docs, blog } = Astro.props
 ---
 
 <Layout title={cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname)} pathname={pathname}>
   {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} />}
-  {!docs && cmsPage && <CmsPage client:load {...cmsPage} />}
+  {!docs && !blog && cmsPage && <CmsPage client:load {...cmsPage} />}
+  {blog && cmsPage && <BlogPostPage client:load {...cmsPage} />}
 </Layout>
