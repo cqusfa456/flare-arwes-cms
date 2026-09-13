@@ -539,47 +539,19 @@ apiRoutes.get('/health', (c) => {
 })
 
 // Basic collections endpoint
+//
+// Deliberately not cached. Each collection carries the schema and the URL prefix
+// its entries are published under, and a site build reads them to decide where
+// content goes: serving a stale copy for up to a KV propagation delay (or a
+// cache TTL) means a path change is ignored by the next build. The query is a
+// single small read on a table with a handful of rows.
 apiRoutes.get('/collections', async (c) => {
   const executionStart = Date.now()
 
   try {
     const db = c.env.DB
-    const cacheEnabled = c.get('cacheEnabled')
-    const cache = getCacheService(CACHE_CONFIGS.api!)
-    const cacheKey = cache.generateKey('collections', 'all')
 
-
-
-    // Use cache only if cache plugin is active
-    if (cacheEnabled) {
-      const cacheResult = await cache.getWithSource<any>(cacheKey)
-      if (cacheResult.hit && cacheResult.data) {
-        // Add cache headers
-        c.header('X-Cache-Status', 'HIT')
-        c.header('X-Cache-Source', cacheResult.source)
-        if (cacheResult.ttl) {
-          c.header('X-Cache-TTL', Math.floor(cacheResult.ttl).toString())
-        }
-
-        // Add cache info and timing to meta
-        const dataWithMeta = {
-          ...cacheResult.data,
-          meta: addTimingMeta(c, {
-            ...cacheResult.data.meta,
-            cache: {
-              hit: true,
-              source: cacheResult.source,
-              ttl: cacheResult.ttl ? Math.floor(cacheResult.ttl) : undefined
-            }
-          }, executionStart)
-        }
-
-        return c.json(dataWithMeta)
-      }
-    }
-
-    // Cache miss - fetch from database
-    c.header('X-Cache-Status', 'MISS')
+    c.header('X-Cache-Status', 'BYPASS')
     c.header('X-Cache-Source', 'database')
 
     const stmt = db.prepare('SELECT * FROM collections WHERE is_active = 1')
@@ -602,11 +574,6 @@ apiRoutes.get('/collections', async (c) => {
           source: 'database'
         }
       }, executionStart)
-    }
-
-    // Cache the response only if cache plugin is enabled
-    if (cacheEnabled) {
-      await cache.set(cacheKey, responseData)
     }
 
     return c.json(responseData)
