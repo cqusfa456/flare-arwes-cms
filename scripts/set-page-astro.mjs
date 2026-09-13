@@ -13,7 +13,8 @@
  * Usage:
  *   SCIFI_ADMIN_PASSWORD=... node scripts/set-page-astro.mjs <base-url> \
  *     --slug index --title "Futuristic Sci-Fi UI Web Framework" \
- *     --file cms/packages/cms/content/pages/home.astro [--dry-run] [--confirm-production]
+ *     --file cms/packages/cms/content/pages/home.astro \
+ *     [--layout <key>] [--nav <key>] [--dry-run] [--confirm-production]
  */
 
 import { readFileSync } from 'node:fs'
@@ -28,11 +29,13 @@ const value = (name, fallback) => {
 const slug = value('slug', '')
 const title = value('title', '')
 const file = value('file', '')
+const layout = value('layout', '')
+const nav = value('nav', '')
 const dryRun = args.includes('--dry-run')
 
 if (!baseUrl || !slug || !file) {
   console.error(
-    'Usage: node scripts/set-page-astro.mjs <base-url> --slug <slug> --title <title> --file <path.astro> [--dry-run] [--confirm-production]'
+    'Usage: node scripts/set-page-astro.mjs <base-url> --slug <slug> --title <title> --file <path.astro> [--layout <key>] [--nav <key>] [--dry-run] [--confirm-production]'
   )
   process.exit(1)
 }
@@ -79,8 +82,17 @@ const run = async () => {
     slug,
     status: 'published',
     // Keep whatever else the entry had (markdown body, meta description, ...): the
-    // Astro source is an additional field, not a replacement.
-    data: { ...(match?.data ?? {}), title: title || match?.title || slug, slug, astro: source }
+    // Astro source is an additional field, not a replacement. `--layout` / `--nav`
+    // pick the layout version that frames the page and the menu it renders; both
+    // fall back to the site rule when left out.
+    data: {
+      ...(match?.data ?? {}),
+      title: title || match?.title || slug,
+      slug,
+      astro: source,
+      ...(layout ? { layout } : {}),
+      ...(nav ? { nav } : {})
+    }
   }
 
   log(match ? `updating page "${slug}" (${match.id})` : `creating page "${slug}"`)

@@ -24,6 +24,8 @@ type AppShellProps = {
   serverPaths?: string[]
   /** Menu items from the CMS; empty means the shell uses its built-in navigation. */
   navItems?: Array<{ label: string; href: string }>
+  /** The page's layout owns the chrome, so the shell renders no menu. */
+  hideMenu?: boolean
   children?: ReactNode
 }
 
@@ -62,7 +64,7 @@ const PageContent = (props: {
 // The `children` are the CMS-managed page content rendered by Astro
 // (SSR) and passed through the slot.
 const AppShell = (props: AppShellProps): JSX.Element => {
-  const { pathname, blogPath, appBaseUrl, serverPaths, navItems, children } = props
+  const { pathname, blogPath, appBaseUrl, serverPaths, navItems, hideMenu, children } = props
 
   const store = useMemo(() => {
     const store = createStore()
@@ -73,7 +75,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
   return (
     <Provider store={store}>
       <Router appBaseUrl={appBaseUrl} serverPaths={serverPaths}>
-        <LayoutRoot blogPath={blogPath} navItems={navItems}>
+        <LayoutRoot blogPath={blogPath} navItems={navItems} hideMenu={hideMenu}>
           <PageContent serverContent={children} initialPathname={pathname} />
         </LayoutRoot>
       </Router>

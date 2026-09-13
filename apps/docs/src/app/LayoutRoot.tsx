@@ -19,6 +19,7 @@ const LayoutRoot = (props: {
   children: ReactNode
   blogPath?: string
   navItems?: Array<{ label: string; href: string }>
+  hideMenu?: boolean
 }): JSX.Element => {
   const [isMotionEnabled] = useAtom(atomMotionEnabled)
   const [isAudioEnabled] = useAtom(atomAudioEnabled)
@@ -52,7 +53,11 @@ const LayoutRoot = (props: {
               <Animator combine manager="sequence">
                 <div className="relative flex-1 flex flex-col min-w-0 min-h-0">
                   <Animator combine>
-                    <Header blogPath={props.blogPath} navItems={props.navItems} />
+                    <Header
+                      blogPath={props.blogPath}
+                      navItems={props.navItems}
+                      hideMenu={props.hideMenu}
+                    />
                   </Animator>
 
                   <div className="flex-1 flex min-w-0 min-h-0">{props.children}</div>

@@ -4,8 +4,9 @@ import { getCollection } from 'astro:content'
 import { settings } from '@/config/settings'
 import { routes } from '@/router/routes'
 import { AppShell } from '@/AppShell'
+import CmsLayout from '@/components/CmsLayout.astro'
 import { collectionIndexHref, getCollectionPrefixes, getSiteRouting, pagePath } from '@/lib/cms-collections'
-import { getNavigation } from '@/lib/site-content'
+import { getLayout, getNavigation } from '@/lib/site-content'
 
 import '@/ui/globals.css'
 
@@ -14,13 +15,26 @@ interface LayoutProps {
   pathname: string
   /** Menu this page selects; the site rule picks one when it names none. */
   navKey?: string
+  /** Layout version framing this page; `default` when it names none. */
+  layout?: string
+  /** Override for the rule below: the shell never renders a menu of its own. */
+  hideMenu?: boolean
 }
 
-const { title, pathname, navKey } = Astro.props
+const { title, pathname, navKey, layout, hideMenu: hideMenuProp } = Astro.props
+
+// Every page is injected through the same layout: the version it names (a page
+// field in the CMS, the `default` fallback). The layout composes the site's shared
+// components — the navigation bar, the footer bar — so pages bring content only.
+const layoutEntry = await getLayout(layout)
 
 // The header's menu is a CMS setting (see src/lib/site-content.ts). An empty
 // result means the site's own built-in navigation is used.
 const navItems = await getNavigation(pathname, navKey)
+
+// Whichever renders the menu owns it: with a layout in place and a CMS menu to
+// show, the shell's own header menu stays hidden so the two never double up.
+const hideMenu = hideMenuProp ?? (!!layoutEntry && navItems.length > 0)
 
 // Two CMS settings shape the shell's navigation:
 //   * the blog link follows the `blog-posts` collection's prefix, and points at
@@ -88,8 +102,15 @@ const serverPaths = cmsPages
       appBaseUrl={appBaseUrl}
       serverPaths={serverPaths}
       navItems={navItems}
+      hideMenu={hideMenu}
     >
-      <slot />
+      {/*
+        The page is framed by the layout it selected. `navKey` travels with it so a
+        layout can render the menu the page asked for (<CmsNav navKey={navKey} />).
+      */}
+      <CmsLayout name={layout} title={title} pathname={pathname} navKey={navKey}>
+        <slot />
+      </CmsLayout>
     </AppShell>
   </body>
 </html>

@@ -1,0 +1,31 @@
+---
+/**
+ * Renders a shared component published in the CMS.
+ *
+ * Navigation bars, footer bars and anything else the site repeats are authored in
+ * Admin -> Content -> Components as `.astro` files. The build writes each one to
+ * `src/cms-components/<key>.astro` (see scripts/sync-cms-pages.mjs), so a layout
+ * composes them by key and never has to import a path that may not exist:
+ *
+ *   <CmsComponent name="nav" navKey={navKey} />
+ *   <CmsComponent name="footer" />
+ *
+ * Props other than `name` are forwarded to the component. When the site defines no
+ * component under that key, nothing is rendered.
+ */
+interface Props {
+  /** Key of the component (`key` field in the CMS). */
+  name?: string
+  /** Alias of `name`. */
+  key?: string
+  [prop: string]: unknown
+}
+
+const { name, key, ...props } = Astro.props
+const wanted = typeof name === 'string' && name ? name : key
+
+const components = import.meta.glob<{ default: any }>('/src/cms-components/*.astro', { eager: true })
+const Component = wanted ? components[`/src/cms-components/${wanted}.astro`]?.default : undefined
+---
+
+{Component ? <Component {...props} /> : null}

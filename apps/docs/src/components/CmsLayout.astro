@@ -1,0 +1,32 @@
+---
+/**
+ * Frames a page in the layout version it selected.
+ *
+ * Every layout published in Admin -> Content -> Layouts is written to
+ * `src/cms-layouts/<key>.astro` before the build, and every page — its own route
+ * files, the CMS pages and the markdown pages alike — is injected through here by
+ * `src/layouts/Layout.astro`. That is what makes a layout a choice: the pages name
+ * a version (`default`, `article`, ...) and this renders it.
+ *
+ * Props are forwarded to the layout (`title`, `pathname`, `navKey`) and the page's
+ * own markup arrives through the slot. A key with no layout falls back to
+ * `default`; a site with no layouts at all renders the page unwrapped.
+ */
+interface Props {
+  /** Layout version (`key` field in the CMS); `default` when omitted. */
+  name?: string
+  /** Alias of `name`. */
+  key?: string
+  [prop: string]: unknown
+}
+
+const { name, key, ...props } = Astro.props
+const layouts = import.meta.glob<{ default: any }>('/src/cms-layouts/*.astro', { eager: true })
+
+const wanted = typeof name === 'string' && name ? name : ''
+// Capitalised: Astro resolves a component from a capitalised variable, and treats
+// anything else as an HTML tag.
+const Layout = layouts[`/src/cms-layouts/${wanted}.astro`]?.default ?? layouts['/src/cms-layouts/default.astro']?.default
+---
+
+{Layout ? <Layout {...props}><slot /></Layout> : <slot />}

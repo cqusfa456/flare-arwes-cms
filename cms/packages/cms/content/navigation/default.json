@@ -1,0 +1,10 @@
+{
+  "key": "default",
+  "name": "Default menu",
+  "items": [
+    { "label": "Home", "href": "/" },
+    { "label": "Docs", "href": "/docs/" },
+    { "label": "Blog", "href": "https://arwes-blog.pages.dev/" },
+    { "label": "Demos", "href": "/demos" }
+  ]
+}

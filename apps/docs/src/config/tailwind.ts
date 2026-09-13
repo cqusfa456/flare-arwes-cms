@@ -16,7 +16,11 @@ const createTWPalette = (
     .reduce((t, i) => ({ ...t, ...i }), {})
 
 export const tailwind: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  // `.astro` is scanned too: pages and the CMS-managed layouts/page frames are
+  // written as Astro files, and their utility classes have to be generated like
+  // any component's. The CMS sources land in `src/pages` and `src/cms-layouts`
+  // before the build runs, so they are already in place here.
+  content: ['./src/**/*.{js,ts,jsx,tsx,astro}'],
   plugins: [require('@tailwindcss/typography')],
   theme: {
     extend: {

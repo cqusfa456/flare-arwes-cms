@@ -1,0 +1,11 @@
+{
+  "key": "footer",
+  "name": "Footer menu",
+  "items": [
+    { "label": "Docs", "href": "/docs/" },
+    { "label": "Demos", "href": "/demos" },
+    { "label": "Blog", "href": "https://arwes-blog.pages.dev/" },
+    { "label": "GitHub", "href": "https://github.com/arwes/arwes" },
+    { "label": "Discord", "href": "https://discord.gg/s5sbTkw" }
+  ]
+}

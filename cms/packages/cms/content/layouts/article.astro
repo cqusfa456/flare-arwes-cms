@@ -1,0 +1,43 @@
+---
+/**
+ * The article layout: the shared chrome around a centred column of prose.
+ *
+ * A second version of the frame, selected by a page's `layout` field. It is what a
+ * CMS page wants — a title, a readable column, its own scrolling — while pages that
+ * manage their own layout (the documentation, a dashboard) use `default`.
+ *
+ * Props the page passes down: `title`, `pathname`, `navKey`.
+ */
+import CmsComponent from '@/components/CmsComponent.astro'
+
+const { title, navKey } = Astro.props
+---
+
+<div class="flex-1 flex flex-col min-w-0 min-h-0">
+  <CmsComponent name="nav" navKey={navKey} />
+
+  <div class="flex-1 min-h-0 overflow-y-auto">
+    <div class="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg p-4 md:p-8">
+      <h1 class="font-header text-size-2 text-primary-main-3">{title}</h1>
+
+      <div
+        class="cms-body flex flex-col gap-4 text-primary-low-2 [&_a]:text-secondary-low-2 [&_a:hover]:text-secondary-high-3"
+      >
+        <slot />
+      </div>
+    </div>
+  </div>
+
+  <CmsComponent name="footer" />
+</div>
+
+<style>
+  /* The layout owns the look of its pages: this CSS is scoped to this frame and to
+     the content a page drops in the slot. */
+  .cms-body :global(a) {
+    text-decoration: none;
+  }
+  .cms-body :global(p) {
+    line-height: 1.6;
+  }
+</style>

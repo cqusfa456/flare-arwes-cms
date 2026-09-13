@@ -45,12 +45,14 @@ interface HeaderProps {
   blogPath?: string
   /** Menu items from the CMS; empty means the built-in navigation is used. */
   navItems?: Array<{ label: string; href: string }>
+  /** Set when the page's layout renders the chrome: no menu from the shell. */
+  hideMenu?: boolean
 }
 
 const HEIGHT_CLASS = 'h-10 md:h-12'
 
 const Header = memo((props: HeaderProps): JSX.Element => {
-  const { className, animated, blogPath, navItems } = props
+  const { className, animated, blogPath, navItems, hideMenu } = props
   const hasCmsNav = !!navItems && navItems.length > 0
 
   const pathname = usePathname()
@@ -143,9 +145,9 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                   manager="stagger"
                   // The front page hides the menu unless the CMS provides one for it:
                   // a site that manages its navigation decides what the home menu is.
-                  condition={!isIndex || hasCmsNav}
+                  condition={(!isIndex || hasCmsNav) && !hideMenu}
                   unmountOnExited
-                  unmountOnDisabled={isIndex && !hasCmsNav}
+                  unmountOnDisabled={(isIndex && !hasCmsNav) || !!hideMenu}
                 >
                   <Menu className={HEIGHT_CLASS}>
                     {/*

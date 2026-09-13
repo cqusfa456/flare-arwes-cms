@@ -1,19 +1,27 @@
 /**
- * Materialise CMS pages as real Astro files.
+ * Materialise the CMS-managed site chrome as real Astro files.
  *
  * A `pages` entry may carry an `astro` field holding a whole `.astro` file (the
  * `astro-editor` plugin provides the editor). This script runs before
- * `astro build`, fetches the published pages from the CMS, and writes each one to
- * the path its collection prefix and slug resolve to, so Astro compiles it like
- * any hand-written page: layouts, components, imports and expressions all work.
+ * `astro build`, fetches the published content from the CMS, and writes:
+ *
+ *   pages       -> src/pages/...            the page itself (the manifest
+ *                                           `.cms-pages.json` lists the paths it
+ *                                           owns, so the catch-all route skips them)
+ *   layouts     -> src/cms-layouts/<key>.astro     a page frame with a <slot />
+ *   components  -> src/cms-components/<key>.astro  shared chrome (nav, footer, ...)
+ *
+ * Every page is injected through the layout it selects (`default` when it names
+ * none), and every layout composes the shared components, so the site's style and
+ * its menus live in the CMS while a page is content only. Astro compiles all of
+ * them like hand-written files: layouts, components, imports and expressions work.
  *
  * Pages with no `astro` field are left alone: they keep rendering through the
  * markdown path in `src/pages/[...path].astro`, which is what entries created
- * before the field existed have.
+ * before the field existed have — and they too are framed by their layout.
  *
- * The generated files live in `src/pages/` (ignored by git) and the list of paths
- * they own is written to `.cms-pages.json`, which that route reads so the two
- * never claim the same path.
+ * Generated files live in `src/pages/`, `src/cms-layouts/` and `src/cms-components/`
+ * (all ignored by git).
  *
  * Usage (normally via scripts/setup.sh, before the build):
  *   node scripts/sync-cms-pages.mjs [--verbose]
@@ -26,6 +34,7 @@ import { SciFiClient, SciFiD1Client } from '@sci-fi-cms/astro'
 const APP_DIR = resolve(import.meta.dirname ?? '.', '..')
 const PAGES_DIR = join(APP_DIR, 'src', 'pages')
 const LAYOUTS_DIR = join(APP_DIR, 'src', 'cms-layouts')
+const COMPONENTS_DIR = join(APP_DIR, 'src', 'cms-components')
 const MANIFEST = join(APP_DIR, '.cms-pages.json')
 
 const verbose = process.argv.includes('--verbose')
@@ -89,54 +98,53 @@ const cleanPrevious = () => {
 const run = async () => {
   const client = createClient()
 
-  // A content-only site (a blog subdomain) may not publish pages at all; then
-  // there is nothing to generate and the manifest has to say so.
+  // A content-only site (a blog subdomain) may not publish pages at all; then no
+  // page file is generated. It still gets the shared chrome: its layouts and
+  // components frame the collections it does publish.
   const routing = await client.fetchSiteRouting(SITE).catch(() => null)
   const routes = routing?.contentRoutes ?? null
-  if (routes && routes.pages === undefined) {
+  const publishesPages = !(routes && routes.pages === undefined)
+  if (!publishesPages) {
     for (const path of cleanPrevious()) {
       rmSync(fileForPath(path), { force: true })
     }
     writeFileSync(MANIFEST, JSON.stringify({ generated: [] }, null, 2) + '\n')
-    log(`"${routing.slug}" does not publish pages; nothing generated`)
-    return
+    log(`"${routing.slug}" does not publish pages; generating its chrome only`)
   }
 
   const collections = await client.fetchCollections()
   const pagesCollection = collections.find((collection) => collection.name === 'pages')
   if (!pagesCollection) {
-    log('the CMS has no "pages" collection; nothing generated')
+    log('the CMS has no "pages" collection; generating the shared chrome only')
     writeFileSync(MANIFEST, JSON.stringify({ generated: [] }, null, 2) + '\n')
-    return
   }
 
-  const items = (await client.fetchCollection('pages')).filter(
-    (item) => item.status === 'published'
-  )
+  const items =
+    publishesPages && pagesCollection
+      ? (await client.fetchCollection('pages')).filter((item) => item.status === 'published')
+      : []
 
-  // Page frames live in the CMS too: a page is wrapped in the layout it selects
-  // (`default` when it names none), so an author writes content only.
+  // Page frames live in the CMS too: every page is injected through the layout it
+  // selects (`default` when it names none), and each layout composes the shared
+  // components. Both are written next to the pages as real Astro files, so a layout
+  // can import whatever the CMS publishes under `components`.
   const layoutEntries = await client.fetchCollection('layouts').catch(() => [])
-  const layoutsByKey = new Map()
-  for (const entry of layoutEntries) {
-    const key = String(entry.data?.key ?? entry.slug ?? '')
-    const astro = entry.data?.astro
-    if (key && typeof astro === 'string' && astro.trim() !== '') {
-      layoutsByKey.set(key, astro.replace(/\s*$/, ''))
-    }
-  }
-  const usedLayouts = new Set()
-  const layoutSourceFor = (page) => {
-    const wanted = [page.data?.layout, 'default'].filter((key) => typeof key === 'string' && key)
-    for (const key of wanted) {
-      const layoutSource = layoutsByKey.get(key)
-      if (layoutSource) {
-        usedLayouts.add(key)
-        return { key, source: layoutSource }
+  const componentEntries = await client.fetchCollection('components').catch(() => [])
+
+  const sourcesFrom = (entries) => {
+    const sources = new Map()
+    for (const entry of Array.isArray(entries) ? entries : []) {
+      const key = String(entry.data?.key ?? entry.slug ?? '')
+      const astro = entry.data?.astro
+      if (key && typeof astro === 'string' && astro.trim() !== '') {
+        sources.set(key, astro.replace(/\s*$/, ''))
       }
     }
-    return null
+    return sources
   }
+
+  const layoutsByKey = sourcesFrom(layoutEntries)
+  const componentsByKey = sourcesFrom(componentEntries)
 
   const generated = []
   // Paths a previous run wrote, so a hand-written page file is never overwritten.
@@ -175,17 +183,19 @@ const run = async () => {
 
     // The author decides the shape:
     //   * a source that renders its own `<Layout>` is the whole page: compiled as-is;
-    //   * anything else is content, wrapped in the CMS layout the page selects so
-    //     the site's style stays consistent. The author's frontmatter (imports,
-    //     variables) is kept and merged into the wrapper, so a page can use
-    //     expressions without any layout boilerplate.
+    //   * anything else is content: the author's frontmatter (imports, variables) is
+    //     kept and the body is wrapped in the shared `Layout`, which injects the
+    //     layout version the page selects. So a page is content only, and its frame
+    //     is managed in the CMS.
     let contents = source
 
     if (!/<Layout[\s>]/.test(source)) {
       const pageTitle = String(item.title ?? '')
       const navKey = typeof item.data?.nav === 'string' && item.data.nav ? item.data.nav : null
-      const layout = layoutSourceFor(item)
+      const layoutKey =
+        typeof item.data?.layout === 'string' && item.data.layout ? item.data.layout : null
       const navAttr = navKey ? ` navKey=${JSON.stringify(navKey)}` : ''
+      const layoutAttr = layoutKey ? ` layout=${JSON.stringify(layoutKey)}` : ''
 
       // Split the author's frontmatter off, if any.
       const frontmatterMatch = source.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
@@ -195,15 +205,10 @@ const run = async () => {
         ''
       )
 
-      const imports = ["import Layout from '@/layouts/Layout.astro'"]
-      if (layout) {
-        imports.push(`import PageLayout from '@/cms-layouts/${layout.key}.astro'`)
-      }
-      imports.push("import { settings } from '@/config/settings'")
-
-      const wrapped = layout
-        ? `  <PageLayout title={title} pathname={pathname}>\n${body}\n  </PageLayout>`
-        : body
+      const imports = [
+        "import Layout from '@/layouts/Layout.astro'",
+        "import { settings } from '@/config/settings'"
+      ]
 
       contents = [
         '---',
@@ -214,8 +219,8 @@ const run = async () => {
         `const pathname = ${JSON.stringify(path)}`,
         '---',
         '',
-        `<Layout title={\`\${title} | \${settings.title}\`} pathname={pathname}${navAttr}>`,
-        wrapped,
+        `<Layout title={\`\${title} | \${settings.title}\`} pathname={pathname}${navAttr}${layoutAttr}>`,
+        body,
         '</Layout>',
         ''
       ].join('\n')
@@ -230,20 +235,27 @@ const run = async () => {
     }
   }
 
-  // Write the layouts the generated pages import.
-  const layoutFiles = []
-  for (const key of usedLayouts) {
-    const file = join(LAYOUTS_DIR, `${key}.astro`)
-    mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(
-      file,
-      `${layoutsByKey.get(key)}\n<!-- Generated from the CMS layout "${key}". Edit it in Admin → Content → Layouts. -->\n`
-    )
-    layoutFiles.push(key)
+  // Write every layout and every shared component, not only the ones the pages
+  // above happen to use: a page selects a layout version by key at build time, and
+  // a layout composes components by key, so all of them have to be importable.
+  const writeSources = (directory, sources, kind, help) => {
+    const keys = [...sources.keys()]
+    for (const key of keys) {
+      const file = join(directory, `${key}.astro`)
+      mkdirSync(dirname(file), { recursive: true })
+      writeFileSync(
+        file,
+        `${sources.get(key)}\n<!-- Generated from the CMS ${kind} "${key}". Edit it in Admin → Content → ${help}. -->\n`
+      )
+    }
+    if (keys.length) {
+      log(`${kind} file(s): ${keys.join(', ')}`)
+    }
+    return keys
   }
-  if (layoutFiles.length) {
-    log(`layout file(s): ${layoutFiles.join(', ')}`)
-  }
+
+  writeSources(LAYOUTS_DIR, layoutsByKey, 'layout', 'Layouts')
+  writeSources(COMPONENTS_DIR, componentsByKey, 'component', 'Components')
 
   // Drop files a previous run wrote that no longer exist in the CMS.
   const stale = [...previouslyGenerated].filter((path) => !generated.includes(path))

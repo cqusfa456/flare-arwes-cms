@@ -1,0 +1,26 @@
+---
+/**
+ * The site's footer bar.
+ *
+ * A shared component like the navigation: layouts render it with
+ * `<CmsComponent name="footer" />`. Its links are a menu of its own — the
+ * `navigation` entry with the key `footer` — so the footer can say something
+ * different from the header, and either can be edited without touching a layout.
+ */
+import CmsNav from '@/components/CmsNav.astro'
+import { settings } from '@/config/settings'
+
+const year = new Date().getFullYear()
+---
+
+<footer class="shrink-0 border-t border-primary-main-8/40 bg-primary-main-11/30">
+  <div
+    class="flex flex-col gap-2 mx-auto w-full max-w-screen-3xl px-4 py-4 items-center md:flex-row md:justify-between md:py-6"
+  >
+    <CmsNav navKey="footer" class="justify-center md:justify-start" />
+
+    <p class="m-0 font-cta text-size-10 uppercase text-primary-low-4">
+      &copy; {year} {settings.title} &middot; v{settings.version}
+    </p>
+  </div>
+</footer>

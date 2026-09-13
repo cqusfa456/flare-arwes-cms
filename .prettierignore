@@ -56,3 +56,6 @@ apps/docs/src/dynamics.ts
 apps/play/src/playground/typeDefinitions.js
 .astro
 cms
+
+# Generated before the build by apps/docs/scripts/sync-cms-pages.mjs
+.cms-pages.json

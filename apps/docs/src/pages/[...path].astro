@@ -93,7 +93,11 @@ export async function getStaticPaths() {
     contentHtml: md.render(String(page.data.content ?? '')),
     // `excerpt` is the summary field of the CMS's built-in collections;
     // `meta_description` is what pages created earlier carry.
-    metaDescription: page.data.excerpt ?? page.data.meta_description
+    metaDescription: page.data.excerpt ?? page.data.meta_description,
+    // The layout version and the menu the page selected in the CMS; both fall back
+    // to the site rule in `Layout.astro` when the entry names none.
+    layout: typeof page.data.layout === 'string' ? page.data.layout : undefined,
+    navKey: typeof page.data.nav === 'string' ? page.data.nav : undefined
   })
 
   // 1. CMS pages claim their paths first. Outside the docs and blog trees they
@@ -249,6 +253,8 @@ const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = 
 <Layout
   title={pageTitle ?? (cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname))}
   pathname={pathname}
+  layout={cmsPage?.layout}
+  navKey={cmsPage?.navKey}
 >
   {/*
     `navData` must be passed explicitly: `{...cmsPage}` only spreads the page

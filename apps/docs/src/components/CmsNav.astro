@@ -1,0 +1,60 @@
+---
+/**
+ * The site's navigation, rendered from the CMS.
+ *
+ * A layout includes this where the menu belongs, so the shared chrome lives in the
+ * layout instead of being hardcoded in the site shell:
+ *
+ *   <CmsNav />                            the menu the path selects
+ *   <CmsNav navKey="home" />              a specific menu from Admin -> Content -> Navigation
+ *   <CmsNav navKey={navKey} class="..." />  the menu the page itself selects
+ *
+ * The `navKey` prop is what a generated page passes down to its CMS layout, so a
+ * page that names a menu (`nav` field) keeps it wherever it is published.
+ *
+ * It renders nothing when the CMS defines no menu, so a layout can include it
+ * unconditionally.
+ */
+import { getNavigation } from '@/lib/site-content'
+
+interface Props {
+  /** Menu key; the site rule picks one when omitted. */
+  navKey?: string
+  /** Alias of `navKey`, for layouts that read better with the short name. */
+  key?: string
+  class?: string
+}
+
+const { navKey, key, class: className } = Astro.props
+const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/'
+const items = await getNavigation(pathname, navKey ?? key)
+---
+
+{
+  items.length > 0 && (
+    <nav
+      class:list={[
+        'flex flex-row flex-wrap items-center justify-center gap-1 md:gap-2',
+        className
+      ]}
+    >
+      {items.map((item) => {
+        const target = item.href.replace(/\/+$/, '') || '/'
+        const active = pathname === target || pathname.startsWith(`${target}/`)
+        return (
+          <a
+            class:list={[
+              'px-3 py-2 font-cta text-size-10 uppercase no-underline transition-colors duration-200 ease-out',
+              active
+                ? 'text-secondary-main-5 hover:text-secondary-high-2'
+                : 'text-primary-main-5 hover:text-primary-high-2'
+            ]}
+            href={item.href}
+          >
+            {item.label}
+          </a>
+        )
+      })}
+    </nav>
+  )
+}
