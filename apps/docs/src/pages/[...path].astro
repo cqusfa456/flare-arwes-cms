@@ -10,7 +10,6 @@ import { DocsCmsPage } from '@/cms/DocsCmsPage'
 import { BlogPostPage } from '@/cms/BlogPostPage'
 import { BlogIndexPage } from '@/cms/BlogIndexPage'
 import { collectionIndexPath, contentPath, getCollectionPrefixes } from '@/lib/cms-collections'
-
 // Build the static paths: the app's own routes plus the CMS-managed entries.
 //
 // Where each collection is published comes from the CMS (`url_prefix`, editable
@@ -111,6 +110,9 @@ export async function getStaticPaths() {
     return {
       slug: doc.data.slug,
       title: doc.data.title,
+      // Resolved here so the sidebar follows the collection's prefix instead of
+      // assuming /docs.
+      href: contentPath(docsPrefix, doc.data.slug),
       section: sectionSlugById.get(ref) ?? ref,
       order: doc.data.order
     }
@@ -148,6 +150,8 @@ export async function getStaticPaths() {
           props: {
             pathname: blogIndexPath,
             blogIndex: true,
+            // The blog index is not an app route, so `getTitle()` cannot name it.
+            pageTitle: `Blog | ${settings.title}`,
             posts: [...cmsPosts]
               .sort(
                 (a, b) =>
@@ -172,10 +176,14 @@ export async function getStaticPaths() {
   return [...appPaths, ...pagePaths, ...postPaths, ...docsPaths, ...indexPaths]
 }
 
-const { pathname, cmsPage, docs, blog, blogIndex, posts, navData } = Astro.props
+const { pathname, cmsPage, docs, blog, blogIndex, posts, navData, pageTitle } = Astro.props
 ---
 
-<Layout title={cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname)} pathname={pathname}>
+<Layout
+  title={pageTitle ??
+    (cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname))}
+  pathname={pathname}
+>
   {/*
     `navData` must be passed explicitly: `{...cmsPage}` only spreads the page
     fields, so spreading alone left the island with title/contentHtml only and

@@ -6,6 +6,8 @@ import { NavItem, NavList } from '@/ui'
 export type CmsNavDoc = {
   slug: string
   title: string
+  /** Public path of the doc, resolved from the collection's URL prefix at build time. */
+  href?: string
   /** Section slug the page belongs to, when the CMS exposes the relation. */
   section?: string
   order?: number
@@ -77,7 +79,9 @@ const CmsDocsNav = memo((props: CmsDocsNavProps): JSX.Element => {
           const items = group.docs.map((doc) => (
             <NavItem
               key={doc.slug}
-              href={`/docs/${doc.slug}`}
+              // The path comes from the CMS (`docs` collection prefix); the
+              // fallback only covers a payload from an older build.
+              href={doc.href ?? `/docs/${doc.slug}/`}
               text={doc.title}
               pathname={pathname}
             />

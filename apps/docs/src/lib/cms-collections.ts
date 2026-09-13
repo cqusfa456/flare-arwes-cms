@@ -44,6 +44,9 @@ export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
 /**
  * Public path of one entry: the collection's prefix plus the slug.
  *
+ * The trailing slash matters: the site is built with `build.format: 'directory'`,
+ * so `/blog/post/` is the canonical URL and `/blog/post` answers with a redirect.
+ *
  * Returns null when the collection has no prefix recorded (not published on its
  * own), so callers can skip it instead of generating a broken URL.
  */
@@ -52,8 +55,8 @@ export const contentPath = (prefix: string | null | undefined, slug: string): st
     return null
   }
   const base = prefix.replace(/\/+$/, '')
-  const cleanSlug = String(slug).replace(/^\/+/, '')
-  return `${base}/${cleanSlug}`
+  const cleanSlug = String(slug).replace(/^\/+|\/+$/g, '')
+  return `${base}/${cleanSlug}/`
 }
 
 /** The prefix itself as a path (`/blog`), or null when the collection is not routed. */
@@ -62,4 +65,10 @@ export const collectionIndexPath = (prefix: string | null | undefined): string |
     return null
   }
   return prefix.replace(/\/+$/, '')
+}
+
+/** The prefix as the canonical URL of its index page (`/blog/`). */
+export const collectionIndexUrl = (prefix: string | null | undefined): string | null => {
+  const path = collectionIndexPath(prefix)
+  return path === null ? null : `${path}/`
 }

@@ -152,7 +152,18 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                     </Animator>
                     {blogPath && (
                       <Animator>
-                        <MenuItem active={pathname.startsWith(blogPath)} animated={['flicker']}>
+                        {/*
+                          The link carries the canonical trailing slash, while the
+                          active state compares against the prefix itself: the
+                          app's pathname never has a trailing slash.
+                        */}
+                        <MenuItem
+                          active={
+                            pathname === blogPath.replace(/\/+$/, '') ||
+                            pathname.startsWith(`${blogPath.replace(/\/+$/, '')}/`)
+                          }
+                          animated={['flicker']}
+                        >
                           <Link href={blogPath} title="Go to Blog">
                             <Post /> <span className="hidden md:block">Blog</span>
                           </Link>

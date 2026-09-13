@@ -1,7 +1,7 @@
 ---
 import { settings } from '@/config/settings'
 import { AppShell } from '@/AppShell'
-import { collectionIndexPath, getCollectionPrefixes } from '@/lib/cms-collections'
+import { collectionIndexUrl, getCollectionPrefixes } from '@/lib/cms-collections'
 
 import '@/ui/globals.css'
 
@@ -14,7 +14,7 @@ const { title, pathname } = Astro.props
 
 // The blog's path is a CMS setting (the `blog-posts` collection's URL prefix), so
 // the header link follows it instead of assuming /blog. Undefined hides the link.
-const blogPath = collectionIndexPath((await getCollectionPrefixes()).get('blog-posts')) ?? undefined
+const blogPath = collectionIndexUrl((await getCollectionPrefixes()).get('blog-posts')) ?? undefined
 ---
 
 <html lang="en">

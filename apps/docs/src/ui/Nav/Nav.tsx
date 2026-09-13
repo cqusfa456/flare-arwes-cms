@@ -57,8 +57,16 @@ const Item = (props: ItemProps): JSX.Element => {
 
   const routerPathname = usePathname()
   const pathname = pathnameProp ?? routerPathname
-  const matches = !!href && pathname.startsWith(href)
-  const active = !!href && pathname === href
+
+  // Trailing slashes are ignored on both sides: the app's pathname never has one,
+  // while a CMS entry's canonical URL does (`build.format: 'directory'`).
+  const normalize = (value: string): string =>
+    value.length > 1 ? value.replace(/\/+$/, '') : value
+  const current = normalize(pathname)
+  const target = href ? normalize(href) : ''
+  const matches =
+    !!href && (current === target || (target !== '/' && current.startsWith(`${target}/`)))
+  const active = !!href && current === target
 
   const content = (
     <div
