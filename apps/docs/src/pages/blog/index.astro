@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content'
 
 import Layout from '@/layouts/Layout.astro'
 import { settings } from '@/config/settings'
+import { BlogIndexPage } from '@/cms/BlogIndexPage'
 
 // Blog index: CMS *pages*, newest first. Posts live at /blog/<slug> (see
 // [...path].astro); this page only lists them.
@@ -10,45 +11,19 @@ import { settings } from '@/config/settings'
 // `_publishedAt` is the loader's publish-date system field, and a CMS page
 // carries `meta_description` rather than an `excerpt`, which is the `docs`
 // collection's field.
-const posts = (await getCollection('pages')).sort(
-  (a, b) => (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0)
-)
+//
+// The list is rendered by a React island so it animates in like every other
+// page. Only plain values cross the island boundary.
+const posts = (await getCollection('pages'))
+  .sort((a, b) => (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0))
+  .map((post) => ({
+    slug: post.data.slug,
+    title: post.data.title,
+    publishedAt: post.data._publishedAt?.toISOString().slice(0, 10),
+    summary: post.data.meta_description
+  }))
 ---
 
 <Layout title={`Blog | ${settings.title}`} pathname="/blog">
-  <div className="flex-1 overflow-y-auto p-4 min-w-0 min-h-0 md:p-8">
-    <div className="flex flex-col gap-6 m-auto w-full min-w-0 max-w-screen-lg">
-      {/*
-        Theme colours, not the document default: this page is outside the prose
-        container, so unstyled text inherits black on a black background.
-      */}
-      <h1 class="font-header text-size-2 text-primary-main-3">Blog</h1>
-      {posts.length === 0 && <p class="text-primary-low-2">No posts yet.</p>}
-      <ul class="flex flex-col gap-5">
-        {
-          posts.map((post) => (
-            <li key={post.data.slug} class="flex flex-col gap-1">
-              <a
-                href={`/blog/${post.data.slug}/`}
-                class="font-header text-size-5 text-secondary-low-2 hover:text-secondary-high-3"
-              >
-                {post.data.title}
-              </a>
-              {post.data._publishedAt && (
-                <time
-                  class="font-code text-size-10 text-primary-low-2"
-                  datetime={post.data._publishedAt.toISOString()}
-                >
-                  {post.data._publishedAt.toISOString().slice(0, 10)}
-                </time>
-              )}
-              {post.data.meta_description && (
-                <p class="text-primary-low-2 text-size-8">{post.data.meta_description}</p>
-              )}
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </div>
+  <BlogIndexPage client:load posts={posts} />
 </Layout>

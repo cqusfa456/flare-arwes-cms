@@ -1,7 +1,12 @@
 'use client'
 
+import { Animated, Animator } from '@arwes/react'
+import { animate, stagger } from 'motion'
+
 import { LayoutDevelop } from '@/app/docs/develop/LayoutDevelop'
+import { CmsAnimator } from './CmsAnimator'
 import { CmsDocsNav, type CmsNavDoc, type CmsNavSection } from './CmsDocsNav'
+import { stripLeadingTitle } from './content'
 
 type DocsCmsPageProps = {
   title: string
@@ -40,25 +45,54 @@ const DocsCmsPage = (props: DocsCmsPageProps): JSX.Element => {
     }
   }
 
-  // Most CMS documents open with their own `# Title`, which the markdown
-  // renderer already produced as an `<h1>`. Rendering the wrapper title as well
-  // printed the heading twice, so it is only used when the content lacks one.
-  const contentHasTitle = /^\s*<h1[\s>]/i.test(contentHtml)
+  // The document's own heading is rendered by this page instead, so it can take
+  // part in the enter animation.
+  const bodyHtml = stripLeadingTitle(contentHtml, title)
 
   return (
-    <LayoutDevelop
-      nav={
-        <CmsDocsNav
-          sections={sections}
-          docs={docs}
-          pathname={pathname}
-          className="mb-auto"
-        />
-      }
-    >
-      {!contentHasTitle && <h1>{title}</h1>}
-      <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
-    </LayoutDevelop>
+    <CmsAnimator>
+      <LayoutDevelop
+        nav={
+          <CmsDocsNav
+            sections={sections}
+            docs={docs}
+            pathname={pathname}
+            className="mb-auto"
+          />
+        }
+      >
+        {/*
+          The docs layout staggers its children, so the title and the body have
+          to be ARWES `Animated` blocks: plain elements used to appear instantly
+          while the sidebar and the frames animated in. Inside the body, each
+          top-level markdown block fades in on its own, like the app's own
+          paragraphs and lists do.
+        */}
+        <Animator>
+          <Animated as="h1" animated={['flicker']}>
+            {title}
+          </Animated>
+        </Animator>
+
+        <Animator>
+          <Animated
+            as="div"
+            animated={{
+              transitions: {
+                entering: ({ $, duration }) =>
+                  animate(
+                    $(':scope > *'),
+                    { opacity: [0, 1, 0.5, 1] },
+                    { duration, delay: stagger(0.02) }
+                  ),
+                exiting: { opacity: [1, 0, 0.5, 0] }
+              }
+            }}
+            dangerouslySetInnerHTML={{ __html: bodyHtml }}
+          />
+        </Animator>
+      </LayoutDevelop>
+    </CmsAnimator>
   )
 }
 
