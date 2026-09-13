@@ -11,7 +11,7 @@
  * rest of the build noticing.
  */
 import type { CollectionSchema } from './types-cms'
-import type { SciFiContentItem, SciFiD1Options } from './types'
+import type { SciFiContentItem, SciFiD1Options, SciFiCollectionInfo } from './types'
 
 const API_BASE = 'https://api.cloudflare.com/client/v4'
 
@@ -213,6 +213,23 @@ export class SciFiD1Client {
       created_at: row.created_at,
       updated_at: row.updated_at,
       published_at: row.published_at ?? null
+    }))
+  }
+
+  /** The collections the CMS exposes, with the URL prefix of each. */
+  async fetchCollections(): Promise<SciFiCollectionInfo[]> {
+    const rows = await this.query<{
+      id: string
+      name: string
+      display_name: string
+      url_prefix: string | null
+    }>('SELECT id, name, display_name, url_prefix FROM collections WHERE is_active = 1')
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      displayName: row.display_name,
+      urlPrefix: row.url_prefix ?? null
     }))
   }
 

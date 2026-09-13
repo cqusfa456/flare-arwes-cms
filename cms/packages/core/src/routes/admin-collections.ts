@@ -17,6 +17,7 @@ interface Collection {
   formattedDate: string
   field_count?: number
   managed?: boolean
+  url_prefix?: string | null
 }
 
 interface CollectionFormData {
@@ -24,6 +25,7 @@ interface CollectionFormData {
   name?: string
   display_name?: string
   description?: string
+  url_prefix?: string | null
   fields?: CollectionField[]
   managed?: boolean
   isEdit?: boolean
@@ -62,6 +64,25 @@ interface CollectionsListPageData {
     role: string
   }
   version?: string
+}
+
+/**
+ * Normalize a collection URL prefix submitted by the admin form.
+ *
+ * Mirrors `normalizeUrlPrefix` in admin-api.ts so both write paths store the
+ * same values: `''` (or `'/'`) means the site root, everything else becomes a
+ * path prefix with a leading slash and no trailing slash, and nullish input
+ * means the collection is not routed on its own.
+ */
+function normalizeUrlPrefix(value: string | null | undefined): string | null {
+  if (value === undefined || value === null) {
+    return null
+  }
+  const trimmed = value.trim()
+  if (trimmed === '' || trimmed === '/') {
+    return ''
+  }
+  return (trimmed.startsWith('/') ? trimmed : `/${trimmed}`).replace(/\/+$/, '')
 }
 
 type Bindings = {
@@ -109,7 +130,7 @@ adminCollectionsRoutes.get('/', async (c) => {
     let results
     if (search) {
       stmt = db.prepare(`
-        SELECT id, name, display_name, description, created_at, managed, schema
+        SELECT id, name, display_name, description, created_at, managed, schema, url_prefix
         FROM collections
         WHERE is_active = 1
         AND (name LIKE ? OR display_name LIKE ? OR description LIKE ?)
@@ -119,7 +140,7 @@ adminCollectionsRoutes.get('/', async (c) => {
       const queryResults = await stmt.bind(searchParam, searchParam, searchParam).all()
       results = queryResults.results
     } else {
-      stmt = db.prepare('SELECT id, name, display_name, description, created_at, managed, schema FROM collections WHERE is_active = 1 ORDER BY created_at DESC')
+      stmt = db.prepare('SELECT id, name, display_name, description, created_at, managed, schema, url_prefix FROM collections WHERE is_active = 1 ORDER BY created_at DESC')
       const queryResults = await stmt.all()
       results = queryResults.results
     }
@@ -156,7 +177,8 @@ adminCollectionsRoutes.get('/', async (c) => {
           created_at: Number(row.created_at || 0),
           formattedDate: row.created_at ? new Date(Number(row.created_at)).toLocaleDateString() : 'Unknown',
           field_count: fieldCount,
-          managed: row.managed === 1
+          managed: row.managed === 1,
+          url_prefix: row.url_prefix === undefined ? null : (row.url_prefix === null ? null : String(row.url_prefix))
         }
       })
 
@@ -222,6 +244,8 @@ adminCollectionsRoutes.post('/', async (c) => {
     const name = formData.get('name') as string
     const displayName = formData.get('displayName') as string
     const description = formData.get('description') as string
+    const urlPrefixValue = formData.get('url_prefix')
+    const urlPrefix = normalizeUrlPrefix(typeof urlPrefixValue === 'string' ? urlPrefixValue : null)
 
     // Check if this is an HTMX request
     const isHtmx = c.req.header('HX-Request') === 'true'
@@ -303,8 +327,8 @@ adminCollectionsRoutes.post('/', async (c) => {
     const now = Date.now()
 
     const insertStmt = db.prepare(`
-      INSERT INTO collections (id, name, display_name, description, schema, is_active, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO collections (id, name, display_name, description, schema, is_active, created_at, updated_at, url_prefix)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     await insertStmt.bind(
@@ -315,7 +339,8 @@ adminCollectionsRoutes.post('/', async (c) => {
       JSON.stringify(basicSchema),
       1, // is_active
       now,
-      now
+      now,
+      urlPrefix
     ).run()
 
     // Clear cache (only if CACHE_KV is available)
@@ -524,6 +549,7 @@ adminCollectionsRoutes.get('/:id', async (c) => {
       name: collection.name,
       display_name: collection.display_name,
       description: collection.description,
+      url_prefix: collection.url_prefix ?? null,
       fields: fields,
       managed: collection.managed === 1,
       isEdit: true,
@@ -578,6 +604,10 @@ adminCollectionsRoutes.put('/:id', async (c) => {
     const formData = await c.req.formData()
     const displayName = formData.get('displayName') as string
     const description = formData.get('description') as string
+    // Only touch url_prefix when the submitted form actually carried the field,
+    // so a form rendered without it cannot silently clear the stored value.
+    const urlPrefixSubmitted = formData.has('url_prefix')
+    const urlPrefixValue = formData.get('url_prefix')
 
     if (!displayName) {
       return c.html(html`
@@ -589,13 +619,25 @@ adminCollectionsRoutes.put('/:id', async (c) => {
 
     const db = c.env.DB
 
+    const updateFields: string[] = ['display_name = ?', 'description = ?']
+    const updateParams: any[] = [displayName, description || null]
+
+    if (urlPrefixSubmitted) {
+      updateFields.push('url_prefix = ?')
+      updateParams.push(normalizeUrlPrefix(typeof urlPrefixValue === 'string' ? urlPrefixValue : null))
+    }
+
+    updateFields.push('updated_at = ?')
+    updateParams.push(Date.now())
+    updateParams.push(id)
+
     const updateStmt = db.prepare(`
       UPDATE collections
-      SET display_name = ?, description = ?, updated_at = ?
+      SET ${updateFields.join(', ')}
       WHERE id = ?
     `)
 
-    await updateStmt.bind(displayName, description || null, Date.now(), id).run()
+    await updateStmt.bind(...updateParams).run()
 
     return c.html(html`
       <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">

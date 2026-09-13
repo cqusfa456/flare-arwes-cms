@@ -8,10 +8,12 @@ import { MobileLinks } from './MobileLinks'
 type MobileMenuProps = {
   isMenuOpen: boolean
   closeMenu: () => void
+  /** CMS blog path (its collection's URL prefix); undefined hides the link. */
+  blogPath?: string
 }
 
 const MobileMenu = (props: MobileMenuProps): JSX.Element => {
-  const { isMenuOpen, closeMenu } = props
+  const { isMenuOpen, closeMenu, blogPath } = props
 
   return (
     <Animator
@@ -30,16 +32,18 @@ const MobileMenu = (props: MobileMenuProps): JSX.Element => {
           <div className="flex flex-col gap-2">
             <MobileLinks />
 
-            <Animator>
-              <Animated<HTMLAnchorElement>
-                as="a"
-                className="flex justify-center font-cta leading-none text-size-8 text-primary-main-9"
-                animated={['flicker']}
-                href="/blog"
-              >
-                Blog
-              </Animated>
-            </Animator>
+            {blogPath && (
+              <Animator>
+                <Animated<HTMLAnchorElement>
+                  as="a"
+                  className="flex justify-center font-cta leading-none text-size-8 text-primary-main-9"
+                  animated={['flicker']}
+                  href={blogPath}
+                >
+                  Blog
+                </Animated>
+              </Animator>
+            )}
 
             <Animator>
               <Animated<HTMLAnchorElement>

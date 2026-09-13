@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { requireAuth, requireRole } from '../middleware'
 import type { Bindings, Variables } from '../app'
 import { getStorageInfo } from '../storage'
+import { invalidateCollectionMetadataCache } from '../services/cache'
 
 export const adminApiRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -213,7 +214,12 @@ const createCollectionSchema = z.object({
   name: z.string().min(1).max(255).regex(/^[a-z0-9_]+$/, 'Must contain only lowercase letters, numbers, and underscores'),
   displayName: z.string().min(1).max(255).optional(),
   display_name: z.string().min(1).max(255).optional(),
-  description: z.string().optional()
+  description: z.string().optional(),
+  /**
+   * Path the collection's entries are published under: '' for the site root,
+   * '/docs' for a prefix. Omitted means the collection is not routed on its own.
+   */
+  url_prefix: z.string().max(255).optional()
 }).refine(data => data.displayName || data.display_name, {
   message: 'Either displayName or display_name is required',
   path: ['displayName']
@@ -222,8 +228,27 @@ const createCollectionSchema = z.object({
 const updateCollectionSchema = z.object({
   display_name: z.string().min(1).max(255).optional(),
   description: z.string().optional(),
-  is_active: z.boolean().optional()
+  is_active: z.boolean().optional(),
+  url_prefix: z.string().max(255).nullable().optional()
 })
+
+/**
+ * Normalize a collection URL prefix.
+ *
+ * `''` means the site root, anything else is a path prefix with a leading slash
+ * and without a trailing one. `null` means the collection is not routed on its
+ * own (a collection that only exists to group others, like docs-sections).
+ */
+function normalizeUrlPrefix(value: string | null | undefined): string | null {
+  if (value === undefined || value === null) {
+    return null
+  }
+  const trimmed = value.trim()
+  if (trimmed === '' || trimmed === '/') {
+    return ''
+  }
+  return (trimmed.startsWith('/') ? trimmed : `/${trimmed}`).replace(/\/+$/, '')
+}
 
 /**
  * Get all collections
@@ -240,7 +265,7 @@ adminApiRoutes.get('/collections', async (c) => {
 
     if (search) {
       stmt = db.prepare(`
-        SELECT id, name, display_name, description, created_at, updated_at, is_active, managed
+        SELECT id, name, display_name, description, created_at, updated_at, is_active, managed, url_prefix
         FROM collections
         WHERE ${includeInactive ? '1=1' : 'is_active = 1'}
         AND (name LIKE ? OR display_name LIKE ? OR description LIKE ?)
@@ -251,7 +276,7 @@ adminApiRoutes.get('/collections', async (c) => {
       results = queryResults.results
     } else {
       stmt = db.prepare(`
-        SELECT id, name, display_name, description, created_at, updated_at, is_active, managed
+        SELECT id, name, display_name, description, created_at, updated_at, is_active, managed, url_prefix
         FROM collections
         ${includeInactive ? '' : 'WHERE is_active = 1'}
         ORDER BY created_at DESC
@@ -274,6 +299,7 @@ adminApiRoutes.get('/collections', async (c) => {
       updated_at: Number(row.updated_at),
       is_active: row.is_active === 1,
       managed: row.managed === 1,
+      url_prefix: row.url_prefix ?? null,
       field_count: fieldCounts.get(String(row.id)) || 0
     }))
 
@@ -537,8 +563,8 @@ adminApiRoutes.post('/collections', async (c) => {
       const now = Date.now()
 
       const insertStmt = db.prepare(`
-        INSERT INTO collections (id, name, display_name, description, schema, is_active, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO collections (id, name, display_name, description, schema, is_active, created_at, updated_at, url_prefix)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       await insertStmt.bind(
@@ -549,10 +575,14 @@ adminApiRoutes.post('/collections', async (c) => {
         JSON.stringify(basicSchema),
         1, // is_active
         now,
-        now
+        now,
+        normalizeUrlPrefix(validatedData.url_prefix)
       ).run()
 
-      // Clear cache
+      // Clear cache. Both the cache service (which the public API reads) and the
+      // legacy keys are dropped: a collection's prefix decides where the next
+      // build publishes its entries.
+      await invalidateCollectionMetadataCache()
       try {
         await c.env.CACHE_KV.delete('cache:collections:all')
         await c.env.CACHE_KV.delete(`cache:collection:${validatedData.name}`)
@@ -565,6 +595,7 @@ adminApiRoutes.post('/collections', async (c) => {
         name: validatedData.name,
         displayName: displayName,
         description: validatedData.description,
+        url_prefix: normalizeUrlPrefix(validatedData.url_prefix),
         created_at: now
       }, 201)
     } catch (error) {
@@ -615,6 +646,11 @@ adminApiRoutes.patch('/collections/:id', async (c) => {
         updateParams.push(validatedData.is_active ? 1 : 0)
       }
 
+      if (validatedData.url_prefix !== undefined) {
+        updateFields.push('url_prefix = ?')
+        updateParams.push(normalizeUrlPrefix(validatedData.url_prefix))
+      }
+
       if (updateFields.length === 0) {
         return c.json({ error: 'No fields to update' }, 400)
       }
@@ -631,7 +667,8 @@ adminApiRoutes.patch('/collections/:id', async (c) => {
 
       await updateStmt.bind(...updateParams).run()
 
-      // Clear cache
+      // Clear cache (see the create handler: the prefix decides build paths).
+      await invalidateCollectionMetadataCache()
       try {
         await c.env.CACHE_KV.delete('cache:collections:all')
         await c.env.CACHE_KV.delete(`cache:collection:${existing.name}`)

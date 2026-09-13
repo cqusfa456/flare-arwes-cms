@@ -5,7 +5,12 @@
  * to fetch collection data and schemas from the CMS API.
  */
 import type { CollectionSchema } from './types-cms'
-import type { SciFiLoaderOptions, SciFiContentItem, SciFiApiResponse } from './types'
+import type {
+  SciFiLoaderOptions,
+  SciFiContentItem,
+  SciFiApiResponse,
+  SciFiCollectionInfo
+} from './types'
 
 interface CollectionMeta {
   id: string
@@ -99,6 +104,31 @@ export class SciFiClient {
       console.warn(
         `[sci-fi-cms/astro] "${collection}" was scoped to site "${scope.siteSlug}" but no \`site\` option is set; the scope came from the request.`
       )
+    }
+  }
+
+  /**
+   * Fetch the collections the CMS exposes, with the URL prefix each one's
+   * entries are published under. Returns an empty array on error.
+   */
+  async fetchCollections(): Promise<SciFiCollectionInfo[]> {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/collections`, { headers: this.headers() })
+      if (!res.ok) {
+        console.error(`[sci-fi-cms/astro] Failed to fetch collections: ${res.status} ${res.statusText}`)
+        return []
+      }
+
+      const json = (await res.json()) as { data?: Array<Record<string, unknown>> }
+      return (json.data ?? []).map((row) => ({
+        id: String(row.id ?? ''),
+        name: String(row.name ?? ''),
+        displayName: String(row.display_name ?? row.displayName ?? row.name ?? ''),
+        urlPrefix: (row.url_prefix ?? row.urlPrefix ?? null) as string | null
+      }))
+    } catch (err) {
+      console.error('[sci-fi-cms/astro] Network error fetching collections:', err)
+      return []
     }
   }
 

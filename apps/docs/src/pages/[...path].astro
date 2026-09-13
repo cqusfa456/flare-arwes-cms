@@ -8,54 +8,97 @@ import { routes, getTitle } from '@/router/routes'
 import { CmsPage } from '@/cms/CmsPage'
 import { DocsCmsPage } from '@/cms/DocsCmsPage'
 import { BlogPostPage } from '@/cms/BlogPostPage'
+import { BlogIndexPage } from '@/cms/BlogIndexPage'
+import { collectionIndexPath, contentPath, getCollectionPrefixes } from '@/lib/cms-collections'
 
-// Build the static paths: the app routes plus the CMS-managed pages.
+// Build the static paths: the app's own routes plus the CMS-managed entries.
+//
+// Where each collection is published comes from the CMS (`url_prefix`, editable
+// at Admin → Collections), so moving a content type is a CMS change plus a
+// rebuild instead of a code change. A path that would collide with an app route
+// (or with another CMS entry) is skipped, because the app owns its routes.
 export async function getStaticPaths() {
-  // Markdown renderer for CMS page content.
+  // Markdown renderer for CMS content.
   const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
 
-  // Fetch all pages managed by the Sci-Fi CMS admin.
-  const cmsPages = await getCollection('pages')
+  const prefixes = await getCollectionPrefixes()
+  const docsPrefix = prefixes.get('docs')
+  const postsPrefix = prefixes.get('blog-posts')
+  const pagesPrefix = prefixes.get('pages')
 
-  // Documentation managed in the CMS renders under /docs/<slug>. Sections only
-  // group content administratively, so the URL stays flat and a page can move
-  // between sections without breaking links.
+  const cmsPages = await getCollection('pages')
   const cmsDocs = await getCollection('docs')
+  const cmsPosts = await getCollection('posts')
+  const cmsSections = await getCollection('docsSections')
+
+  // Everything the app already serves, plus what the CMS claims as we go.
+  const claimed = new Set<string>(routes)
+  const claim = (path: string): boolean => {
+    if (!path || claimed.has(path)) {
+      return false
+    }
+    claimed.add(path)
+    return true
+  }
 
   const appPaths = routes.map((route) => ({
     params: { path: route === '/' ? undefined : route.slice(1) },
     props: { pathname: route, cmsPage: undefined }
   }))
 
-  const cmsPaths = cmsPages.map((page) => ({
-    params: { path: `blog/${page.data.slug}` },
-    props: {
-      pathname: `/blog/${page.data.slug}`,
-      blog: true,
-      cmsPage: {
-        title: page.data.title,
-        contentHtml: md.render(String(page.data.content ?? '')),
-        metaDescription: page.data.meta_description,
-        // The loader exposes the publish date as the `_publishedAt` system
-        // field (`published_at` never reached the page: the API transform
-        // dropped the column and Astro strips undeclared schema keys).
-        publishedAt: page.data._publishedAt
-          ? new Date(page.data._publishedAt).toISOString().slice(0, 10)
-          : undefined
-      }
+  // Standalone CMS pages. Their prefix is normally empty, which publishes them at
+  // the site root.
+  const pagePaths = cmsPages.flatMap((page) => {
+    const path = contentPath(pagesPrefix, page.data.slug)
+    if (!path || !claim(path)) {
+      return []
     }
-  }))
+    return [
+      {
+        params: { path: path.replace(/^\//, '') },
+        props: {
+          pathname: path,
+          cmsPage: {
+            title: page.data.title,
+            contentHtml: md.render(String(page.data.content ?? '')),
+            metaDescription: page.data.meta_description
+          }
+        }
+      }
+    ]
+  })
 
-  // Sidebar data: sections for the headings, docs for the links. A page
-  // whose section is not in the CMS section list still appears (unlabelled),
-  // so content cannot become unreachable.
-  //
-  // A doc's `section` field holds the *entry id* of its section (a UUID), not
-  // the section slug, so it has to be translated. Grouping by the raw value
-  // matched nothing and silently flattened every link into one unlabelled list.
-  const cmsSections = await getCollection('docsSections')
+  // Blog posts.
+  const postPaths = cmsPosts.flatMap((post) => {
+    const path = contentPath(postsPrefix, post.data.slug)
+    if (!path || !claim(path)) {
+      return []
+    }
+    return [
+      {
+        params: { path: path.replace(/^\//, '') },
+        props: {
+          pathname: path,
+          blog: true,
+          cmsPage: {
+            title: post.data.title,
+            contentHtml: md.render(String(post.data.content ?? '')),
+            metaDescription: post.data.meta_description,
+            // The loader exposes the publish date as the `_publishedAt` system
+            // field (`published_at` never reaches the page: the API transform
+            // dropped the column and Astro strips undeclared schema keys).
+            publishedAt: post.data._publishedAt
+              ? new Date(post.data._publishedAt).toISOString().slice(0, 10)
+              : undefined
+          }
+        }
+      }
+    ]
+  })
+
+  // Documentation. Sections only group content administratively, so a doc's URL
+  // does not include one: it can move between sections without breaking links.
   const sectionSlugById = new Map(cmsSections.map((section: any) => [section.id, section.data.slug]))
-
   const navSections = cmsSections.map((section: any) => ({
     slug: section.data.slug,
     name: section.data.name,
@@ -71,24 +114,63 @@ export async function getStaticPaths() {
     }
   })
 
-  const docsPaths = cmsDocs.map((doc) => ({
-    params: { path: `docs/${doc.data.slug}` },
-    props: {
-      pathname: `/docs/${doc.data.slug}`,
-      docs: true,
-      navData: JSON.stringify({ sections: navSections, docs: navDocs }),
-      cmsPage: {
-        title: doc.data.title,
-        contentHtml: md.render(String(doc.data.content ?? '')),
-        metaDescription: doc.data.excerpt
-      }
+  const docsPaths = cmsDocs.flatMap((doc) => {
+    const path = contentPath(docsPrefix, doc.data.slug)
+    if (!path || !claim(path)) {
+      return []
     }
-  }))
+    return [
+      {
+        params: { path: path.replace(/^\//, '') },
+        props: {
+          pathname: path,
+          docs: true,
+          navData: JSON.stringify({ sections: navSections, docs: navDocs }),
+          cmsPage: {
+            title: doc.data.title,
+            contentHtml: md.render(String(doc.data.content ?? '')),
+            metaDescription: doc.data.excerpt
+          }
+        }
+      }
+    ]
+  })
 
-  return [...appPaths, ...cmsPaths, ...docsPaths]
+  // The blog index lives at its collection's prefix (`/blog`).
+  const blogIndexPath = collectionIndexPath(postsPrefix)
+  const hasBlogIndex = !!blogIndexPath && claim(blogIndexPath)
+  const indexPaths = hasBlogIndex
+    ? [
+        {
+          params: { path: blogIndexPath!.replace(/^\//, '') },
+          props: {
+            pathname: blogIndexPath,
+            blogIndex: true,
+            posts: [...cmsPosts]
+              .sort(
+                (a, b) =>
+                  (b.data._publishedAt?.getTime() ?? 0) - (a.data._publishedAt?.getTime() ?? 0)
+              )
+              .map((post) => ({
+                // The link is resolved here, at build time: the island must not
+                // import the routing helper (it reads build-only env).
+                href: contentPath(postsPrefix, post.data.slug),
+                slug: post.data.slug,
+                title: post.data.title,
+                publishedAt: post.data._publishedAt
+                  ? new Date(post.data._publishedAt).toISOString().slice(0, 10)
+                  : undefined,
+                summary: post.data.meta_description
+              }))
+          }
+        }
+      ]
+    : []
+
+  return [...appPaths, ...pagePaths, ...postPaths, ...docsPaths, ...indexPaths]
 }
 
-const { pathname, cmsPage, docs, blog, navData } = Astro.props
+const { pathname, cmsPage, docs, blog, blogIndex, posts, navData } = Astro.props
 ---
 
 <Layout title={cmsPage ? `${cmsPage.title} | ${settings.title}` : getTitle(pathname)} pathname={pathname}>
@@ -98,6 +180,7 @@ const { pathname, cmsPage, docs, blog, navData } = Astro.props
     rendered an empty sidebar with no error.
   */}
   {docs && cmsPage && <DocsCmsPage client:load {...cmsPage} navData={navData} pathname={pathname} />}
-  {!docs && !blog && cmsPage && <CmsPage client:load {...cmsPage} />}
   {blog && cmsPage && <BlogPostPage client:load {...cmsPage} />}
+  {!docs && !blog && !blogIndex && cmsPage && <CmsPage client:load {...cmsPage} />}
+  {blogIndex && <BlogIndexPage client:load posts={posts} />}
 </Layout>

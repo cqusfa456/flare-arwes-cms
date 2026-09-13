@@ -7,6 +7,8 @@ import { Link } from '@/router'
 import { CmsAnimator } from './CmsAnimator'
 
 export type BlogPostSummary = {
+  /** Public path of the post, resolved from the collection's URL prefix. */
+  href: string | null
   slug: string
   title: string
   publishedAt?: string
@@ -68,7 +70,7 @@ const BlogIndexPage = memo((props: BlogIndexPageProps): JSX.Element => {
                     <li key={post.slug} className="flex flex-col gap-1">
                       <Link
                         className="font-header text-size-5 text-secondary-low-2 hover:text-secondary-high-3"
-                        href={`/blog/${post.slug}/`}
+                        href={post.href ?? '#'}
                       >
                         {post.title}
                       </Link>

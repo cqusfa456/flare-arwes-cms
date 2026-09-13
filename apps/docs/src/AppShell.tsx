@@ -11,6 +11,11 @@ import { App } from '@/App'
 
 type AppShellProps = {
   pathname: string
+  /**
+   * Path of the CMS blog collection, read from its URL prefix at build time.
+   * Undefined when the CMS does not route a blog, which hides the link.
+   */
+  blogPath?: string
   children?: ReactNode
 }
 
@@ -39,7 +44,7 @@ const PageContent = (props: { serverContent?: ReactNode }): JSX.Element => {
 // The `children` are the CMS-managed page content rendered by Astro
 // (SSR) and passed through the slot.
 const AppShell = (props: AppShellProps): JSX.Element => {
-  const { pathname, children } = props
+  const { pathname, blogPath, children } = props
 
   const store = useMemo(() => {
     const store = createStore()
@@ -50,7 +55,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
   return (
     <Provider store={store}>
       <Router>
-        <LayoutRoot>
+        <LayoutRoot blogPath={blogPath}>
           <PageContent serverContent={children} />
         </LayoutRoot>
       </Router>

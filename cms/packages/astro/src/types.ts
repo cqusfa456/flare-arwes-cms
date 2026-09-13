@@ -66,6 +66,24 @@ export interface SciFiLoaderOptions {
 }
 
 /**
+ * A collection as the CMS describes it, including where its entries are
+ * published. Lets a build generate paths from CMS settings instead of hardcoding
+ * them.
+ */
+export interface SciFiCollectionInfo {
+  id: string
+  name: string
+  displayName: string
+
+  /**
+   * Path prefix the collection's entries are published under:
+   * `''` is the site root, `'/docs'` is a path prefix, `null` means the
+   * collection is not routed on its own (it only groups other entries).
+   */
+  urlPrefix: string | null
+}
+
+/**
  * Shape of a content item returned by the Sci-Fi CMS API.
  */
 export interface SciFiContentItem {

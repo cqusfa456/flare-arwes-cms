@@ -11,4 +11,10 @@ export { sciFiLiveLoader } from './live-loader'
 export { sciFiSchemaToZod } from './schema'
 export { SciFiClient } from './client'
 export { SciFiD1Client } from './d1-client'
-export type { SciFiLoaderOptions, SciFiContentItem, SciFiApiResponse, SciFiD1Options } from './types'
+export type {
+  SciFiLoaderOptions,
+  SciFiContentItem,
+  SciFiApiResponse,
+  SciFiD1Options,
+  SciFiCollectionInfo
+} from './types'

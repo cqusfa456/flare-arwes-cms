@@ -278,3 +278,17 @@ export async function invalidatePublicContentCache(): Promise<void> {
   await cache.invalidate('content-filtered:*')
   await cache.invalidate('content:list:*')
 }
+
+/**
+ * Invalidate cached collection metadata.
+ *
+ * The public `GET /collections` response carries each collection's schema and its
+ * URL prefix, and a site build reads it to decide where entries are published. It
+ * has to be dropped when a collection changes, or the next build routes content
+ * by the previous prefix.
+ */
+export async function invalidateCollectionMetadataCache(): Promise<void> {
+  const cache = getCacheService(CACHE_CONFIGS.api!)
+  await cache.invalidate('collections:*')
+  await cache.invalidate('collection:*')
+}

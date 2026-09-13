@@ -1,5 +1,6 @@
 import { renderAdminLayoutCatalyst, AdminLayoutCatalystData } from '../layouts/admin-layout-catalyst.template'
 import { renderTable } from '../components/table.template'
+import { escapeHtml } from '../../utils/sanitize'
 
 export interface Collection {
   id: string
@@ -10,6 +11,7 @@ export interface Collection {
   formattedDate: string
   field_count?: number
   managed?: boolean
+  url_prefix?: string | null
 }
 
 export interface CollectionsListPageData {
@@ -49,6 +51,34 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                 ` : ''}
             </div>
           `
+      },
+      {
+        key: 'url_prefix',
+        label: 'URL Prefix',
+        sortable: true,
+        sortType: 'string',
+        render: (_value: any, collection: any) => {
+          const prefix = collection.url_prefix
+
+          // null/undefined: the collection is not routed on its own
+          if (prefix === null || prefix === undefined) {
+            return `
+              <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 font-mono text-xs text-zinc-500 dark:text-zinc-400 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/10" title="Not routed on its own (grouping-only collection)">
+                not routed
+              </span>
+            `
+          }
+
+          // '' means entries are published at the site root
+          const isSiteRoot = prefix === ''
+          const display = isSiteRoot ? '/' : escapeHtml(String(prefix))
+          const title = isSiteRoot ? 'Site root' : `Entries are published under ${escapeHtml(String(prefix))}`
+          return `
+            <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 font-mono text-xs font-medium text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-700/10 dark:ring-emerald-400/20" title="${title}">
+              ${display}
+            </span>
+          `
+        }
       },
       {
         key: 'display_name',

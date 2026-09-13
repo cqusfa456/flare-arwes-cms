@@ -19,6 +19,7 @@ export interface CollectionFormData {
   name?: string
   display_name?: string
   description?: string
+  url_prefix?: string | null
   fields?: CollectionField[]
   managed?: boolean
   isEdit?: boolean
@@ -115,6 +116,16 @@ export function renderCollectionFormPage(data: CollectionFormData): string {
       placeholder: 'Description of this collection...',
       rows: 3,
       readonly: data.managed,
+      className: data.managed ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-not-allowed' : ''
+    },
+    {
+      name: 'url_prefix',
+      label: 'URL Prefix',
+      type: 'text',
+      value: data.url_prefix === null || data.url_prefix === undefined ? '' : data.url_prefix,
+      placeholder: '/docs',
+      readonly: data.managed,
+      helpText: 'Path prefix this collection\'s entries are published under. Leave empty to publish at the site root (e.g. /about); enter a path such as /docs to publish under it (e.g. /docs/quick-start). Collections that only group other entries can leave this empty too.',
       className: data.managed ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-not-allowed' : ''
     }
   ]

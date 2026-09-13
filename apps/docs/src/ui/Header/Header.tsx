@@ -41,12 +41,14 @@ import styles from './Header.module.css'
 interface HeaderProps {
   className?: string
   animated?: AnimatedProp
+  /** CMS blog path (its collection's URL prefix); undefined hides the link. */
+  blogPath?: string
 }
 
 const HEIGHT_CLASS = 'h-10 md:h-12'
 
 const Header = memo((props: HeaderProps): JSX.Element => {
-  const { className, animated } = props
+  const { className, animated, blogPath } = props
 
   const pathname = usePathname()
   const [isMotionEnabled, setIsMotionEnabled] = useAtom(atomMotionEnabled)
@@ -148,13 +150,15 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                         </Link>
                       </MenuItem>
                     </Animator>
-                    <Animator>
-                      <MenuItem active={pathname.startsWith('/blog')} animated={['flicker']}>
-                        <Link href="/blog" title="Go to Blog">
-                          <Post /> <span className="hidden md:block">Blog</span>
-                        </Link>
-                      </MenuItem>
-                    </Animator>
+                    {blogPath && (
+                      <Animator>
+                        <MenuItem active={pathname.startsWith(blogPath)} animated={['flicker']}>
+                          <Link href={blogPath} title="Go to Blog">
+                            <Post /> <span className="hidden md:block">Blog</span>
+                          </Link>
+                        </MenuItem>
+                      </Animator>
+                    )}
                     <Animator>
                       <MenuItem active={pathname.startsWith('/demos')} animated={['flicker']}>
                         <Link href="/demos" title="Go to Demos">
@@ -322,7 +326,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
       </div>
 
       {/* MOBILE MENU */}
-      <MobileMenu isMenuOpen={isMenuOpen} closeMenu={closeMenu} />
+      <MobileMenu isMenuOpen={isMenuOpen} closeMenu={closeMenu} blogPath={blogPath} />
     </Animated>
   )
 })
