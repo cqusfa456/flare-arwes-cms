@@ -109,22 +109,33 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: bash scripts/ci-cf-credential.sh
 
-      - name: Check the CMS API URL is configured
+      - name: Check the content source is configured
+        env:
+          D1_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          D1_TOKEN: ${{ env.CF_CREDENTIAL }}
         run: |
-          # SCIFI_API_URL is the current secret. FLARE_API_URL is the pre-rename
-          # name, still accepted until it is deleted from the repository.
-          if [ -z "${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}" ]; then
-            echo "::error::SCIFI_API_URL secret is not set. Without it the build falls back to http://localhost:8787 and publishes empty content."
+          if [ -z "$D1_ACCOUNT_ID" ] || [ -z "$D1_TOKEN" ]; then
+            echo "::error::The build reads content from D1 through the Cloudflare API and needs CF_ACCOUNT_ID plus a credential with D1 access. Without them it would fall back to the CMS HTTP API."
             exit 1
           fi
+          # SCIFI_API_URL is the current secret; FLARE_API_URL is the pre-rename
+          # name, still accepted until it is deleted from the repository.
+          if [ -z "${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}" ]; then
+            echo "::warning::SCIFI_API_URL is not set; only the D1 source is available."
+          fi
 
-      # The build reads published content from the CMS for exactly this site.
+      # The build reads content of exactly this site (see the env below).
       - name: Build
         working-directory: ${{ inputs.root_directory }}
         env:
+          # Fallback source, also read by the site's own scripts.
           PUBLIC_SCIFI_API_URL: ${{ secrets.SCIFI_API_URL || secrets.FLARE_API_URL }}
           PUBLIC_SCIFI_API_TOKEN: ${{ secrets.SCIFI_API_TOKEN || secrets.FLARE_API_TOKEN }}
           PUBLIC_SCIFI_SITE: ${{ inputs.site }}
+          # Direct D1 source.
+          SCIFI_D1_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          SCIFI_D1_DATABASE_NAME: sci-fi-cms-db
+          SCIFI_D1_API_TOKEN: ${{ env.CF_CREDENTIAL }}
         run: ${{ inputs.build_command }}
 
       # A Pages project does not have to be created by hand first: `wrangler

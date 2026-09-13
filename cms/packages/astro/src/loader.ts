@@ -1,13 +1,34 @@
 /**
  * Build-time Astro Content Layer Loader for Sci-Fi CMS.
  *
- * Fetches content from the CMS API at build time and stores it
- * in Astro's content store for type-safe `getCollection()` queries.
+ * Loads content at build time into Astro's content store for type-safe
+ * `getCollection()` queries, either from the CMS HTTP API or — with `d1` — from
+ * the deployment's D1 database through the Cloudflare API.
  */
 import type { Loader } from 'astro/loaders'
 import type { SciFiLoaderOptions } from './types'
 import { SciFiClient } from './client'
+import { SciFiD1Client } from './d1-client'
 import { sciFiSchemaToZod } from './schema'
+
+/**
+ * The content source. Both clients expose the same small surface, so the loader
+ * body does not care which one it got.
+ */
+const createClient = (options: SciFiLoaderOptions): SciFiClient | SciFiD1Client =>
+  options.d1
+    ? new SciFiD1Client(options.d1, options.site)
+    : new SciFiClient({
+        apiUrl: options.apiUrl,
+        apiToken: options.apiToken,
+        site: options.site,
+      })
+
+/** Where the loader is reading from, for the build log. */
+const describeSource = (options: SciFiLoaderOptions): string =>
+  options.d1
+    ? `D1 (${options.d1.databaseId ?? options.d1.databaseName ?? 'unknown database'})`
+    : String(options.apiUrl)
 
 /**
  * Create an Astro Content Layer loader for a Sci-Fi CMS collection.
@@ -28,27 +49,43 @@ import { sciFiSchemaToZod } from './schema'
  *   }),
  * }
  * ```
+ *
+ * Reading the database directly (build machines holding a Cloudflare token):
+ *
+ * ```ts
+ * loader: sciFiLoader({
+ *   d1: {
+ *     accountId: process.env.CF_ACCOUNT_ID!,
+ *     databaseName: 'sci-fi-cms-db',
+ *     apiToken: process.env.CF_API_TOKEN!,
+ *   },
+ *   site: 'my-site',
+ *   collection: 'pages',
+ * })
+ * ```
  */
 export function sciFiLoader(options: SciFiLoaderOptions): Loader {
   return {
     name: 'sci-fi-loader',
 
     load: async ({ store, meta, logger, parseData, generateDigest }) => {
-      const client = new SciFiClient({
-        apiUrl: options.apiUrl,
-        apiToken: options.apiToken,
-        site: options.site,
-      })
+      const client = createClient(options)
 
-      logger.info(`Fetching "${options.collection}" from ${options.apiUrl}`)
+      logger.info(`Fetching "${options.collection}" from ${describeSource(options)}`)
 
-      // SciFiClient returns empty array on network/API errors
-      // (it logs errors internally). We treat an empty response
-      // differently from a fetch failure — check meta for staleness.
+      // The HTTP API client swallows network/API errors (it logs them and
+      // returns an empty list) so an unreachable CMS does not break a build.
+      // Reading D1 is a build-time configuration step instead: a failure there
+      // means the content is unknown, and continuing would deploy a site with
+      // empty collections, so it fails the build.
       let items
       try {
         items = await client.fetchCollection(options.collection)
       } catch (error) {
+        if (options.d1) {
+          logger.error(`Failed to read "${options.collection}" from D1: ${error}`)
+          throw error
+        }
         logger.warn(`Failed to fetch "${options.collection}" from CMS: ${error}`)
         logger.warn('Build will continue with cached content if available')
         return
@@ -120,11 +157,7 @@ export function sciFiLoader(options: SciFiLoaderOptions): Loader {
       }
 
       // Otherwise, dynamically fetch from CMS and convert
-      const client = new SciFiClient({
-        apiUrl: options.apiUrl,
-        apiToken: options.apiToken,
-        site: options.site,
-      })
+      const client = createClient(options)
 
       try {
         const collectionSchema = await client.fetchCollectionSchema(options.collection)

@@ -162,20 +162,24 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                         </Link>
                       </MenuItem>
                     </Animator>
-                    <Animator>
-                      <MenuItem active={pathname.startsWith('/play')} animated={['flicker']}>
-                        <a href={settings.apps.play.url} title="Go to Playground">
-                          <Codepen /> <span className="hidden md:block">Play</span>
-                        </a>
-                      </MenuItem>
-                    </Animator>
-                    <Animator>
-                      <MenuItem active={pathname.startsWith('/perf')} animated={['flicker']}>
-                        <a href={settings.apps.perf.url} title="Go to Performance">
-                          <DashboardSpeed /> <span className="hidden md:block">Perf</span>
-                        </a>
-                      </MenuItem>
-                    </Animator>
+                    {settings.apps.play.url && (
+                      <Animator>
+                        <MenuItem active={pathname.startsWith('/play')} animated={['flicker']}>
+                          <a href={settings.apps.play.url} title="Go to Playground">
+                            <Codepen /> <span className="hidden md:block">Play</span>
+                          </a>
+                        </MenuItem>
+                      </Animator>
+                    )}
+                    {settings.apps.perf.url && (
+                      <Animator>
+                        <MenuItem active={pathname.startsWith('/perf')} animated={['flicker']}>
+                          <a href={settings.apps.perf.url} title="Go to Performance">
+                            <DashboardSpeed /> <span className="hidden md:block">Perf</span>
+                          </a>
+                        </MenuItem>
+                      </Animator>
+                    )}
                   </Menu>
                 </Animator>
               </Animated>

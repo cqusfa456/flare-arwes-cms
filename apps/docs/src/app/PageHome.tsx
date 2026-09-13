@@ -67,27 +67,31 @@ const PageHome = (): JSX.Element => {
               </ButtonSimple>
             </Link>
 
-            <a href={settings.apps.play.url}>
-              <ButtonSimple
-                tabIndex={-1}
-                title="Go to Playground"
-                animated={[['x', theme.spacen(3), 0, 0]]}
-              >
-                <Codepen className="text-size-[1.5em] xhidden x2sm:block" />
-                <span>Play</span>
-              </ButtonSimple>
-            </a>
+            {settings.apps.play.url && (
+              <a href={settings.apps.play.url}>
+                <ButtonSimple
+                  tabIndex={-1}
+                  title="Go to Playground"
+                  animated={[['x', theme.spacen(3), 0, 0]]}
+                >
+                  <Codepen className="text-size-[1.5em] xhidden x2sm:block" />
+                  <span>Play</span>
+                </ButtonSimple>
+              </a>
+            )}
 
-            <a href={settings.apps.perf.url}>
-              <ButtonSimple
-                tabIndex={-1}
-                title="Go to Performance"
-                animated={[['x', theme.spacen(6), 0, 0]]}
-              >
-                <DashboardSpeed className="text-size-[1.5em] xhidden x2sm:block" />
-                <span>Perf</span>
-              </ButtonSimple>
-            </a>
+            {settings.apps.perf.url && (
+              <a href={settings.apps.perf.url}>
+                <ButtonSimple
+                  tabIndex={-1}
+                  title="Go to Performance"
+                  animated={[['x', theme.spacen(6), 0, 0]]}
+                >
+                  <DashboardSpeed className="text-size-[1.5em] xhidden x2sm:block" />
+                  <span>Perf</span>
+                </ButtonSimple>
+              </a>
+            )}
           </Animated>
         </Animator>
       </Animated>

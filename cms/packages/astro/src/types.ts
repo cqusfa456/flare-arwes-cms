@@ -3,11 +3,42 @@
  */
 
 /**
+ * Read content straight out of the deployment's D1 database through the
+ * Cloudflare API instead of the CMS HTTP API. Builds use this so the database is
+ * the source of truth and the build does not depend on the Worker (or its
+ * response cache).
+ */
+export interface SciFiD1Options {
+  /** Cloudflare account that owns the database. */
+  accountId: string
+
+  /** D1 database id. Takes precedence over `databaseName`. */
+  databaseId?: string
+
+  /** D1 database name, looked up once through the Cloudflare API. */
+  databaseName?: string
+
+  /** Token with D1 read access. */
+  apiToken: string
+}
+
+/**
  * Configuration options for the Sci-Fi CMS Astro loader.
  */
 export interface SciFiLoaderOptions {
-  /** CMS API base URL (e.g., 'http://localhost:8787') */
-  apiUrl: string
+  /**
+   * CMS API base URL (e.g., 'http://localhost:8787'). Optional when `d1` is
+   * configured, since the loader then reads the database directly.
+   */
+  apiUrl?: string
+
+  /**
+   * Read from D1 through the Cloudflare API instead of `apiUrl`.
+   *
+   * Only usable at build time (it needs a Cloudflare token), which is exactly
+   * where the Content Layer loader runs.
+   */
+  d1?: SciFiD1Options
 
   /** Collection name in Sci-Fi CMS (e.g., 'blog-posts') */
   collection: string

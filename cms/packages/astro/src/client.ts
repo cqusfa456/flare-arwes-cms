@@ -26,8 +26,10 @@ export class SciFiClient {
   private readonly site?: string
 
   constructor(options: Pick<SciFiLoaderOptions, 'apiUrl' | 'apiToken' | 'site'>) {
-    // Strip trailing slash for consistent URL construction
-    this.apiUrl = options.apiUrl.replace(/\/+$/, '')
+    // Strip trailing slash for consistent URL construction. The URL is only
+    // absent when the loader reads D1 directly, in which case this client is
+    // never constructed.
+    this.apiUrl = (options.apiUrl ?? '').replace(/\/+$/, '')
     this.apiToken = options.apiToken
     this.site = options.site
   }

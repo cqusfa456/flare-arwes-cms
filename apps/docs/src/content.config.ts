@@ -1,5 +1,5 @@
 import { defineCollection } from 'astro:content'
-import { sciFiLoader } from '@sci-fi-cms/astro'
+import { sciFiLoader, type SciFiD1Options } from '@sci-fi-cms/astro'
 
 // Sci-Fi CMS API URL. In local development it points to the local
 // wrangler dev server. In production it points to the deployed
@@ -18,10 +18,36 @@ const API_TOKEN = env.PUBLIC_SCIFI_API_TOKEN || env.PUBLIC_FLARE_API_TOKEN
 // registered, an unidentified build only sees shared content.
 const SITE = env.PUBLIC_SCIFI_SITE || env.PUBLIC_FLARE_SITE
 
+// D1 source. CI sets these (the deploy workflow passes the resolved Cloudflare
+// credential, which has D1 access), so a deployed build reads the database
+// directly: it does not depend on the Worker being reachable and it cannot be
+// served a cached response. Local development leaves them unset and falls back
+// to the HTTP API above.
+//
+// Read from `process.env`, not `import.meta.env`: only PUBLIC_-prefixed values
+// are exposed there, and this token must never reach a client bundle.
+const D1: SciFiD1Options | undefined =
+  process.env.SCIFI_D1_ACCOUNT_ID && process.env.SCIFI_D1_API_TOKEN
+    ? {
+        accountId: process.env.SCIFI_D1_ACCOUNT_ID,
+        databaseId: process.env.SCIFI_D1_DATABASE_ID || undefined,
+        databaseName: process.env.SCIFI_D1_DATABASE_NAME || undefined,
+        apiToken: process.env.SCIFI_D1_API_TOKEN
+      }
+    : undefined
+
+if (!D1) {
+  console.warn(
+    '[content] No D1 credentials (SCIFI_D1_ACCOUNT_ID / SCIFI_D1_API_TOKEN); ' +
+      `reading content from the CMS API at ${API_URL} instead.`
+  )
+}
+
 // Pages collection — content managed in Sci-Fi CMS admin.
 // Each page has a slug (URL path), title, and markdown content.
 const pages = defineCollection({
   loader: sciFiLoader({
+    d1: D1,
     apiUrl: API_URL,
     apiToken: API_TOKEN,
     site: SITE,
@@ -36,6 +62,7 @@ const pages = defineCollection({
 // (name/slug/order/description) and is available for navigation.
 const docs = defineCollection({
   loader: sciFiLoader({
+    d1: D1,
     apiUrl: API_URL,
     apiToken: API_TOKEN,
     site: SITE,
@@ -46,6 +73,7 @@ const docs = defineCollection({
 
 const docsSections = defineCollection({
   loader: sciFiLoader({
+    d1: D1,
     apiUrl: API_URL,
     apiToken: API_TOKEN,
     site: SITE,
