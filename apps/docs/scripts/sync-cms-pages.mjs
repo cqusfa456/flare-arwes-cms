@@ -169,19 +169,26 @@ const run = async () => {
     mkdirSync(dirname(file), { recursive: true })
 
     // The author decides the shape:
-    //   * a file that starts with `---` is the whole page and is compiled as-is;
-    //   * anything else is the page's markup, wrapped in the page frame the CMS
-    //     provides (`default` unless the page names another) so the site's style
-    //     stays consistent and the author writes content only. A layout may render
-    //     `<slot />` and receives `title` and `pathname` as props.
-    const trimmed = source.replace(/^\s+/, '')
+    //   * a source that renders its own `<Layout>` is the whole page: compiled as-is;
+    //   * anything else is content, wrapped in the CMS layout the page selects so
+    //     the site's style stays consistent. The author's frontmatter (imports,
+    //     variables) is kept and merged into the wrapper, so a page can use
+    //     expressions without any layout boilerplate.
     let contents = source
 
-    if (!trimmed.startsWith('---')) {
+    if (!/<Layout[\s>]/.test(source)) {
       const pageTitle = String(item.title ?? '')
       const navKey = typeof item.data?.nav === 'string' && item.data.nav ? item.data.nav : null
       const layout = layoutSourceFor(item)
       const navAttr = navKey ? ` navKey=${JSON.stringify(navKey)}` : ''
+
+      // Split the author's frontmatter off, if any.
+      const frontmatterMatch = source.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\r?\n?/)
+      const authorFrontmatter = frontmatterMatch ? frontmatterMatch[1].trim() : ''
+      const body = (frontmatterMatch ? source.slice(frontmatterMatch[0].length) : source).replace(
+        /\s*$/,
+        ''
+      )
 
       const imports = ["import Layout from '@/layouts/Layout.astro'"]
       if (layout) {
@@ -189,7 +196,6 @@ const run = async () => {
       }
       imports.push("import { settings } from '@/config/settings'")
 
-      const body = source.replace(/\s*$/, '')
       const wrapped = layout
         ? `  <PageLayout title={title} pathname={pathname}>\n${body}\n  </PageLayout>`
         : body
@@ -197,6 +203,7 @@ const run = async () => {
       contents = [
         '---',
         ...imports,
+        ...(authorFrontmatter ? ['', authorFrontmatter] : []),
         '',
         `const title = ${JSON.stringify(pageTitle)}`,
         `const pathname = ${JSON.stringify(path)}`,
