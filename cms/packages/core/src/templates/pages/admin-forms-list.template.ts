@@ -103,7 +103,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
       },
       {
         key: 'is_active',
-        label: 'Status',
+        label: t('Status'),
         sortable: true,
         sortType: 'string',
         render: (_value: any, form: any) => {
@@ -124,13 +124,13 @@ export function renderFormsListPage(data: FormsListPageData): string {
       },
       {
         key: 'formattedDate',
-        label: 'Created',
+        label: t('Created'),
         sortable: true,
         sortType: 'date'
       },
       {
         key: 'actions',
-        label: 'Actions',
+        label: t('Actions'),
         sortable: false,
         render: (_value: any, form: any) => {
           if (!form || !form.id) return '<span class="text-zinc-500 dark:text-zinc-400">-</span>'
@@ -297,7 +297,7 @@ export function renderFormsListPage(data: FormsListPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Forms',
+    title: t('Forms'),
     content: pageContent,
     user: data.user,
     version: data.version

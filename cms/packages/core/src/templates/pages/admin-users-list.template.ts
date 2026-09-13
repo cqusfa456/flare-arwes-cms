@@ -108,7 +108,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
     },
     {
       key: 'role',
-      label: 'Role',
+      label: t('Role'),
       sortable: true,
       sortType: 'string',
       render: (value: string) => {
@@ -134,14 +134,14 @@ export function renderUsersListPage(data: UsersListPageData): string {
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: t('Created'),
       sortable: true,
       sortType: 'date',
       render: (value: number) => `<span class="text-sm text-zinc-500 dark:text-zinc-400">${new Date(value).toLocaleDateString()}</span>`
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('Actions'),
       className: 'text-right',
       sortable: false,
       render: (_value: any, row: User) => `
@@ -469,8 +469,8 @@ export function renderUsersListPage(data: UsersListPageData): string {
       id: 'toggle-user-status-confirm',
       title: 'Toggle User Status',
       message: 'Are you sure you want to activate/deactivate this user?',
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
+      confirmText: t('Confirm'),
+      cancelText: t('Cancel'),
       iconColor: 'yellow',
       confirmClass: 'bg-yellow-500 hover:bg-yellow-400',
       onConfirm: 'performToggleUserStatus()'
@@ -481,7 +481,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
       title: 'Force Logout User',
       message: 'This will immediately revoke the user\'s session. They will need to log in again.',
       confirmText: 'Force Logout',
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'yellow',
       confirmClass: 'bg-amber-500 hover:bg-amber-400',
       onConfirm: 'performForceLogout()'
@@ -491,7 +491,7 @@ export function renderUsersListPage(data: UsersListPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Users',
+    title: t('Users'),
     pageTitle: 'User Management',
     currentPath: '/admin/users',
     user: data.user,

@@ -486,19 +486,19 @@ adminContentRoutes.get('/', async (c) => {
         },
         scheduled: {
           class: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-500/20',
-          text: 'Scheduled'
+          text: t('Scheduled')
         },
         published: {
           class: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20 dark:ring-green-500/20',
-          text: 'Published'
+          text: t('Published')
         },
         archived: {
           class: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 ring-1 ring-inset ring-purple-600/20 dark:ring-purple-500/20',
-          text: 'Archived'
+          text: t('Archived')
         },
         deleted: {
           class: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/20 dark:ring-red-500/20',
-          text: 'Deleted'
+          text: t('Deleted')
         }
       }
 
@@ -642,7 +642,7 @@ adminContentRoutes.get('/new', async (c) => {
 
       const { renderAdminLayout } = await import('../templates/layouts/admin-layout-v2.template')
       return c.html(renderAdminLayout({
-        title: 'Select Collection',
+        title: t('Select Collection'),
         pageTitle: 'Select Collection',
         currentPath: '/admin/content',
         user: user ? { name: user.email, email: user.email, role: user.role } : undefined,

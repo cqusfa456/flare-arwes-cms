@@ -159,10 +159,10 @@ export function renderCodeExamplesList(data: CodeExamplesListData): string {
           columns: [
             { key: 'title', label: t('Title'), sortable: true, sortType: 'string' },
             { key: 'language', label: t('Language'), sortable: true, sortType: 'string' },
-            { key: 'description', label: 'Description', sortable: false },
-            { key: 'status', label: 'Status', sortable: true, sortType: 'boolean' },
-            { key: 'sortOrder', label: 'Order', sortable: true, sortType: 'number' },
-            { key: 'created_at', label: 'Created', sortable: true, sortType: 'date' }
+            { key: 'description', label: t('Description'), sortable: false },
+            { key: 'status', label: t('Status'), sortable: true, sortType: 'boolean' },
+            { key: 'sortOrder', label: t('Order'), sortable: true, sortType: 'number' },
+            { key: 'created_at', label: t('Created'), sortable: true, sortType: 'date' }
           ],
           rows: codeExamples.map(example => {
             const truncatedDesc = example.description

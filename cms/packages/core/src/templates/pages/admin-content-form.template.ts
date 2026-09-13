@@ -473,10 +473,10 @@ export function renderContentFormPage(data: ContentFormData): string {
 
     ${renderConfirmationDialog({
       id: 'delete-content-confirm',
-      title: 'Delete Content',
+      title: t('Delete Content'),
       message: 'Are you sure you want to delete this content? This action cannot be undone.',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      confirmText: t('Delete'),
+      cancelText: t('Cancel'),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: `performDeleteContent('${data.id}')`

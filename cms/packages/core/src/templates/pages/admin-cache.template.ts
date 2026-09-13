@@ -234,7 +234,7 @@ export function renderCacheDashboard(data: CacheDashboardData): string {
       title: 'Clear Namespace Cache',
       message: 'Clear cache for this namespace?',
       confirmText: t('Clear'),
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'yellow',
       confirmClass: 'bg-yellow-500 hover:bg-yellow-400',
       onConfirm: 'performClearNamespaceCache()'

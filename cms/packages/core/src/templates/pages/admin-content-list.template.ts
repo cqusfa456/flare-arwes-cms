@@ -56,7 +56,7 @@ export function renderContentListPage(data: ContentListPageData): string {
         name: 'model',
         label: t('Model'),
         options: [
-          { value: 'all', label: 'All Models', selected: data.modelName === 'all' },
+          { value: 'all', label: t('All Models'), selected: data.modelName === 'all' },
           ...data.models.map(model => ({
             value: model.name,
             label: model.displayName,
@@ -68,13 +68,13 @@ export function renderContentListPage(data: ContentListPageData): string {
         name: 'status',
         label: t('Status'),
         options: [
-          { value: 'all', label: 'All Status', selected: data.status === 'all' },
-          { value: 'draft', label: 'Draft', selected: data.status === 'draft' },
-          { value: 'review', label: 'Under Review', selected: data.status === 'review' },
-          { value: 'scheduled', label: 'Scheduled', selected: data.status === 'scheduled' },
-          { value: 'published', label: 'Published', selected: data.status === 'published' },
-          { value: 'archived', label: 'Archived', selected: data.status === 'archived' },
-          { value: 'deleted', label: 'Deleted', selected: data.status === 'deleted' }
+          { value: 'all', label: t('All Status'), selected: data.status === 'all' },
+          { value: 'draft', label: t('Draft'), selected: data.status === 'draft' },
+          { value: 'review', label: t('Under Review'), selected: data.status === 'review' },
+          { value: 'scheduled', label: t('Scheduled'), selected: data.status === 'scheduled' },
+          { value: 'published', label: t('Published'), selected: data.status === 'published' },
+          { value: 'archived', label: t('Archived'), selected: data.status === 'archived' },
+          { value: 'deleted', label: t('Deleted'), selected: data.status === 'deleted' }
         ]
       }
     ],
@@ -85,20 +85,20 @@ export function renderContentListPage(data: ContentListPageData): string {
         onclick: 'openAdvancedSearch()'
       },
       {
-        label: 'Refresh',
+        label: t('Refresh'),
         className: 'btn-secondary',
         onclick: 'location.reload()'
       }
     ],
     bulkActions: isTrashView
       ? [
-          { label: 'Restore', value: 'restore', icon: 'rotate-ccw' },
+          { label: t('Restore'), value: 'restore', icon: 'rotate-ccw' },
           { label: 'Delete Permanently', value: 'purge', icon: 'trash', className: 'text-red-600' }
         ]
       : [
-          { label: 'Publish', value: 'publish', icon: 'check-circle' },
-          { label: 'Unpublish', value: 'unpublish', icon: 'x-circle' },
-          { label: 'Delete', value: 'delete', icon: 'trash', className: 'text-red-600' }
+          { label: t('Publish'), value: 'publish', icon: 'check-circle' },
+          { label: t('Unpublish'), value: 'unpublish', icon: 'x-circle' },
+          { label: t('Delete'), value: 'delete', icon: 'trash', className: 'text-red-600' }
         ]
   }
 
@@ -106,7 +106,7 @@ export function renderContentListPage(data: ContentListPageData): string {
   const tableColumns: TableColumn[] = [
     {
       key: 'title',
-      label: 'Title',
+      label: t('Title'),
       sortable: true,
       sortType: 'string',
       render: (value, row) => `
@@ -122,35 +122,35 @@ export function renderContentListPage(data: ContentListPageData): string {
     },
     {
       key: 'modelName',
-      label: 'Model',
+      label: t('Model'),
       sortable: true,
       sortType: 'string',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'statusBadge',
-      label: 'Status',
+      label: t('Status'),
       sortable: true,
       sortType: 'string',
       render: (value) => value
     },
     {
       key: 'authorName',
-      label: 'Author',
+      label: t('Author'),
       sortable: true,
       sortType: 'string',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'formattedDate',
-      label: 'Updated',
+      label: t('Updated'),
       sortable: true,
       sortType: 'date',
       className: 'text-sm text-zinc-500 dark:text-zinc-400'
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('Actions'),
       sortable: false,
       className: 'text-sm font-medium',
       render: (value, row) => isTrashView ? `
@@ -698,10 +698,10 @@ export function renderContentListPage(data: ContentListPageData): string {
     <!-- Confirmation Dialog for Bulk Actions -->
     ${renderConfirmationDialog({
       id: 'bulk-action-confirm',
-      title: 'Confirm Bulk Action',
+      title: t('Confirm Bulk Action'),
       message: 'Are you sure you want to perform this action? This operation will affect multiple items.',
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
+      confirmText: t('Confirm'),
+      cancelText: t('Cancel'),
       confirmClass: 'bg-blue-500 hover:bg-blue-400',
       iconColor: 'blue',
       onConfirm: 'executeBulkAction()'
@@ -1000,7 +1000,7 @@ export function renderContentListPage(data: ContentListPageData): string {
 
   // Prepare layout data
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Content Management',
+    title: t('Content Management'),
     pageTitle: 'Content Management',
     currentPath: '/admin/content',
     user: data.user,

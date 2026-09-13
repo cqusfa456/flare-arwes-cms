@@ -492,8 +492,8 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
           configuration: { 
             options: [
               { value: 'draft', label: t('Draft') },
-              { value: 'published', label: 'Published' },
-              { value: 'archived', label: 'Archived' }
+              { value: 'published', label: t('Published') },
+              { value: 'archived', label: t('Archived') }
             ]
           },
           sampleValue: 'published',
@@ -523,7 +523,7 @@ export function getFieldTypeDefinitions(): FieldTypeDefinition[] {
     },
     {
       name: 'media',
-      displayName: 'Media',
+      displayName: t('Media'),
       description: 'File upload and selection for images, videos, and documents',
       category: 'Media',
       icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

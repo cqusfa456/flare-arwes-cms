@@ -43,7 +43,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
     { value: 'media', label: t('Media') },
     { value: 'editor', label: 'Editors' },
     { value: 'seo', label: 'SEO & Analytics' },
-    { value: 'security', label: 'Security' },
+    { value: 'security', label: t('Security') },
     { value: 'utilities', label: 'Utilities' },
     { value: 'system', label: 'System' },
     { value: 'development', label: 'Development' },
@@ -51,10 +51,10 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
   ];
 
   const statuses = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: 'active', label: t('Active') },
+    { value: 'inactive', label: t('Inactive') },
     { value: 'uninstalled', label: 'Available to Install' },
-    { value: 'error', label: 'Error' }
+    { value: 'error', label: t('Error') }
   ];
 
   // Calculate counts
@@ -499,7 +499,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
       title: 'Uninstall Plugin',
       message: 'Are you sure you want to uninstall this plugin? This action cannot be undone.',
       confirmText: 'Uninstall',
-      cancelText: 'Cancel',
+      cancelText: t('Cancel'),
       iconColor: 'red',
       confirmClass: 'bg-red-500 hover:bg-red-400',
       onConfirm: 'performUninstallPlugin()'
@@ -509,7 +509,7 @@ export function renderPluginsListPage(data: PluginsListPageData): string {
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Plugins',
+    title: t('Plugins'),
     pageTitle: 'Plugin Management',
     currentPath: '/admin/plugins',
     user: data.user,

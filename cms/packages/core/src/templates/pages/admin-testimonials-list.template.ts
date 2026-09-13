@@ -152,8 +152,8 @@ export function renderTestimonialsList(data: TestimonialsListData): string {
             { key: 'author', label: t('Author'), sortable: true, sortType: 'string' },
             { key: 'testimonial', label: 'Testimonial', sortable: false },
             { key: 'status', label: t('Status'), sortable: true, sortType: 'boolean' },
-            { key: 'sortOrder', label: 'Order', sortable: true, sortType: 'number' },
-            { key: 'created_at', label: 'Created', sortable: true, sortType: 'date' }
+            { key: 'sortOrder', label: t('Order'), sortable: true, sortType: 'number' },
+            { key: 'created_at', label: t('Created'), sortable: true, sortType: 'date' }
           ],
           rows: testimonials.map(testimonial => {
             const rating = testimonial.rating ? '⭐'.repeat(testimonial.rating) : ''

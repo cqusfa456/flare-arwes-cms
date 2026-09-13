@@ -141,7 +141,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
       },
       {
         key: 'formattedDate',
-        label: 'Created',
+        label: t('Created'),
         sortable: true,
         sortType: 'date'
       },
@@ -359,7 +359,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
   `
 
   const layoutData: AdminLayoutCatalystData = {
-    title: 'Collections',
+    title: t('Collections'),
     pageTitle: 'Collections',
     currentPath: '/admin/collections',
     user: data.user,
