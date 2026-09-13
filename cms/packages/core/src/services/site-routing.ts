@@ -163,8 +163,16 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
   // The active site that builds the website itself is the one with no content
   // routes. A content-only site links its shell's navigation back to it; the app
   // site (and a deployment with no app site) resolves to null.
+  //
+  // A deployment can have several sites with no content routes — the same website
+  // deployed as a Worker and to Pages, for instance — and a Worker without a
+  // custom domain has no host to link to. The first candidate with a resolvable
+  // base URL wins, so a secondary host is not left pointing at nothing.
   const appSite = sites.find(
-    (candidate) => candidate.id !== site.id && parseSiteContentRoutes(candidate.contentRoutes) === null
+    (candidate) =>
+      candidate.id !== site.id &&
+      parseSiteContentRoutes(candidate.contentRoutes) === null &&
+      baseUrlOf(candidate) !== null
   )
 
   return {

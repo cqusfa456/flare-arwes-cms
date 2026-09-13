@@ -323,9 +323,15 @@ export class SciFiD1Client {
     }
 
     // The website itself is built by the active site that does not declare content
-    // routes; a content-only site links back to it.
+    // routes; a content-only site links back to it. Several sites can qualify (the
+    // same website deployed as a Worker and to Pages), and a Worker with no custom
+    // domain has no host to link to, so the first candidate with a resolvable base
+    // URL wins.
     const appSite = siteRows.find(
-      (row) => row.id !== current.id && parseContentRoutes(row.content_routes) === null
+      (row) =>
+        row.id !== current.id &&
+        parseContentRoutes(row.content_routes) === null &&
+        baseUrlOf(row) !== null
     )
     const appBaseUrl = contentRoutes === null || !appSite ? null : baseUrlOf(appSite)
 
