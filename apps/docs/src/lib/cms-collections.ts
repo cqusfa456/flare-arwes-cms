@@ -25,8 +25,17 @@ export type SiteRoutingInfo = {
   /** Site slug this build belongs to, when the CMS knows it. */
   slug: string | null
 
-  /** How the site publishes; see the CMS's `SiteContentMode`. */
+  /**
+   * How the site publishes; see the CMS's `SiteContentMode`.
+   *
+   * `standalone` is deployed on its own: it publishes the website when it declares no
+   * content routes, or just the collections its routes name when it does. `paths` is
+   * published by its parent, so this build is not supposed to run at all.
+   */
   mode: 'paths' | 'standalone'
+
+  /** The site this one is mounted on, when it publishes in paths mode. */
+  parentSlug: string | null
 
   /**
    * Collections this site publishes, with their prefix on this site. `null` for a
@@ -36,8 +45,9 @@ export type SiteRoutingInfo = {
   routes: Map<string, string> | null
 
   /**
-   * Prefixes a `paths` site changes for the collections it names; empty otherwise.
-   * A collection missing here keeps its own `url_prefix`.
+   * Prefixes this build changes for the collections it names: its own content routes,
+   * plus what the sites mounted on it declare (migration 052). A collection missing
+   * here keeps its own `url_prefix`.
    */
   overrides: Map<string, string>
 
@@ -69,7 +79,8 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
         )
         return {
           slug: SITE ?? null,
-          mode: 'paths' as const,
+          mode: 'standalone' as const,
+          parentSlug: null,
           routes: null,
           overrides: new Map<string, string>(),
           external: new Map<string, string>(),
@@ -77,13 +88,17 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
         }
       }
 
-      // Only a standalone site publishes *just* its content routes; on a `paths`
-      // site the same routes are prefix overrides on top of the whole website.
+      // A deployed site that declares routes publishes *just* those collections; one
+      // that declares none publishes the website, with the prefixes its mounted sites
+      // ask for (migration 052) on top of each collection's own.
       const contentRoutes = routing.contentRoutes
         ? new Map(Object.entries(routing.contentRoutes))
         : null
       const routes = routing.contentMode === 'standalone' ? contentRoutes : null
-      const overrides = routing.contentMode === 'paths' && contentRoutes ? contentRoutes : new Map()
+      const overrides = new Map<string, string>(Object.entries(routing.mounts ?? {}))
+      for (const [collection, prefix] of contentRoutes ?? []) {
+        overrides.set(collection, prefix)
+      }
 
       if (routes) {
         console.info(
@@ -91,13 +106,14 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
         )
       } else if (overrides.size > 0) {
         console.info(
-          `[routing] "${routing.slug}" publishes the website, with ${[...overrides.keys()].join(', ')} under an overridden prefix`
+          `[routing] "${routing.slug}" publishes the website, with ${[...overrides.keys()].join(', ')} under a declared prefix`
         )
       }
 
       return {
         slug: routing.slug,
         mode: routing.contentMode,
+        parentSlug: routing.parentSlug ?? null,
         routes,
         overrides,
         external: new Map(Object.entries(routing.external)),
@@ -154,7 +170,10 @@ export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
 }
 
 /** True when this build publishes the website's own routes. */
-export const isAppSite = async (): Promise<boolean> => (await getSiteRouting()).routes === null
+export const isAppSite = async (): Promise<boolean> => {
+  const routing = await getSiteRouting()
+  return routing.mode === 'standalone' && routing.routes === null
+}
 
 const stripTrailing = (value: string): string => value.replace(/\/+$/, '')
 

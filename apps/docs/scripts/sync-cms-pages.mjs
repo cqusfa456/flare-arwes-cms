@@ -132,10 +132,19 @@ const run = async () => {
   // components frame the collections it does publish.
   const routing = await client.fetchSiteRouting(SITE).catch(() => null)
   const routes = routing?.contentRoutes ?? null
-  // A site that publishes the website always publishes its pages; only a
-  // standalone host can be content-only, and it is when it does not name `pages`.
-  const mode = routing?.contentMode ?? (routes ? 'standalone' : 'paths')
-  const publishesPages = mode === 'paths' || !(routes && routes.pages === undefined)
+  // Only a deployed site is built. A `paths` site is published by its parent
+  // (migration 052), so building it here would publish a second copy of the website
+  // on a host that is not supposed to have one — the CMS refuses to start the build
+  // for the same reason, and a manual run stops here instead of half-building.
+  if (routing?.contentMode === 'paths') {
+    log(
+      `"${routing.slug}" publishes in paths mode: its content is published by ` +
+        `"${routing.parentSlug ?? 'its parent site'}". Build that site instead.`
+    )
+    process.exitCode = 1
+    return
+  }
+  const publishesPages = !(routes && routes.pages === undefined)
   if (!publishesPages) {
     // A content-only site publishes no pages at all: every file this script wrote
     // on a previous run goes, manifest or not (the manifest of a content-only site

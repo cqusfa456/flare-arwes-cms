@@ -4,9 +4,14 @@ import { getCacheService, CACHE_CONFIGS, validateStatusTransition, isSlugLocked,
 import {
   resolveContentSiteScope,
   contentSiteScopeFragment,
-  describeSiteScope,
-  resolveSiteId
+  describeSiteScope
 } from '../services/content-site-scope'
+import {
+  assignContentSites,
+  listContentSiteIds,
+  readSubmittedSiteRefs,
+  resolveContentSiteIds
+} from '../services/content-sites'
 import { getHookSystem } from '../plugins/hooks-singleton'
 import { HOOKS } from '../types'
 import { deliverWebhooks } from '../services/webhook-delivery'
@@ -93,6 +98,8 @@ apiContentCrudRoutes.get('/:id', async (c) => {
       status: (content as any).status,
       collectionId: (content as any).collection_id,
       siteId: (content as any).site_id ?? null,
+      // Every site that publishes this item (migration 052); `siteId` is the first.
+      siteIds: await listContentSiteIds(db, String((content as any).id)),
       data: (content as any).data ? JSON.parse((content as any).data) : {},
       created_at: (content as any).created_at,
       updated_at: (content as any).updated_at,
@@ -126,14 +133,25 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       return c.json({ error: 'title is required' }, 400)
     }
 
-    // Content ownership: `siteId` (id) or `site` (slug) assigns this item to a
-    // site; omitting both creates shared content readable by every site.
-    const requestedSite = body.siteId ?? body.site
-    const resolved = await resolveSiteId(db, requestedSite)
-    if (resolved.unknown) {
-      return c.json({ error: `Unknown site "${resolved.requested}". Register it in Admin → Sites first.` }, 400)
+    // Content ownership: `siteIds` (a list of ids or slugs) assigns this item to the
+    // sites that publish it, `siteId`/`site` stays accepted for one site, and omitting
+    // all of them creates shared content readable by every site.
+    const submittedSites = readSubmittedSiteRefs(body as Record<string, unknown>)
+    const resolved = await resolveContentSiteIds(
+      db,
+      (submittedSites ?? []).filter((value) => value !== null && value !== undefined)
+    )
+    if (resolved.unknown.length > 0) {
+      return c.json(
+        {
+          error: `Unknown site${resolved.unknown.length === 1 ? '' : 's'} ${resolved.unknown
+            .map((slug) => `"${slug}"`)
+            .join(', ')}. Register ${resolved.unknown.length === 1 ? 'it' : 'them'} in Admin → Sites first.`
+        },
+        400
+      )
     }
-    const siteId = resolved.siteId
+    const siteId = resolved.siteIds[0] ?? null
 
     // Collection-level RBAC: check create permission
     const canCreate = await checkCollectionPermission(db, user!.userId, user!.role, collectionId, 'create')
@@ -206,6 +224,10 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       now,
       publishedAt,
     ).run()
+
+    // The sites that publish this item (migration 052). The insert above wrote the
+    // primary owner; this stores the whole set.
+    await assignContentSites(db, contentId, resolved.siteIds, now)
 
     // Log creation in audit trail (non-blocking)
     try {
@@ -389,6 +411,28 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
       console.error('[hooks] before-update hook failed:', hookErr)
     }
 
+    // A write may change which sites publish this item (migration 052). `site_id` is
+    // mirrored by the assignment below, so the UPDATE itself leaves the column alone.
+    const submittedSites = readSubmittedSiteRefs(body as Record<string, unknown>)
+    let nextSiteIds: string[] | null = null
+    if (submittedSites !== null) {
+      const resolvedSites = await resolveContentSiteIds(
+        db,
+        submittedSites.filter((value) => value !== null && value !== undefined)
+      )
+      if (resolvedSites.unknown.length > 0) {
+        return c.json(
+          {
+            error: `Unknown site${resolvedSites.unknown.length === 1 ? '' : 's'} ${resolvedSites.unknown
+              .map((slug) => `"${slug}"`)
+              .join(', ')}. Register ${resolvedSites.unknown.length === 1 ? 'it' : 'them'} in Admin → Sites first.`
+          },
+          400
+        )
+      }
+      nextSiteIds = resolvedSites.siteIds
+    }
+
     // (5) Build update fields dynamically and execute DB UPDATE
     const updates: string[] = []
     const params: any[] = []
@@ -450,6 +494,10 @@ apiContentCrudRoutes.put('/:id', requireAuth(), async (c) => {
     `)
 
     await updateStmt.bind(...params).run()
+
+    if (nextSiteIds) {
+      await assignContentSites(db, id, nextSiteIds, now)
+    }
 
     // Sync workflow state when content status changes
     if (body.status !== undefined && body.status !== existing.status) {

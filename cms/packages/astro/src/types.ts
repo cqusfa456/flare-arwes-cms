@@ -86,9 +86,10 @@ export interface SciFiCollectionInfo {
 /**
  * How a site publishes; mirrors `SiteContentMode` in @sci-fi-cms/core.
  *
- * `paths` keeps one host serving the website and its collections at their own
- * prefixes (`/blog`, `/docs`, ...); `standalone` makes the site a host of its own
- * for the collections in its content routes.
+ * `standalone` is deployed on its own: it publishes the website when it declares no
+ * content routes, or just the collections its routes name when it does. `paths` is
+ * not deployed — the parent site publishes its content at the prefixes its routes
+ * name, which is how one host can serve `/blog` and `/docs`.
  */
 export type SciFiSiteContentMode = 'paths' | 'standalone'
 
@@ -109,21 +110,34 @@ export interface SciFiSiteRouting {
   /**
    * How this site publishes; see `SiteContentMode` in @sci-fi-cms/core.
    *
-   * `paths` — the site publishes the website, with `contentRoutes` overriding the
-   * prefix of the collections it names. `standalone` — a content-only host that
-   * publishes only the collections in `contentRoutes`.
+   * `standalone` — deployed on its own: it publishes the website when it declares no
+   * content routes, or just the collections its routes name when it does.
+   * `paths` — not deployed; the parent site (`parentSiteId`) publishes its content at
+   * the prefixes its routes name.
    */
   contentMode: SciFiSiteContentMode
+
+  /** The site this one is mounted on, when it publishes in `paths` mode. */
+  parentSiteId: string | null
+
+  /** The parent's slug, for a build that reports where its content is published. */
+  parentSlug: string | null
 
   /**
    * Collection name → the prefix it is published under **on this site**.
    *
-   * `null` on a site that publishes the website and overrides no prefix. On a
-   * `standalone` site it is the complete list of collections that host publishes
-   * (`''` is that host's root); on a `paths` site it is a set of overrides, so a
-   * collection missing from it keeps its own `url_prefix`.
+   * `null` on a deployed site that declares no routes (it publishes the website and
+   * every collection at the collection's own `url_prefix`); otherwise the set of
+   * collections this host serves, at the prefixes given — a collection missing from it
+   * keeps its own `url_prefix`.
    */
   contentRoutes: Record<string, string> | null
+
+  /**
+   * What the sites mounted on this one publish, as collection → prefix (migration 052).
+   * Merged into this build prefixes, so a mounted site content appears on this host.
+   */
+  mounts: Record<string, string>
 
   /** Absolute base URL of a collection published on another site, by collection name. */
   external: Record<string, string>

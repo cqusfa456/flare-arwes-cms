@@ -48,16 +48,23 @@ import { resolveContentSiteScope } from './content-site-scope'
 import type { ContentSiteScope, ResolveSiteScopeInput } from './content-site-scope'
 
 /**
- * How a site publishes (see {@link SiteContentMode} in `services/sites`), with the
- * rows that predate migration 051 classified from what they already do: a site
- * with content routes was a content-only host, one without them built the website.
+ * How a site publishes (see {@link SiteContentMode}), with rows that predate the
+ * column classified from what they already do: every site that existed was deployed
+ * on its own, so an unset mode is `standalone`. `paths` (migration 052) means the
+ * site is *not* deployed — its content is published by {@link Site.parentSiteId}.
  */
 export const siteContentMode = (site: Site): SiteContentMode =>
-  site.contentMode ?? (parseSiteContentRoutes(site.contentRoutes) === null ? 'paths' : 'standalone')
+  site.contentMode === 'paths' ? 'paths' : 'standalone'
 
-/** True when a site builds the website's own routes (see {@link siteContentMode}). */
+/** True when the site is deployed on its own and therefore built. */
+export const isDeployed = (site: Site): boolean => siteContentMode(site) === 'standalone'
+
+/**
+ * True when a site builds the website's own routes: it is deployed and declares no
+ * content routes, so it publishes the app plus every collection the CMS routes.
+ */
 export const publishesWebsite = (site: Site): boolean =>
-  siteContentMode(site) === 'paths' || parseSiteContentRoutes(site.contentRoutes) === null
+  isDeployed(site) && parseSiteContentRoutes(site.contentRoutes) === null
 
 /** How one site is wired: what it publishes and where everything else lives. */
 export interface SiteRouting {
@@ -67,23 +74,37 @@ export interface SiteRouting {
   domain: string | null
   /** The mode this site publishes in; see {@link siteContentMode}. */
   contentMode: SiteContentMode
+  /** The site this one is mounted on, when it publishes in `paths` mode. */
+  parentSiteId: string | null
+  /** The parent's slug, so a build can report where a mounted site is published. */
+  parentSlug: string | null
   /**
    * Collection name -> prefix on this site.
    *
-   * `null` on a site that publishes the website. On a `standalone` site it is the
-   * complete list of collections the host publishes; on a `paths` site it is a set
-   * of prefix overrides — a collection listed here is published under this prefix
-   * instead of the collection's own `url_prefix`, and a collection missing from it
-   * keeps that own prefix.
+   * On a deployed site that declares no routes it is `null` (it publishes the website
+   * and every collection at the collection's own `url_prefix`); otherwise it is the
+   * set of collections the host serves, at the prefixes given — a collection missing
+   * from it keeps its own `url_prefix`.
    */
   contentRoutes: Record<string, string> | null
   /**
+   * What the sites mounted on this one publish, as collection -> prefix (migration
+   * 052). The build merges these into its own prefixes, so a `paths` site's content
+   * appears on this host at the path its parent declares.
+   */
+  mounts: Record<string, string>
+  /**
    * Absolute base URL of a collection published on another active site, by
    * collection name. A collection listed here is *not* published locally — even
-   * on an app site — so the build must skip it and link to this URL instead.
+   * on a site that publishes the website — so the build must skip it and link to
+   * this URL instead.
    */
   external: Record<string, string>
-  /** Base URL of the site that builds the website, for a content-only site's links home. */
+  /**
+   * Base URL this build's links home point at: the parent site for a `paths` site,
+   * the site that builds the website for a content-only host, null for that site
+   * itself.
+   */
   appBaseUrl: string | null
 }
 
@@ -158,25 +179,38 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
 
   const contentRoutes = parseSiteContentRoutes(site.contentRoutes)
   const contentMode = siteContentMode(site)
-  // Collections that are local to this site. A `paths` site nominally publishes
-  // every collection at the collection's own `url_prefix`, but that is exactly
-  // the case the rule inverts: a collection claimed by another active site is not
-  // built here at all — it is linked to through `external` — so `published` is
-  // deliberately only this site's *explicit* content routes, never "everything"
-  // for a site that publishes the website. A collection can only be local when no
-  // other site claims it.
-  const published = new Set(Object.keys(contentRoutes ?? {}))
+  // The sites mounted on this one (migration 052): a `paths` site is published by its
+  // parent, at the prefixes its own content routes name — a collection it does not
+  // name keeps that collection own `url_prefix`. This is what the parent build has to
+  // add to what it already publishes.
+  const children = contentMode === 'standalone' ? await service.listChildren(site.id) : []
+  const mounts: Record<string, string> = {}
+  for (const child of children) {
+    for (const [collection, prefix] of Object.entries(
+      parseSiteContentRoutes(child.contentRoutes) ?? {}
+    )) {
+      if (mounts[collection] === undefined) mounts[collection] = prefix
+    }
+  }
 
-  // `external` = every collection published by a *different* active site,
-  // resolved to an absolute URL on that host. This holds for a content-only site
-  // and for an app site alike, so the website skips generating a collection that
-  // has moved to its own host and links there instead. The same site's own
-  // collections are skipped so a link never points at itself, and the first other
-  // site to claim a collection wins (a second one would be a configuration error,
-  // not something to silently override).
+  // Collections that are local to this site: its own explicit routes plus everything
+  // the sites mounted on it publish. A collection claimed by another site elsewhere is
+  // not built here at all — it is linked to through `external` — so `published` is
+  
+  // deliberately only what this site (or the sites mounted on it) publishes, never
+  // "everything" for a site that publishes the website.
+  const published = new Set([...Object.keys(contentRoutes ?? {}), ...Object.keys(mounts)])
+
+  // `external` = every collection published by a *different* deployed site, resolved
+  // to an absolute URL on that host, so this build skips generating a collection that
+  // has moved to its own host and links there instead. This site own collections — and
+  // those of the sites mounted on it — are skipped so a link never points at itself, and
+  // the first other site to claim a collection wins (a second one would be a
+  // configuration error, not something to silently override). A `paths` site is not a
+  // host of its own, so it is never offered as an external target either.
   const external: Record<string, string> = {}
   for (const other of sites) {
-    if (other.id === site.id) continue
+    if (other.id === site.id || !isDeployed(other)) continue
     const base = baseUrlOf(other)
     if (!base) continue
     for (const [collection, prefix] of Object.entries(
@@ -187,28 +221,38 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
     }
   }
 
-  // The active site that builds the website itself is one that publishes the
-  // website: a `paths` site, with or without content-route overrides. A content-only
-  // (`standalone`) site links its shell's navigation back to it; the website site
+  // The active site that builds the website itself is a deployed site with no content
+  // routes. A content-only host links its shell navigation back to it; the website site
   // itself (and a deployment with no such site) resolves to null.
   //
   // A deployment can have several sites that publish the website — the same website
-  // deployed as a Worker and to Pages, for instance — and a Worker without a
-  // custom domain has no host to link to. The first candidate with a resolvable
-  // base URL wins, so a secondary host is not left pointing at nothing.
+  // deployed as a Worker and to Pages, for instance — and a Worker without a custom
+  // domain has no host to link to. The first candidate with a resolvable base URL wins,
+  // so a secondary host is not left pointing at nothing.
   const appSite = sites.find(
     (candidate) =>
       candidate.id !== site.id && publishesWebsite(candidate) && baseUrlOf(candidate) !== null
   )
+
+  // A mounted site is published by its parent, and its own links point there: the parent
+  // is the host that serves the website its content lives on.
+  const parent =
+    contentMode === 'paths' && site.parentSiteId
+      ? sites.find((candidate) => candidate.id === site.parentSiteId) ?? null
+      : null
+  const homeBase = parent ? baseUrlOf(parent) : appSite ? baseUrlOf(appSite) : null
 
   return {
     slug: site.slug,
     name: site.name,
     domain: domains.get(site.id) ?? null,
     contentMode,
+    parentSiteId: site.parentSiteId ?? null,
+    parentSlug: parent?.slug ?? null,
     contentRoutes,
+    mounts,
     external,
-    appBaseUrl: contentMode === 'standalone' && appSite ? baseUrlOf(appSite) : null
+    appBaseUrl: contentMode === 'standalone' && contentRoutes === null ? null : homeBase
   }
 }
 

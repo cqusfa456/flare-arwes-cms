@@ -1,13 +1,18 @@
 import { describe, it, expect } from 'vitest'
 
 import type { Site } from '../../services/sites'
-import { publishesWebsite, siteContentMode } from '../../services/site-routing'
+import { isDeployed, publishesWebsite, siteContentMode } from '../../services/site-routing'
 
 /** Only the fields the routing classification reads. */
-const site = (fields: { contentMode?: unknown; contentRoutes?: unknown }): Site =>
+const site = (fields: {
+  contentMode?: unknown
+  contentRoutes?: unknown
+  parentSiteId?: unknown
+}): Site =>
   ({
     contentMode: fields.contentMode ?? null,
-    contentRoutes: fields.contentRoutes ?? null
+    contentRoutes: fields.contentRoutes ?? null,
+    parentSiteId: fields.parentSiteId ?? null
   }) as Site
 
 describe('siteContentMode', () => {
@@ -16,34 +21,32 @@ describe('siteContentMode', () => {
     expect(siteContentMode(site({ contentMode: 'standalone' }))).toBe('standalone')
   })
 
-  it('classifies rows that predate migration 051 from what they already do', () => {
-    // No content routes: the site built the whole website, as every site did before.
-    expect(siteContentMode(site({ contentRoutes: null }))).toBe('paths')
-    // Content routes: it was a content-only host publishing exactly those.
+  it('treats a row with no mode as deployed', () => {
+    // Every site that existed before migration 052 was deployed on its own.
+    expect(siteContentMode(site({ contentRoutes: null }))).toBe('standalone')
     expect(siteContentMode(site({ contentRoutes: { 'blog-posts': '' } }))).toBe('standalone')
-  })
-
-  it('accepts the routes as they are stored (a JSON string)', () => {
     expect(siteContentMode(site({ contentRoutes: '{"docs":""}' }))).toBe('standalone')
   })
 })
 
+describe('isDeployed', () => {
+  it('is true only for a standalone site', () => {
+    expect(isDeployed(site({ contentMode: 'standalone' }))).toBe(true)
+    expect(isDeployed(site({ contentMode: 'paths', parentSiteId: 'p' }))).toBe(false)
+  })
+})
+
 describe('publishesWebsite', () => {
-  it('is true for a site that publishes the website, routes or not', () => {
-    expect(publishesWebsite(site({ contentMode: 'paths' }))).toBe(true)
-    // A paths site may override prefixes without ceasing to publish the website.
-    expect(publishesWebsite(site({ contentMode: 'paths', contentRoutes: { docs: '/docs' } }))).toBe(
-      true
-    )
-    // No routes at all is the historical "app site", whatever the column says.
+  it('is true for a deployed site that declares no content routes', () => {
+    expect(publishesWebsite(site({ contentMode: 'standalone' }))).toBe(true)
     expect(publishesWebsite(site({ contentRoutes: null }))).toBe(true)
   })
 
-  it('is false for a content-only host', () => {
+  it('is false for a content-only host and for a mounted site', () => {
     expect(publishesWebsite(site({ contentMode: 'standalone', contentRoutes: { docs: '' } }))).toBe(
       false
     )
-    // Classified from the routes when the column is empty (an older row).
-    expect(publishesWebsite(site({ contentRoutes: { 'blog-posts': '' } }))).toBe(false)
+    // A paths site has no host of its own: its parent publishes its content.
+    expect(publishesWebsite(site({ contentMode: 'paths', parentSiteId: 'p' }))).toBe(false)
   })
 })

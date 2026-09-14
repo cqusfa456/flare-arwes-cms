@@ -203,10 +203,19 @@ export interface Site {
   contentRoutes: SiteContentRoutes | null
 
   /**
-   * `paths` serves the collections at their own prefixes on this host; `standalone`
-   * makes this site the home of the collections in its content routes.
+   * `standalone` is deployed on its own: it publishes the website when it declares
+   * no content routes, or just the collections its routes name when it does.
+   * `paths` is not deployed — the site in {@link parentSiteId} publishes its
+   * content under the prefixes its routes name.
    */
   contentMode: SiteContentMode | null
+
+  /**
+   * The site a `paths` site is mounted on (migration 052): its content is published
+   * by that site, at the prefixes this site's content routes name. Always an active
+   * `standalone` site; null on a site that is deployed on its own.
+   */
+  parentSiteId: string | null
   /** Extra/overriding build-time env vars pushed to the trigger (migration 040). */
   buildEnv: Record<string, SiteBuildEnvVar>
   /** Read-only API token the CMS minted for this site's builds (never serialized). */
@@ -251,6 +260,11 @@ export interface SiteInput {
 
   /** How the site publishes; see {@link SiteContentMode}. */
   contentMode?: SiteContentMode | null
+  /**
+   * The site this one is mounted on; required by `paths` and rejected with a
+   * `standalone` target that does not exist. `null` clears it.
+   */
+  parentSiteId?: string | null
   buildEnv?: Record<string, SiteBuildEnvVar> | null
   isActive?: boolean
 }
@@ -493,6 +507,7 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   contentPrefix: (row.content_prefix as string | null) ?? null,
   contentRoutes: parseSiteContentRoutes(row.content_routes),
   contentMode: normalizeContentMode(row.content_mode),
+  parentSiteId: (row.parent_site_id as string | null) ?? null,
   buildEnv: parseBuildEnv(row.build_env),
   contentToken: (row.content_token as string | null) ?? null,
   contentTokenId: (row.content_token_id as string | null) ?? null,
@@ -931,6 +946,62 @@ export class SitesService {
     return routes
   }
 
+  /**
+   * Resolve the site a `paths` site is mounted on (migration 052).
+   *
+   * The parent publishes the child's content, so it has to be a site that is itself
+   * deployed — an active `standalone` site. A `paths` site without a parent would
+   * publish nowhere, which is a configuration mistake rather than a state to store,
+   * so it is rejected here instead of silently building nothing.
+   */
+  private async resolveParentSite(
+    value: unknown,
+    self: { id: string | null; contentMode: SiteContentMode }
+  ): Promise<string | null> {
+    const requested = typeof value === 'string' ? value.trim() : ''
+    if (requested === '') {
+      if (self.contentMode === 'paths') {
+        throw new SitesConfigError(
+          'A site in paths mode needs a parent site (the deployed site that publishes its content)'
+        )
+      }
+      return null
+    }
+
+    const row = await this.db
+      .prepare('SELECT * FROM sites WHERE slug = ? OR id = ? LIMIT 1')
+      .bind(requested, requested)
+      .first()
+    if (!row) {
+      throw new SitesConfigError(`Unknown parent site "${requested}"`)
+    }
+
+    const parent = rowToSite(row as Record<string, unknown>)
+    if (self.id && parent.id === self.id) {
+      throw new SitesConfigError('A site cannot be its own parent')
+    }
+    if (!parent.isActive) {
+      throw new SitesConfigError(`The parent site "${parent.slug}" is inactive`)
+    }
+    const parentMode = parent.contentMode ?? 'standalone'
+    if (parentMode !== 'standalone') {
+      throw new SitesConfigError(
+        `The parent site "${parent.slug}" publishes in paths mode itself; the parent has to be a standalone site`
+      )
+    }
+
+    return parent.id
+  }
+
+  /** Active sites mounted on this one, which this site publishes. */
+  async listChildren(siteId: string): Promise<Site[]> {
+    const { results } = await this.db
+      .prepare('SELECT * FROM sites WHERE parent_site_id = ? AND is_active = 1 ORDER BY slug ASC')
+      .bind(siteId)
+      .all()
+    return (results ?? []).map((row) => rowToSite(row as Record<string, unknown>))
+  }
+
   async create(input: SiteInput): Promise<Site> {
     const slug = normalizeSiteSlug(input.slug || input.name)
     if (!slug) throw new SitesConfigError('A site slug is required')
@@ -948,6 +1019,17 @@ export class SitesService {
     // Normalised (and checked against `collections.name`) before the INSERT so an
     // unknown collection is a 400, not a stored route no build can resolve.
     const contentRoutes = await this.resolveContentRoutes(input.contentRoutes)
+    // Naming a parent makes the site a mounted slice of that parent; without one it
+    // is deployed on its own.
+    const contentMode =
+      normalizeContentMode(input.contentMode) ?? (input.parentSiteId ? 'paths' : 'standalone')
+    // A `paths` site is published by its parent, so the parent has to exist and be
+    // a site that is deployed itself; checked before the INSERT for the same reason
+    // the routes are.
+    const parentSiteId = await this.resolveParentSite(input.parentSiteId, {
+      id: null,
+      contentMode
+    })
 
     await this.db
       .prepare(
@@ -956,9 +1038,9 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, content_routes, content_mode, build_env, content_token, content_token_id, deploy_mode,
+           content_prefix, content_routes, content_mode, parent_site_id, build_env, content_token, content_token_id, deploy_mode,
            is_active, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
       )
       .bind(
         id,
@@ -981,7 +1063,8 @@ export class SitesService {
         input.contentPrefix ?? null,
         contentRoutes ? JSON.stringify(contentRoutes) : null,
         // The mode follows what the site publishes unless it says otherwise.
-        normalizeContentMode(input.contentMode) ?? (contentRoutes ? 'standalone' : 'paths'),
+        contentMode,
+        parentSiteId,
         input.buildEnv && Object.keys(input.buildEnv).length > 0
           ? JSON.stringify(input.buildEnv)
           : null,
@@ -1032,8 +1115,21 @@ export class SitesService {
       contentPrefix: 'content_prefix',
       contentRoutes: 'content_routes',
       contentMode: 'content_mode',
+      parentSiteId: 'parent_site_id',
       buildEnv: 'build_env',
       isActive: 'is_active'
+    }
+
+    // The mode and the parent are validated together against the row's resulting
+    // state, so switching a site to `paths` without naming a parent is rejected even
+    // when only one of the two fields is sent.
+    const nextMode = normalizeContentMode(input.contentMode) ?? current.contentMode ?? 'standalone'
+    const resolvedParent = await this.resolveParentSite(
+      input.parentSiteId !== undefined ? input.parentSiteId : current.parentSiteId,
+      { id: current.id, contentMode: nextMode }
+    )
+    if (resolvedParent !== current.parentSiteId) {
+      ;(input as Record<string, unknown>).parentSiteId = resolvedParent
     }
 
     const assignments: string[] = []
@@ -1046,6 +1142,7 @@ export class SitesService {
       if (key === 'slug') values.push(normalizeSiteSlug(String(value)))
       else if (key === 'isActive') values.push(value ? 1 : 0)
       else if (key === 'deployMode') values.push(normalizeDeployMode(value))
+      else if (key === 'parentSiteId') values.push(value === null ? null : String(value))
       else if (key === 'contentRoutes') {
         const routes = await this.resolveContentRoutes(value as SiteContentRoutesInput)
         values.push(routes === undefined || routes === null ? null : JSON.stringify(routes))
@@ -1124,6 +1221,18 @@ export class SitesService {
 
     if (!site.isActive) {
       throw new SitesConfigError(`Site "${site.slug}" is inactive; enable it before building`)
+    }
+
+    // A site in paths mode has no host of its own (migration 052): its content is
+    // published by its parent, so building it would publish a second copy of the
+    // content somewhere it does not belong. Building the parent is what the operator
+    // means, so the answer says so.
+    if (site.contentMode === 'paths') {
+      const parent = site.parentSiteId ? await this.get(site.parentSiteId) : null
+      throw new SitesConfigError(
+        `Site "${site.slug}" publishes in paths mode: its content is published by ` +
+          `"${parent?.slug ?? 'its parent site'}". Build that site instead.`
+      )
     }
 
     const mode = this.effectiveDeployMode(site)

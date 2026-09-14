@@ -3,8 +3,10 @@
  * subset of content it may therefore read.
  *
  * Rule (enforced server-side, never widen-able by the caller):
- *   * a request that identifies an active site sees **that site's content plus
- *     shared content** (`site_id = ? OR site_id IS NULL`)
+ *   * a request that identifies an active site sees **that site's content, the
+ *     content assigned to it, the content of the `paths` sites mounted on it (see
+ *     migration 052), and shared content** (`site_id = ? OR site_id IS NULL` plus
+ *     the `content_sites` assignments)
  *   * a request that identifies nothing sees **shared content only**, once at
  *     least one site is registered — a multi-tenant deployment must not leak
  *     every site's content just because a client omitted a header
@@ -12,7 +14,9 @@
  *     behaviour and sees everything, so existing setups are unaffected
  *
  * A site identifies itself with `X-Site: <slug|id>` or `?site=<slug|id>`.
- * Content ownership is `content.site_id` (migration 038).
+ * Content ownership is `content.site_id` (migration 038) — the primary site — and
+ * `content_sites` (migration 052) holds every site an item is published by, so one
+ * item can be published by several sites.
  *
  * A request authenticated with a **site-pinned API token** (migration 040) gets
  * that site regardless of what it sends: a build token issued for one site must
@@ -36,6 +40,12 @@ export type SiteScopeMode =
 export interface ContentSiteScope {
   /** Resolved site id, when a site was identified. */
   siteId: string | null
+  /**
+   * Every site whose content this request may read: the identified site plus the
+   * `paths` sites mounted on it (their content is published by this one, so a build
+   * of the parent has to see it). Empty for a scope that identified no site.
+   */
+  relatedSiteIds: string[]
   /** Resolved site slug, when a site was identified. */
   siteSlug: string | null
   /** Raw value the caller sent, if any (used to report unknown sites). */
@@ -72,6 +82,25 @@ export async function hasActiveSites(db: D1Database): Promise<boolean> {
 }
 
 /**
+ * Every site whose content a request scoped to `siteId` may read: the site itself
+ * plus the `paths` sites mounted on it (migration 052). Those sites are not deployed;
+ * their content is published by this one, so its build has to see it.
+ */
+export async function relatedSiteIdsOf(db: D1Database, siteId: string): Promise<string[]> {
+  const { results } = await db
+    .prepare('SELECT id FROM sites WHERE parent_site_id = ? AND is_active = 1')
+    .bind(siteId)
+    .all()
+
+  const related = [siteId]
+  for (const row of results ?? []) {
+    const id = String((row as { id: unknown }).id)
+    if (!related.includes(id)) related.push(id)
+  }
+  return related
+}
+
+/**
  * Resolve the requesting site's content scope.
  *
  * The header wins over the query parameter so a build can pin the header while
@@ -101,6 +130,7 @@ export async function resolveContentSiteScope(
       const ignored = requested !== null && requested !== row.slug && requested !== row.id
       return {
         siteId: row.id,
+        relatedSiteIds: await relatedSiteIdsOf(db, row.id),
         siteSlug: row.slug,
         requested,
         source: 'token',
@@ -114,6 +144,7 @@ export async function resolveContentSiteScope(
 
     return {
       siteId: null,
+      relatedSiteIds: [],
       siteSlug: null,
       requested,
       source: 'token',
@@ -135,6 +166,7 @@ export async function resolveContentSiteScope(
       const row = site as { id: string; slug: string }
       return {
         siteId: row.id,
+        relatedSiteIds: await relatedSiteIdsOf(db, row.id),
         siteSlug: row.slug,
         requested,
         source,
@@ -146,6 +178,7 @@ export async function resolveContentSiteScope(
 
     return {
       siteId: null,
+      relatedSiteIds: [],
       siteSlug: null,
       requested,
       source,
@@ -158,6 +191,7 @@ export async function resolveContentSiteScope(
   if (await hasActiveSites(db)) {
     return {
       siteId: null,
+      relatedSiteIds: [],
       siteSlug: null,
       requested: null,
       source: 'none',
@@ -170,6 +204,7 @@ export async function resolveContentSiteScope(
 
   return {
     siteId: null,
+    relatedSiteIds: [],
     siteSlug: null,
     requested: null,
     source: 'none',
@@ -190,7 +225,24 @@ export function contentSiteScopeFragment(
 ): { sql: string; params: any[] } | null {
   if (scope.mode === 'all') return null
   if (scope.mode === 'shared-only') return { sql: 'site_id IS NULL', params: [] }
-  return { sql: 'site_id = ? OR site_id IS NULL', params: [scope.siteId] }
+
+  // The site itself, the sites mounted on it, and everything explicitly assigned to
+  // any of them — plus the shared rows every site sees.
+  const ids =
+    scope.relatedSiteIds && scope.relatedSiteIds.length > 0
+      ? scope.relatedSiteIds
+      : scope.siteId
+        ? [scope.siteId]
+        : []
+  if (ids.length === 0) return { sql: 'site_id IS NULL', params: [] }
+
+  const placeholders = ids.map(() => '?').join(', ')
+  return {
+    sql:
+      `site_id IS NULL OR site_id IN (${placeholders}) OR id IN ` +
+      `(SELECT content_id FROM content_sites WHERE site_id IN (${placeholders}))`,
+    params: [...ids, ...ids]
+  }
 }
 
 /**

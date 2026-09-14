@@ -19,6 +19,11 @@ import { getBlocksFieldConfig, parseBlocksValue } from '../utils/blocks'
 import { analyzeAstroSource } from '../plugins/core-plugins/astro-editor'
 import { SettingsService } from '../services/settings'
 import { resolveSiteId } from '../services/content-site-scope'
+import {
+  assignContentSites,
+  listContentSiteIds,
+  resolveContentSiteIds
+} from '../services/content-sites'
 
 const adminContentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -322,6 +327,33 @@ async function getSiteOptions(db: D1Database): Promise<Array<{ id: string; slug:
 async function resolveSubmittedSiteId(db: D1Database, raw: unknown): Promise<string | null> {
   const resolved = await resolveSiteId(db, raw)
   return resolved.siteId
+}
+
+/**
+ * The sites a submitted form assigns this item to (migration 052).
+ *
+ * An admin form sends `site_ids` once per checked site, and sends none for shared
+ * content. `null` means the form had no site selector at all, which must leave the
+ * stored assignment alone rather than silently unassign it.
+ */
+async function resolveSubmittedSiteIds(
+  db: D1Database,
+  formData: FormData
+): Promise<string[] | null> {
+  const selectorSubmitted =
+    formData.has('site_ids_present') || formData.has('site_ids') || formData.has('site_id')
+  if (!selectorSubmitted) return null
+
+  const submitted = [
+    ...formData.getAll('site_ids'),
+    ...(formData.has('site_id') ? [formData.get('site_id')] : [])
+  ].filter((value) => typeof value === 'string' && value.trim() !== '')
+
+  const resolved = await resolveContentSiteIds(db, submitted)
+  if (resolved.unknown.length > 0) {
+    throw new Error(`Unknown site ${resolved.unknown.map((slug) => `"${slug}"`).join(', ')}`)
+  }
+  return resolved.siteIds
 }
 
 // Get collection by ID
@@ -932,6 +964,7 @@ adminContentRoutes.get('/:id/edit', async (c) => {
       data: contentData,
       status: content.status,
       siteId: content.site_id ?? null,
+      siteIds: await listContentSiteIds(db, content.id),
       scheduled_publish_at: content.scheduled_publish_at,
       scheduled_unpublish_at: content.scheduled_unpublish_at,
       review_status: content.review_status,
@@ -1031,6 +1064,9 @@ adminContentRoutes.post('/', async (c) => {
         siteId: formData.has('site_id')
           ? await resolveSubmittedSiteId(db, formData.get('site_id'))
           : null,
+        siteIds:
+          (await resolveSubmittedSiteIds(db, formData)) ??
+          (formData.get('site_id') ? [formData.get('site_id') as string] : []),
         validationErrors: errors,
         error: 'Please fix the validation errors below.',
         user: user ? {
@@ -1074,9 +1110,13 @@ adminContentRoutes.post('/', async (c) => {
 
     // Content ownership: only touched when the form submitted the field, so a
     // form rendered without the site selector can never silently unassign.
-    const siteId = formData.has('site_id')
-      ? await resolveSubmittedSiteId(db, formData.get('site_id'))
-      : null
+    const submittedSiteIds = await resolveSubmittedSiteIds(db, formData)
+    const siteId =
+      submittedSiteIds !== null
+        ? submittedSiteIds[0] ?? null
+        : formData.has('site_id')
+          ? await resolveSubmittedSiteId(db, formData.get('site_id'))
+          : null
 
     const insertStmt = db.prepare(`
       INSERT INTO content (
@@ -1101,6 +1141,10 @@ adminContentRoutes.post('/', async (c) => {
       // fills this column, and a blog build orders and dates posts by it.
       status === 'published' ? now : null
     ).run()
+
+    if (submittedSiteIds !== null) {
+      await assignContentSites(db, contentId, submittedSiteIds, now)
+    }
 
     // Invalidate collection content list cache
     const cache = getCacheService(CACHE_CONFIGS.content!)
@@ -1239,6 +1283,9 @@ adminContentRoutes.put('/:id', async (c) => {
         siteId: formData.has('site_id')
           ? await resolveSubmittedSiteId(db, formData.get('site_id'))
           : null,
+        siteIds:
+          (await resolveSubmittedSiteIds(db, formData)) ??
+          (formData.get('site_id') ? [formData.get('site_id') as string] : []),
         validationErrors: errors,
         error: 'Please fix the validation errors below.',
         isEdit: true,
@@ -1331,6 +1378,16 @@ adminContentRoutes.put('/:id', async (c) => {
       data.author_display = authorDisplay
     }
 
+    // Which sites publish this item (migration 052). The assignment is metadata about
+    // where the item is published, not part of its content, so it is applied right away
+    // — including on the staging path below, whose pending revision carries the content
+    // and would otherwise leave a site change unapplied until Go Live.
+    const siteAssignment = await resolveSubmittedSiteIds(db, formData)
+    const assignedAt = Date.now()
+    if (siteAssignment !== null) {
+      await assignContentSites(db, id, siteAssignment, assignedAt)
+    }
+
     // Content Staging: if editing published content and user is not bypassing,
     // create a pending revision instead of overwriting the live version.
     const publishImmediately = formData.get('publish_immediately') === 'on'
@@ -1373,11 +1430,8 @@ adminContentRoutes.put('/:id', async (c) => {
     // Direct save path: draft content, or admin with "publish immediately" bypass
     const now = Date.now()
 
-    // Re-assign the owning site only when the form actually submitted the
-    // field, so partial form renders cannot silently unassign content.
-    const siteAssignment = formData.has('site_id')
-      ? await resolveSubmittedSiteId(db, formData.get('site_id'))
-      : undefined
+    // The assignment was already applied above (it is metadata, not content), so the
+    // direct save only has the content columns left to write.
 
     const updateStmt = db.prepare(`
       UPDATE content SET
@@ -1401,13 +1455,6 @@ adminContentRoutes.put('/:id', async (c) => {
       now,
       id,
     ).run()
-
-    if (siteAssignment !== undefined) {
-      await db
-        .prepare('UPDATE content SET site_id = ?, updated_at = ? WHERE id = ?')
-        .bind(siteAssignment, now, id)
-        .run()
-    }
 
     // Invalidate content cache + bump version for frontend freshness
     const cache = getCacheService(CACHE_CONFIGS.content!)

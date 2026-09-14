@@ -424,6 +424,7 @@ adminSitesRoutes.get('/new', async (c) => {
   return c.html(
     renderSiteNewPage({
       credentials: await service.getCredentialStatus(),
+      parentSites: await service.list(),
       providers: SITE_PROVIDERS,
       presets: ARWES_SITE_PRESETS,
       deployModes: deployModeOptions(),
@@ -496,6 +497,7 @@ adminSitesRoutes.get('/:slug', async (c) => {
   return c.html(
     renderSiteDetailPage({
       site,
+      parentSites: await service.list(),
       domains,
       deployments,
       deploymentsError,

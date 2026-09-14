@@ -201,7 +201,20 @@ export class SciFiD1Client {
       )
     }
 
-    this.siteScopeResolved = { sql: '(site_id = ? OR site_id IS NULL)', params: [site.id] }
+    // The site itself, the sites mounted on it (their content is published here), what is
+    // explicitly assigned to any of them, and the shared rows every site sees.
+    const mounted = await this.query<{ id: string }>(
+      'SELECT id FROM sites WHERE parent_site_id = ? AND is_active = 1',
+      [site.id]
+    )
+    const related = [site.id, ...mounted.map((row) => row.id)]
+    const placeholders = related.map(() => '?').join(', ')
+    this.siteScopeResolved = {
+      sql:
+        `(site_id IS NULL OR site_id IN (${placeholders}) OR id IN ` +
+        `(SELECT content_id FROM content_sites WHERE site_id IN (${placeholders})))`,
+      params: [...related, ...related]
+    }
     return this.siteScopeResolved
   }
 
@@ -262,8 +275,9 @@ export class SciFiD1Client {
       cf_project_name: string | null
       content_routes: string | null
       content_mode: string | null
+      parent_site_id: string | null
     }>(
-      `SELECT id, slug, name, provider, cf_project_name, content_routes, content_mode
+      `SELECT id, slug, name, provider, cf_project_name, content_routes, content_mode, parent_site_id
        FROM sites
        WHERE is_active = 1 AND (slug = ? OR id = ?)
        LIMIT 1`,
@@ -282,8 +296,9 @@ export class SciFiD1Client {
       cf_project_name: string | null
       content_routes: string | null
       content_mode: string | null
+      parent_site_id: string | null
     }>(
-      `SELECT id, slug, provider, cf_project_name, content_routes, content_mode
+      `SELECT id, slug, provider, cf_project_name, content_routes, content_mode, parent_site_id
        FROM sites
        WHERE is_active = 1`
     )
@@ -306,22 +321,38 @@ export class SciFiD1Client {
     }
 
     const contentRoutes = parseContentRoutes(current.content_routes)
-    // Rows that predate migration 051 carry no mode: a site with content routes
-    // was a content-only host, one without them built the website.
+    // A row with no mode predates migration 052, when every site was deployed on its
+    // own: that is what `standalone` means.
     const modeOf = (row: { content_routes: string | null; content_mode: string | null }) =>
-      row.content_mode === 'paths' || row.content_mode === 'standalone'
-        ? (row.content_mode as SciFiSiteContentMode)
-        : parseContentRoutes(row.content_routes) === null
-          ? 'paths'
-          : 'standalone'
+      row.content_mode === 'paths'
+        ? ('paths' as SciFiSiteContentMode)
+        : ('standalone' as SciFiSiteContentMode)
     const contentMode = modeOf(current)
+    // Only a deployed site with no content routes builds the website.
     const publishesWebsite = (row: { content_routes: string | null; content_mode: string | null }) =>
-      modeOf(row) === 'paths' || parseContentRoutes(row.content_routes) === null
-    const published = new Set(Object.keys(contentRoutes ?? {}))
+      modeOf(row) === 'standalone' && parseContentRoutes(row.content_routes) === null
+
+    // The sites mounted on this one (migration 052) publish through it, at the prefixes
+    // their own routes name.
+    const children =
+      contentMode === 'standalone'
+        ? siteRows.filter((row) => row.parent_site_id === current.id)
+        : []
+    const mounts: Record<string, string> = {}
+    for (const child of children) {
+      for (const [collection, prefix] of Object.entries(parseContentRoutes(child.content_routes) ?? {})) {
+        if (mounts[collection] === undefined) {
+          mounts[collection] = prefix
+        }
+      }
+    }
+
+    const published = new Set([...Object.keys(contentRoutes ?? {}), ...Object.keys(mounts)])
 
     const external: Record<string, string> = {}
     for (const other of siteRows) {
-      if (other.id === current.id) {
+      // A mounted site is published by its parent, so it is not a host of its own.
+      if (other.id === current.id || modeOf(other) !== 'standalone') {
         continue
       }
       const base = baseUrlOf(other)
@@ -336,24 +367,32 @@ export class SciFiD1Client {
       }
     }
 
-    // The website itself is built by an active site that publishes the website: a
-    // `paths` site, with or without content-route overrides. A content-only site
-    // links back to it. Several sites can qualify (the same website deployed as a
-    // Worker and to Pages), and a Worker with no custom domain has no host to link
-    // to, so the first candidate with a resolvable base URL wins.
+    // The website itself is built by an active deployed site with no content routes. A
+    // content-only host links back to it. Several sites can qualify (the same website
+    // deployed as a Worker and to Pages), and a Worker with no custom domain has no host
+    // to link to, so the first candidate with a resolvable base URL wins.
     const appSite = siteRows.find(
       (row) => row.id !== current.id && publishesWebsite(row) && baseUrlOf(row) !== null
     )
-    const appBaseUrl = contentMode === 'standalone' && appSite ? baseUrlOf(appSite) : null
+
+    // A mounted site links home to its parent: that is the host serving its content.
+    const parent =
+      contentMode === 'paths' && current.parent_site_id
+        ? siteRows.find((row) => row.id === current.parent_site_id) ?? null
+        : null
+    const homeBase = parent ? baseUrlOf(parent) : appSite ? baseUrlOf(appSite) : null
 
     return {
       slug: current.slug,
       name: current.name,
       domain: domainRows.find((row) => row.site_id === current.id)?.hostname ?? null,
       contentMode,
+      parentSiteId: current.parent_site_id ?? null,
+      parentSlug: parent?.slug ?? null,
       contentRoutes,
+      mounts,
       external,
-      appBaseUrl
+      appBaseUrl: contentMode === 'standalone' && contentRoutes === null ? null : homeBase
     }
   }
 

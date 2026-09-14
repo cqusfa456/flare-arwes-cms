@@ -47,6 +47,8 @@ export interface SitesListPageData {
 
 export interface SiteDetailPageData {
   site: Site
+  /** Registered sites, so a `paths` site can name the one that publishes it. */
+  parentSites: Site[]
   domains: SiteDomain[]
   deployments: SiteDeploymentInfo[]
   deploymentsError: string | null
@@ -143,17 +145,34 @@ const providerOptions = (providers: SiteProviderInfo[], selected: SiteProvider |
  * argue with (see {@link defaultDeployMode} in `services/sites`).
  */
 /**
- * The two ways a site can publish (see `SiteContentMode`): at its own path prefixes,
+ * The two ways a site can publish (see `SiteContentMode`): deployed on its own, or
  * or as a host of its own.
  */
+/** `<option>` list for the publishing-mode select; see `SiteContentMode`. */
 const contentModeOptions = (selected: string | null | undefined): string =>
   ([
-    ['paths', '路径模式：本机按前缀发布（/blog、/docs 等）'],
-    ['standalone', '独立模式：本机是一个独立站点，发布自己的内容树']
+    ['standalone', '独立模式：本机自己部署（有自己的 CF 项目），发布整站或所列集合'],
+    ['paths', '路径模式：本机不部署，内容挂到主站的路径下']
   ] as Array<[string, string]>)
     .map(
       ([value, label]) =>
         `<option value="${value}" ${selected === value ? 'selected' : ''}>${escapeHtml(label)}</option>`
+    )
+    .join('')
+
+/**
+ * `<option>` list for the parent-site select: a mounted site is published by one of
+ * the sites that are deployed on their own (migration 052).
+ */
+const parentSiteOptions = (sites: Site[], selected: string | null | undefined): string =>
+  ['<option value="">— 未设置 —</option>']
+    .concat(
+      sites
+        .filter((site) => site.contentMode !== 'paths')
+        .map(
+          (site) =>
+            `<option value="${escapeHtml(site.id)}" ${selected === site.id ? 'selected' : ''}>${escapeHtml(site.name)} (${escapeHtml(site.slug)})</option>`
+        )
     )
     .join('')
 
@@ -330,6 +349,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
               <div class="flex flex-wrap items-center gap-2">
                 <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="text-sm font-semibold text-zinc-950 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">${escapeHtml(site.name)}</a>
                 ${providerBadge(site.provider)}
+                ${site.contentMode === 'paths' ? `<span class="inline-flex items-center rounded-md bg-teal-50 dark:bg-teal-500/10 px-2 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20 dark:ring-teal-400/20">${t('Paths mode')}</span>` : ''}
                 ${site.isActive ? '' : '<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Inactive</span>'}
                 ${buildBadge(site)}
               </div>
@@ -481,6 +501,8 @@ export function renderSitesListPage(data: SitesListPageData): string {
 // ---------------------------------------------------------------------------
 
 export function renderSiteNewPage(data: {
+  /** Registered sites, so a `paths` site can name the one that publishes it. */
+  parentSites?: Site[]
   credentials: CloudflareCredentialStatus
   providers: SiteProviderInfo[]
   presets: SitePreset[]
@@ -581,10 +603,19 @@ export function renderSiteNewPage(data: {
           <div class="sm:col-span-2">
             <label class="${LABEL}">${t('Publishing mode')}</label>
             <select id="site-content-mode" class="${INPUT}">
-              ${contentModeOptions('paths')}
+              ${contentModeOptions('standalone')}
             </select>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              ${t('Paths serve this site at /blog, /docs and so on; standalone makes it the home of the collections in its content routes.')}
+              ${t('Standalone mode deploys this site on its own: it publishes the whole website, or just the collections its content routes name. Paths mode does not deploy it at all — the parent site publishes its content, under the prefixes given here (a collection left out keeps its own prefix).')}
+            </p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="${LABEL}">${t('Parent site')}</label>
+            <select id="site-parent" class="${INPUT}">
+              ${parentSiteOptions(data.parentSites ?? [], '')}
+            </select>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              ${t('Required in paths mode: this site is published by the chosen site, which has to be deployed on its own (standalone mode).')}
             </p>
           </div>
           <div class="sm:col-span-2">
@@ -764,6 +795,7 @@ export function renderSiteNewPage(data: {
               // null = this site builds the whole website (the column stays NULL).
               content_routes: contentRoutes.value,
               contentMode: val('site-content-mode') || undefined,
+              parentSiteId: val('site-parent') || undefined,
               // Omitted when empty so the site stays on its provider default.
               deployMode: val('site-deploy-mode') || undefined
             })
@@ -987,8 +1019,16 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">${t('Status')}</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
           <div class="flex items-center justify-between gap-4">
             <dt class="text-zinc-500 dark:text-zinc-400">${t('Publishing mode')}</dt>
-            <dd>
+            <dd class="text-right">
               <span class="inline-flex items-center rounded-md bg-teal-50 dark:bg-teal-500/10 px-2 py-0.5 text-[11px] font-medium text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20 dark:ring-teal-400/20">${escapeHtml(site.contentMode === 'paths' ? '路径模式' : '独立模式')}</span>
+              ${
+                site.contentMode === 'paths' && site.parentSiteId
+                  ? `<span class="ml-2 text-zinc-500 dark:text-zinc-400">${escapeHtml(
+                      data.parentSites.find((candidate) => candidate.id === site.parentSiteId)?.slug ??
+                        site.parentSiteId
+                    )}</span>`
+                  : ''
+              }
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
@@ -1057,7 +1097,16 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
               ${contentModeOptions(site.contentMode)}
             </select>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              ${t('Paths serve this site at /blog, /docs and so on; standalone makes it the home of the collections in its content routes.')}
+              ${t('Standalone mode deploys this site on its own: it publishes the whole website, or just the collections its content routes name. Paths mode does not deploy it at all — the parent site publishes its content, under the prefixes given here (a collection left out keeps its own prefix).')}
+            </p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="${LABEL}">${t('Parent site')}</label>
+            <select id="s-parent" class="${INPUT}">
+              ${parentSiteOptions(data.parentSites ?? [], site.parentSiteId)}
+            </select>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              ${t('Required in paths mode: this site is published by the chosen site, which has to be deployed on its own (standalone mode).')}
             </p>
           </div>
           <div class="sm:col-span-2">
@@ -1085,12 +1134,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <textarea id="s-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'>${escapeHtml(
             site.contentRoutes ? JSON.stringify(site.contentRoutes, null, 2) : ''
           )}</textarea>
-                      <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              ${t('Paths mode builds the whole website: its own routes plus every collection at the prefix set on the collection, and a route here overrides that prefix ({"blog-posts": "/blog"} publishes the blog under /blog). Standalone mode makes the site a content-only host that publishes only the collections listed here, at the prefix given for this host ("" is that host root).')}
-            </p>
-          <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            On <strong>独立模式</strong> this site is a <strong>content-only host</strong> that publishes just the collections listed here, at the prefix given for this host
-            (<code>""</code> = that host's root, e.g. <code>{"blog-posts": ""}</code>). Collection names must already exist in Admin → Collections.
+                    <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            ${t('Which collections this site publishes, and under which prefix on its host. On a standalone site this is the complete list: only these collections are published, at the prefixes given ("" is the host root, so {"blog-posts": ""} serves the blog at the domain root). On a paths site it is what the parent publishes for it, and a collection left out keeps its own prefix. Collection names must already exist in Admin → Collections.')}
           </p>
         </div>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
@@ -1251,6 +1296,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           // null = back to an app site that builds the whole website.
           content_routes: contentRoutes.value,
           contentMode: val('s-content-mode') || undefined,
+          parentSiteId: val('s-parent') || null,
           // An empty select means "provider default": the API stores null and
           // effectiveDeployMode() falls back to the provider's own mode.
           deployMode: val('s-deploy-mode') || null,

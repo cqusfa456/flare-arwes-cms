@@ -140,15 +140,13 @@ export class SciFiClient {
         slug: String(data.slug ?? target),
         name: String(data.name ?? data.slug ?? target),
         domain: (data.domain ?? null) as string | null,
-        // An older CMS does not report the mode: a site with content routes was a
-        // content-only host, one without them built the website.
-        contentMode:
-          reportedMode === 'paths' || reportedMode === 'standalone'
-            ? reportedMode
-            : contentRoutes
-              ? 'standalone'
-              : 'paths',
+        // An older CMS does not report the mode: every site it knows is deployed on its
+        // own, which is what `standalone` means.
+        contentMode: reportedMode === 'paths' || reportedMode === 'standalone' ? reportedMode : 'standalone',
+        parentSiteId: (data.parentSiteId ?? null) as string | null,
+        parentSlug: (data.parentSlug ?? null) as string | null,
         contentRoutes,
+        mounts: (data.mounts ?? {}) as Record<string, string>,
         external: (data.external ?? {}) as Record<string, string>,
         appBaseUrl: (data.appBaseUrl ?? null) as string | null
       }

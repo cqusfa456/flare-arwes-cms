@@ -32,9 +32,12 @@ export interface ContentFormData {
   collection: Collection
   fields: FieldDefinition[]
   /**
-   * Owning site of this content item. `null`/undefined means shared content,
-   * readable by every site.
+   * Sites this item is published by (migration 052). Empty/undefined means shared
+   * content, readable by every site. `siteId` stays the primary (first) one, which is
+   * what a form rendered without `siteIds` falls back to.
    */
+  siteIds?: string[]
+  /** Primary site of this item; see {@link siteIds}. */
   siteId?: string | null
   /**
    * Sites available for assignment. When absent or empty the "Site" selector is
@@ -142,33 +145,47 @@ export function renderContentFormPage(data: ContentFormData): string {
   // Site assignment. Hidden when the deployment has no registered sites, so a
   // single-tenant install sees exactly the form it saw before.
   const siteOptions = data.sites || []
+  // The assignment is a set of sites (migration 052): an item may be published by
+  // several, which is what lets a mounted site’s content appear on its parent host.
+  // None checked means shared content.
+  const assignedSiteIds = new Set(data.siteIds ?? (data.siteId ? [data.siteId] : []))
   const siteSelectorHTML = siteOptions.length === 0
     ? ''
     : `
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
-            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-4">${t('Site')}</h3>
-            <label for="site_id" class="block text-sm/6 font-medium text-zinc-950 dark:text-white">Owning site</label>
-            <div class="mt-2 grid grid-cols-1">
-              <select
-                id="site_id"
-                name="site_id"
-                form="content-form"
-                class="col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white/5 dark:bg-white/5 py-1.5 pl-3 pr-8 text-base text-zinc-950 dark:text-white outline outline-1 -outline-offset-1 outline-zinc-500/30 dark:outline-zinc-400/30 *:bg-white dark:*:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-zinc-500 dark:focus-visible:outline-zinc-400 sm:text-sm/6"
-              >
-                <option value="" ${data.siteId ? '' : 'selected'}>Shared — visible to every site</option>
-                ${siteOptions.map((site) => `
-                <option value="${escapeHtml(site.id)}" ${data.siteId === site.id ? 'selected' : ''}>${escapeHtml(site.name)} (${escapeHtml(site.slug)})</option>`).join('')}
-              </select>
-              <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-zinc-600 dark:text-zinc-400 sm:size-4">
-                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-              </svg>
-            </div>
-            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-              Site content is only returned to that site (via <code>X-Site</code>). Shared content is readable by every site.
+            <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-1">${t('Publishing sites')}</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
+              ${t('Checked sites publish this item; a site in paths mode is published by its parent. Leave every box clear for shared content, which every site can read.')}
             </p>
+            <div class="space-y-2">
+              <!--
+                A form that submits no checkbox at all cannot be told from one that never
+                had the selector, and the difference matters: no box checked means "shared
+                content". This marker is what says the selector was submitted.
+              -->
+              <input type="hidden" name="site_ids_present" value="1" form="content-form" />
+              ${siteOptions
+                .map(
+                  (site) => `
+                <label class="flex items-start gap-3 rounded-lg px-3 py-2 ring-1 ring-zinc-950/5 dark:ring-white/10">
+                  <input
+                    type="checkbox"
+                    name="site_ids"
+                    value="${escapeHtml(site.id)}"
+                    form="content-form"
+                    ${assignedSiteIds.has(site.id) ? 'checked' : ''}
+                    class="mt-1 rounded border-zinc-300 dark:border-white/20"
+                  />
+                  <span>
+                    <span class="block text-sm/6 font-medium text-zinc-950 dark:text-white">${escapeHtml(site.name)}</span>
+                    <span class="block text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(site.slug)}</span>
+                  </span>
+                </label>`
+                )
+                .join('')}
+            </div>
           </div>
   `
-
   const pageContent = `
     <div class="space-y-6">
       <!-- Header -->

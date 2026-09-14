@@ -959,7 +959,10 @@ apiRoutes.get('/site', async (c) => {
       name: routing.routing.name,
       domain: routing.routing.domain,
       contentMode: routing.routing.contentMode,
+      parentSiteId: routing.routing.parentSiteId,
+      parentSlug: routing.routing.parentSlug,
       contentRoutes: routing.routing.contentRoutes,
+      mounts: routing.routing.mounts,
       external: routing.routing.external,
       appBaseUrl: routing.routing.appBaseUrl
     },

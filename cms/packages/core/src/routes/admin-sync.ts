@@ -22,7 +22,7 @@ import {
   computeDiff,
 } from '../services/revisions'
 import { SitesService, type Site } from '../services/sites'
-import { publishesWebsite } from '../services/site-routing'
+import { publishesWebsite, siteContentMode } from '../services/site-routing'
 import { SettingsService } from '../services/settings'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import { logAudit, getClientIP } from '../services/audit-log'
@@ -34,19 +34,39 @@ const adminSyncRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 const CHROME_COLLECTIONS = ['components', 'layouts']
 
 /**
- * Which sites a change reaches: every site when the change is chrome (the
+ * Which sites a change reaches: every deployed site when the change is chrome (the
  * navigation bar, the footer, a layout), a site that publishes the website for any
  * content change — it renders every collection, at the collection's own prefix
- * unless it overrides it — and a content-only host for the collections it names.
+ * unless it declares otherwise — and a content-only host for the collections it
+ * names.
+ *
+ * A site in paths mode is not deployed (migration 052): its content is published by
+ * its parent, so the parent is what has to be built.
  */
 const sitesPublishing = (sites: Site[], collections: string[]): Site[] => {
   const touchesChrome = collections.some((name) => CHROME_COLLECTIONS.includes(name))
+  const deployed = sites.filter((site) => siteContentMode(site) === 'standalone')
+
   if (touchesChrome) {
-    return sites
+    return deployed
   }
-  return sites.filter(
+
+  // Parents of the sites that publish any of the changed collections.
+  const parentsOfMounts = new Set(
+    sites
+      .filter(
+        (site) =>
+          siteContentMode(site) === 'paths' &&
+          site.parentSiteId &&
+          collections.some((name) => site.contentRoutes?.[name] !== undefined)
+      )
+      .map((site) => site.parentSiteId as string)
+  )
+
+  return deployed.filter(
     (site) =>
       publishesWebsite(site) ||
+      parentsOfMounts.has(site.id) ||
       collections.some((name) => site.contentRoutes?.[name] !== undefined)
   )
 }
