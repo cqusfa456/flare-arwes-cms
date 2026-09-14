@@ -49,7 +49,7 @@ export function renderActivityLogsPage(data: ActivityLogsPageData): string {
       </div>
 
       <!-- Breadcrumb -->
-      <nav class="flex mb-6" aria-label="Breadcrumb">
+      <nav class="flex mb-6" aria-label="${t('Breadcrumb')}">
         <ol class="flex items-center space-x-3">
           <li>
             <a href="/admin" class="text-gray-300 hover:text-white transition-colors">

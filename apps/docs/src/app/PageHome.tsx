@@ -48,7 +48,7 @@ const PageHome = (): JSX.Element => {
             <Link href="/docs">
               <ButtonSimple
                 tabIndex={-1}
-                title="Go to Documentation"
+                title="前往文档"
                 animated={[['x', theme.spacen(-6), 0, 0]]}
               >
                 <Page className="text-size-[1.5em] xhidden x2sm:block" />
@@ -59,7 +59,7 @@ const PageHome = (): JSX.Element => {
             <Link href="/demos">
               <ButtonSimple
                 tabIndex={-1}
-                title="Go to Demos"
+                title="前往示例"
                 animated={[['x', theme.spacen(-3), 0, 0]]}
               >
                 <CollageFrame className="text-size-[1.5em] xhidden x2sm:block" />
@@ -71,7 +71,7 @@ const PageHome = (): JSX.Element => {
               <a href={settings.apps.play.url}>
                 <ButtonSimple
                   tabIndex={-1}
-                  title="Go to Playground"
+                  title="前往演练场"
                   animated={[['x', theme.spacen(3), 0, 0]]}
                 >
                   <Codepen className="text-size-[1.5em] xhidden x2sm:block" />
@@ -84,7 +84,7 @@ const PageHome = (): JSX.Element => {
               <a href={settings.apps.perf.url}>
                 <ButtonSimple
                   tabIndex={-1}
-                  title="Go to Performance"
+                  title="前往性能测试"
                   animated={[['x', theme.spacen(6), 0, 0]]}
                 >
                   <DashboardSpeed className="text-size-[1.5em] xhidden x2sm:block" />

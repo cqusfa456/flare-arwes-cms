@@ -7,11 +7,12 @@ interface QqIconProps {
 }
 
 /**
- * The QQ mark.
+ * The QQ mark, drawn to match the icons it sits beside.
  *
- * Drawn from the vendor's own path (viewBox 1024), sized like its siblings: the menu
- * item sets the icon font size, and `1em` square with `currentColor` is what the
- * other icons in the bar use.
+ * The bar's other icons come from iconoir: a stroked outline on a 24-unit grid at
+ * 1.5 units. This mark is the vendor's own silhouette (a 1024-unit grid), so it is
+ * stroked rather than filled, with the width scaled to the same weight
+ * (1.5 × 1024 / 24 ≈ 64) and the same round joins; it inherits `currentColor`.
  */
 const QqIcon = memo((props: QqIconProps): JSX.Element => {
   const { className } = props
@@ -22,7 +23,11 @@ const QqIcon = memo((props: QqIconProps): JSX.Element => {
       width="1em"
       height="1em"
       viewBox="0 0 1024 1024"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="64"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       focusable="false"

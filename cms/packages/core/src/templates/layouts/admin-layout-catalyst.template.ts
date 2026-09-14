@@ -419,7 +419,7 @@ export function renderAdminLayoutCatalyst(
     <main class="flex flex-1 flex-col pb-2 lg:min-w-0 lg:pr-2 lg:pl-64">
       <!-- Mobile header with menu toggle -->
       <header class="flex items-center px-4 py-2.5 lg:hidden border-b border-zinc-950/5 dark:border-white/5">
-        <button onclick="openMobileSidebar()" class="relative flex items-center justify-center rounded-lg p-2 text-zinc-950 hover:bg-zinc-950/5 dark:text-white dark:hover:bg-white/5" aria-label="Open navigation">
+        <button onclick="openMobileSidebar()" class="relative flex items-center justify-center rounded-lg p-2 text-zinc-950 hover:bg-zinc-950/5 dark:text-white dark:hover:bg-white/5" aria-label="${t('Open navigation')}">
           ${icon(Menu, 'h-5 w-5')}
         </button>
         <div class="ml-4 flex-1 text-zinc-900 dark:text-white">
@@ -1220,7 +1220,7 @@ function renderCatalystSidebar(
   // Close button for mobile
   const closeButton = isMobile ? `
     <div class="-mb-3 px-4 pt-3">
-      <button onclick="closeMobileSidebar()" class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/5 sm:text-sm/5" aria-label="Close navigation">
+      <button onclick="closeMobileSidebar()" class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/5 sm:text-sm/5" aria-label="${t('Close navigation')}">
         ${icon(X, 'h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500')}
         <span>${t('Close navigation')}</span>
       </button>

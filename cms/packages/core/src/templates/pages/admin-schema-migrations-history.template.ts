@@ -238,7 +238,7 @@ export function renderSchemaMigrationsHistoryPage(data: SchemaMigrationsPageData
                         Rollback
                       </button>
                     ` : migration.status === 'applied' ? `
-                      <span class="text-xs text-zinc-500 dark:text-zinc-500 italic" title="Only the most recent migration can be rolled back">
+                      <span class="text-xs text-zinc-500 dark:text-zinc-500 italic" title="${t('Only the most recent migration can be rolled back')}">
                         Not rollbackable
                       </span>
                     ` : ''}

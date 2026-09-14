@@ -1,3 +1,4 @@
+import { t } from '../../i18n/admin'
 export interface LogoData {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   variant?: 'default' | 'white' | 'dark'
@@ -57,7 +58,7 @@ export function renderLogo(data: LogoData = {}): string {
       variant === 'white'
         ? 'bg-white/10 text-white/80 ring-white/20 hover:bg-white/20'
         : 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20'
-    }" onclick="navigator.clipboard.writeText('${version}').then(()=>{this.dataset.orig=this.textContent;this.textContent='Copied!';setTimeout(()=>{this.textContent=this.dataset.orig},1500)})" title="Click to copy">
+    }" onclick="navigator.clipboard.writeText('${version}').then(()=>{this.dataset.orig=this.textContent;this.textContent='Copied!';setTimeout(()=>{this.textContent=this.dataset.orig},1500)})" title="${t('Click to copy')}">
       ${version}
     </span>
   `

@@ -687,7 +687,7 @@ function renderTopBar(pageTitle: string, user?: any, currentPath?: string): stri
             </a>
 
             <!-- Dark Mode Toggle -->
-            <button onclick="toggleDarkMode()" class="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10" aria-label="Toggle dark mode">
+            <button onclick="toggleDarkMode()" class="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10" aria-label="${t('Toggle dark mode')}">
               <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
               </svg>

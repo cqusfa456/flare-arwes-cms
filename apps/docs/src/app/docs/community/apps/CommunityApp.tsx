@@ -135,7 +135,7 @@ const CommunityApp = memo((props: CommunityAppProps): JSX.Element => {
               className="text-size-9 font-body text-primary-main-5 hover:text-primary-high-4"
               href={repositoryURL}
               target="_blank"
-              title="Source code repository"
+              title="源码仓库"
               onClick={() => bleeps.click?.play()}
             >
               <p>

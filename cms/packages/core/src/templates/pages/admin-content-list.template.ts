@@ -93,7 +93,7 @@ export function renderContentListPage(data: ContentListPageData): string {
     bulkActions: isTrashView
       ? [
           { label: t('Restore'), value: 'restore', icon: 'rotate-ccw' },
-          { label: 'Delete Permanently', value: 'purge', icon: 'trash', className: 'text-red-600' }
+          { label: t('Delete Permanently'), value: 'purge', icon: 'trash', className: 'text-red-600' }
         ]
       : [
           { label: t('Publish'), value: 'publish', icon: 'check-circle' },
@@ -173,7 +173,7 @@ export function renderContentListPage(data: ContentListPageData): string {
             hx-confirm="Permanently delete this item? This cannot be undone."
             hx-target="#content-list"
             hx-swap="outerHTML"
-            title="Delete Permanently"
+            title="${t('Delete Permanently')}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -194,7 +194,7 @@ export function renderContentListPage(data: ContentListPageData): string {
           <button
             class="inline-flex items-center justify-center p-1.5 rounded-lg bg-slate-50 dark:bg-slate-500/10 text-slate-700 dark:text-slate-400 ring-1 ring-inset ring-slate-600/20 dark:ring-slate-500/20 hover:bg-slate-100 dark:hover:bg-slate-500/20 transition-colors"
             onclick="window.open('/api/content/${row.id}', '_blank')"
-            title="View API"
+            title="${t('View API')}"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>

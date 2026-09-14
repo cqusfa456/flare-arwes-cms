@@ -543,7 +543,7 @@ adminFormsRoutes.get('/:id/submissions', async (c) => {
                         <button
                           onclick="viewSubmission('${esc(sub.id)}')"
                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-950/10 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                          title="View details"
+                          title="${t('View details')}"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

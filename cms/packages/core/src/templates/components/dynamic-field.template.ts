@@ -1005,12 +1005,12 @@ function renderStructuredArrayItem(
           </div>
         </div>
         <div class="flex flex-wrap gap-2 text-xs">
-          <button type="button" data-action="move-up" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="Move item up" title="${t('Move up')}">
+          <button type="button" data-action="move-up" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="${t('Move item up')}" title="${t('Move up')}">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6l-4 4m4-4l4 4m-4-4v12"/>
             </svg>
           </button>
-          <button type="button" data-action="move-down" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="Move item down" title="${t('Move down')}">
+          <button type="button" data-action="move-down" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="${t('Move item down')}" title="${t('Move down')}">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 18l4-4m-4 4l-4-4m4 4V6"/>
             </svg>
@@ -1272,12 +1272,12 @@ function renderBlockCard(
           </div>
         </div>
         <div class="flex flex-wrap gap-2 text-xs">
-          <button type="button" data-action="move-up" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="Move block up" title="${t('Move up')}">
+          <button type="button" data-action="move-up" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="${t('Move block up')}" title="${t('Move up')}">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6l-4 4m4-4l4 4m-4-4v12"/>
             </svg>
           </button>
-          <button type="button" data-action="move-down" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="Move block down" title="${t('Move down')}">
+          <button type="button" data-action="move-down" class="inline-flex items-center justify-center rounded-md border border-zinc-200 px-2 py-1 text-zinc-600 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent" aria-label="${t('Move block down')}" title="${t('Move down')}">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 18l4-4m-4 4l-4-4m4 4V6"/>
             </svg>

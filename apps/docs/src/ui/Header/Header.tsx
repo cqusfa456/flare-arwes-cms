@@ -223,7 +223,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                         <>
                           <Animator>
                             <MenuItem active={pathname.startsWith('/docs')} animated={['flicker']}>
-                              <Link href="/docs" title="Go to Documentation">
+                              <Link href="/docs" title="前往文档">
                                 <Page /> <span className="hidden md:block">Docs</span>
                               </Link>
                             </MenuItem>
@@ -242,7 +242,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                                 }
                                 animated={['flicker']}
                               >
-                                <Link href={blogPath} title="Go to Blog">
+                                <Link href={blogPath} title="前往博客">
                                   <Post /> <span className="hidden md:block">Blog</span>
                                 </Link>
                               </MenuItem>
@@ -250,7 +250,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                           )}
                           <Animator>
                             <MenuItem active={pathname.startsWith('/demos')} animated={['flicker']}>
-                              <Link href="/demos" title="Go to Demos">
+                              <Link href="/demos" title="前往示例">
                                 <CollageFrame /> <span className="hidden md:block">Demos</span>
                               </Link>
                             </MenuItem>
@@ -261,7 +261,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                                 active={pathname.startsWith('/play')}
                                 animated={['flicker']}
                               >
-                                <a href={settings.apps.play.url} title="Go to Playground">
+                                <a href={settings.apps.play.url} title="前往演练场">
                                   <Codepen /> <span className="hidden md:block">Play</span>
                                 </a>
                               </MenuItem>
@@ -273,7 +273,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                                 active={pathname.startsWith('/perf')}
                                 animated={['flicker']}
                               >
-                                <a href={settings.apps.perf.url} title="Go to Performance">
+                                <a href={settings.apps.perf.url} title="前往性能测试">
                                   <DashboardSpeed /> <span className="hidden md:block">Perf</span>
                                 </a>
                               </MenuItem>
@@ -332,20 +332,6 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                   className="flex flex-row gap-4"
                   animated={[['x', theme.spacen(-4), 0, 0]]}
                 >
-                  <Menu className={HEIGHT_CLASS}>
-                    <Animator>
-                      <MenuItem animated={['flicker']}>
-                        <a
-                          className="normal-case"
-                          href={`https://github.com/arwes/arwes/releases/tag/v${settings.version}`}
-                          target="version"
-                          title={new Date(settings.deployTime).toString()}
-                        >
-                          v{settings.version}
-                        </a>
-                      </MenuItem>
-                    </Animator>
-                  </Menu>
                   {/*
                     The right-hand links are a CMS component too (Admin → Content →
                     组件 → links): the shell shows the menu it publishes, and falls back
@@ -397,7 +383,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                     <Animator>
                       <MenuItem animated={['flicker']}>
                         <button
-                          title={isMotionEnabled ? 'Disable motion' : 'Enable motion'}
+                          title={isMotionEnabled ? '关闭动效' : '开启动效'}
                           onClick={() => setIsMotionEnabled(!isMotionEnabled)}
                         >
                           {isMotionEnabled ? <Keyframes /> : <KeyframesMinus />}
@@ -407,7 +393,7 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                     <Animator>
                       <MenuItem animated={['flicker']}>
                         <button
-                          title={isAudioEnabled ? 'Disable audio' : 'Enable audio'}
+                          title={isAudioEnabled ? '关闭音效' : '开启音效'}
                           onClick={() => setIsAudioEnabled(!isAudioEnabled)}
                         >
                           {isAudioEnabled ? <SoundHigh /> : <SoundOff />}

@@ -84,7 +84,7 @@ const Modal = memo((props: ModalProps): JSX.Element => {
                     'text-secondary-main-4 hover:text-secondary-high-2'
                   )}
                   autoFocus
-                  title="Close"
+                  title="关闭"
                   onClick={() => {
                     onClose?.()
                     bleeps.click?.play()

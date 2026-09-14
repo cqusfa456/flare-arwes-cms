@@ -44,7 +44,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
                   ${collection.name}
                 </span>
                 ${collection.managed ? `
-                  <span class="inline-flex items-center rounded-full bg-slate-50 dark:bg-slate-500/10 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 ring-1 ring-inset ring-slate-700/10 dark:ring-slate-400/20" title="Config-managed collection (read-only in UI)">
+                  <span class="inline-flex items-center rounded-full bg-slate-50 dark:bg-slate-500/10 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 ring-1 ring-inset ring-slate-700/10 dark:ring-slate-400/20" title="${t('Config-managed collection (read-only in UI)')}">
                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                     </svg>
@@ -66,7 +66,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
           // null/undefined: the collection is not routed on its own
           if (prefix === null || prefix === undefined) {
             return `
-              <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 font-mono text-xs text-zinc-500 dark:text-zinc-400 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/10" title="Not routed on its own (grouping-only collection)">
+              <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 font-mono text-xs text-zinc-500 dark:text-zinc-400 ring-1 ring-inset ring-zinc-950/5 dark:ring-white/10" title="${t('Not routed on its own (grouping-only collection)')}">
                 not routed
               </span>
             `
@@ -162,7 +162,7 @@ export function renderCollectionsListPage(data: CollectionsListPageData): string
               <button
                 onclick="event.stopPropagation(); openSnippetModal('${collection.id}', '${(collection.display_name || collection.name).replace(/'/g, "\\'")}')"
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 ring-1 ring-zinc-200 dark:ring-zinc-700 transition-colors"
-                title="Astro code snippets"
+                title="${t('Astro code snippets')}"
               >
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>

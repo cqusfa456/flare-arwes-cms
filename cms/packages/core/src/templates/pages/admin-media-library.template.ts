@@ -219,7 +219,7 @@ export function renderMediaLibraryPage(data: MediaLibraryPageData): string {
                         id="clear-media-search"
                         class="hidden absolute right-3 top-2.5 p-0.5 rounded-full bg-zinc-200/80 dark:bg-zinc-700/80 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
                         onclick="clearMediaSearch()"
-                        title="Clear search"
+                        title="${t('Clear search')}"
                       >
                         <svg class="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
