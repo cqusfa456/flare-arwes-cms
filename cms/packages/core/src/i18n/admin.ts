@@ -50,6 +50,9 @@ export const setAdminLocale = (locale: AdminLocale): void => {
 export const getAdminLocale = (): AdminLocale => currentLocale
 
 const zhCN: Record<string, string> = {
+  'Site root': '站点根目录',
+  'Entries are published under': '条目发布在',
+  'not routed': '未占用路径',
   'Move item up': '上移',
   'Move item down': '下移',
   'Move block up': '上移该区块',
