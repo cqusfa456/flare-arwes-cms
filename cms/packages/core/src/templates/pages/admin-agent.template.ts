@@ -140,7 +140,7 @@ export function renderAgentPage(data: AgentPageData): string {
           <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Before you share it')}</h2>
         </div>
         <ul class="list-disc pl-5 space-y-1 text-sm text-zinc-600 dark:text-zinc-300">
-          <li>${t('The token can read and write every collection: it is the CMS write permission.')}</li>
+          <li>${t('The token can read and write every collection and manage sites: it acts as the administrator who minted it.')}</li>
           <li>${t('Content is published to the sites it is assigned to; a site shows the change once it has been built again.')}</li>
           <li>${t('Do not commit the link to a public repository, and refresh it here if it may have leaked.')}</li>
         </ul>

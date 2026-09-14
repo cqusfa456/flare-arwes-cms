@@ -179,10 +179,19 @@ export const requireAuth = () => {
           const result = await validateApiToken(db, apiKey)
           if (result.valid && result.tokenRecord) {
             const tokenRecord = result.tokenRecord
+
+            // A token acts as the user who minted it, so an admin's token can reach the
+            // admin routes (sites, tokens, settings) and an editor's cannot. Falling back
+            // to `viewer` keeps a token whose user was deleted from widening anything.
+            const owner = await db
+              .prepare('SELECT role, email FROM users WHERE id = ? LIMIT 1')
+              .bind(tokenRecord.user_id)
+              .first<{ role: string | null; email: string | null }>()
+
             c.set('user', {
               userId: tokenRecord.user_id,
-              email: 'api-token@system',
-              role: 'viewer',
+              email: owner?.email ?? 'api-token@system',
+              role: owner?.role || 'viewer',
               exp: tokenRecord.expires_at
                 ? Math.floor(tokenRecord.expires_at / 1000)
                 : Math.floor(Date.now() / 1000) + 86400,
@@ -192,6 +201,23 @@ export const requireAuth = () => {
             if (typeof (c as any).set === 'function') {
               try { (c as any).set('apiToken', tokenRecord) } catch { /* ignore */ }
             }
+
+            // A read-only token is what its name says: reads are fine, anything that
+            // changes state is refused. Nothing enforced this before, so the flag was
+            // decoration; a build's content token relies on being read-only.
+            const method = c.req.method.toUpperCase()
+            const readsOnly = method === 'GET' || method === 'HEAD' || method === 'OPTIONS'
+            if (tokenRecord.is_read_only && !readsOnly) {
+              return c.json(
+                {
+                  error:
+                    'This API token is read-only: it can read but not create, update or delete. ' +
+                    'Mint a read-write token in Admin → API Tokens (or use the agent link) instead.'
+                },
+                403
+              )
+            }
+
             return await next()
           }
         }

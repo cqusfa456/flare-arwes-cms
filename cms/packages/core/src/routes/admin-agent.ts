@@ -136,10 +136,13 @@ adminAgentRoutes.post('/api/link', async (c) => {
   const created = await createApiToken(c.env.DB, {
     name: TOKEN_NAME,
     userId: user!.userId,
-    // All collections, writable: an agent that can only read cannot do the work the
-    // link is for. It can be revoked from this page at any time.
+    // All collections, writable: an agent that can only read cannot do the work the link
+    // is for — and it has to be able to manage sites, which is an admin route. The token
+    // acts as the user who minted it (see requireAuth), so an admin link can too. It can
+    // be revoked from this page at any time.
     allowedCollections: null,
-    expiresAt: null
+    expiresAt: null,
+    isReadOnly: false
   })
 
   await settings.setSetting(SETTINGS_CATEGORY, TOKEN_KEY, created.tokenValue)

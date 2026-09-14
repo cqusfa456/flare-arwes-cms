@@ -95,7 +95,10 @@ export async function buildAgentOnboarding(
   -H "Content-Type: application/json" \\
   -d '{"collectionId":"<collection-id>","title":"标题","slug":"slug","status":"published","siteIds":["<site-id>"],"data":{"title":"标题","slug":"slug","content":"正文"}}'`,
     `curl -s -X POST ${input.baseUrl}/admin/sync/api/approve-all \\
-  -H "Authorization: Bearer ${input.token}"`
+  -H "Authorization: Bearer ${input.token}"`,
+    `# 站点接口走后台路由，用 X-API-Key（下面是读站点列表）
+curl -s ${input.baseUrl}/admin/sites/api/sites \\
+  -H "X-API-Key: ${input.token}"`
   ]
 
   return `# Sci-Fi CMS · Agent 接入
@@ -108,6 +111,7 @@ export async function buildAgentOnboarding(
 - CMS 地址：${input.baseUrl}
 - 访问令牌：\`${input.token}\`
 - 认证方式：每个请求都带上 \`Authorization: Bearer ${input.token}\`
+- 令牌权限：**读写**（全部集合），并且以创建它的管理员身份调用后台接口——**包括站点管理**。
 - 后台（人类用）：\`${input.baseUrl}/admin\`
 - 版本：${input.version}
 
@@ -133,6 +137,10 @@ ${collectionLines.join('\n') || '- （还没有集合）'}
 | 系统信息 | \`GET ${input.baseUrl}/api/system/info\` | 名称、版本、能力开关（内容/媒体/缓存/存储后端）。 |
 | 健康检查 | \`GET ${input.baseUrl}/api/system/health\` | 数据库、缓存、存储的可用性。 |
 | 站点与其发布方式 | \`GET ${input.baseUrl}/api/site\`（带 \`X-Site\`）· \`GET ${input.baseUrl}/admin/sites/api/sites\` | 站点模式、主站、内容路由。 |
+| 站点管理（增删改） | \`POST ${input.baseUrl}/admin/sites/api/sites\`、\`PATCH\` / \`DELETE ${input.baseUrl}/admin/sites/api/sites/:id\` | 注册站点、改名称/模式/主站/内容路由、注销站点。后台路由：用 \`X-API-Key\` 调用。 |
+| 站点构建 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/build\` | 触发该站点构建；路径模式的站点会被拒绝（要构建它的主站）。 |
+| 构建配置 / 环境变量 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/sync-build-config\`、\`GET\` / \`POST .../build-env\` | 把构建配置与变量推送到 Cloudflare。 |
+| 站点域名 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/domains\`、\`DELETE .../domains/:hostname\`、\`POST .../domains/refresh\`、\`POST .../domains/primary\` | 绑定、解绑、刷新自定义域名。 |
 | 待发布队列 | \`GET ${input.baseUrl}/admin/sync/api/pending\` | 后台编辑产生的待发布修订（含 diff）。 |
 
 调用这些地址时同样带上令牌：\`/api/*\` 用 \`Authorization: Bearer ${input.token}\`；\`/admin/*\` 用 \`X-API-Key: ${input.token}\`（后台页面走 Cookie 会话，脚本请用 API Key）。
@@ -181,7 +189,8 @@ ${examples.join('\n\n')}
 
 ## 6. 注意
 
-- 这枚令牌拥有全部集合的读写权限，等同 CMS 的写权限；链接泄露即等于凭据泄露。管理员可以在 后台 → Agent 接入 里刷新或吊销它（吊销后这个链接立即失效）。
+- 这枚令牌是**读写令牌**，权限等同创建它的管理员（含站点管理）；链接泄露即等于凭据泄露。管理员可以在 后台 → Agent 接入 里刷新或吊销它（吊销后这个链接立即失效）。
+- 只读令牌（可在 后台 → API 令牌 里创建）只允许 GET：任何写操作都会返回 403。
 - 不要把这枚令牌写进公开仓库或前端代码。
 - 后台页面有 CSRF 保护，脚本调用请走上面的 \`/api/*\` 与 \`/admin/*/api/*\` 接口，不要模拟表单提交。
 `

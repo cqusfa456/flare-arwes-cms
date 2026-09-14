@@ -45,6 +45,12 @@ export interface CreateApiTokenParams {
   expiresAt: number | null
   /** Bind the token to one site; reads are then locked to that site. */
   siteId?: string | null
+  /**
+   * Read-only unless this is `false`. Every call the token makes on a state-changing
+   * method is refused with 403 while it is read-only, which is what the flag has always
+   * claimed; a deployment's build token stays read-only.
+   */
+  isReadOnly?: boolean
 }
 
 export interface CreateApiTokenResult {
@@ -113,12 +119,14 @@ export async function createApiToken(
     ? JSON.stringify(params.allowedCollections)
     : null
 
+  const isReadOnly = params.isReadOnly !== false
+
   await db.prepare(`
     INSERT INTO api_tokens (
       id, name, token, token_hash, token_prefix,
       user_id, permissions, allowed_collections,
       is_read_only, site_id, expires_at, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     tokenId,
     params.name,
@@ -126,8 +134,9 @@ export async function createApiToken(
     tokenHash,
     tokenPrefix,
     params.userId,
-    'read', // read-only permission string
+    isReadOnly ? 'read' : 'write',
     allowedCollectionsStr,
+    isReadOnly ? 1 : 0,
     params.siteId ?? null,
     params.expiresAt,
     now

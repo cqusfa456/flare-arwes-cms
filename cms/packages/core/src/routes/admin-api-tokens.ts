@@ -2,7 +2,8 @@ import { t } from '../i18n/admin'
 /**
  * Admin API Token Management Routes
  *
- * Provides UI for creating and revoking read-only API tokens with collection scoping.
+ * Provides UI for creating and revoking API tokens (read-only or read-write) with
+ * collection scoping.
  * Token values are shown ONCE at creation — only the prefix is stored/displayed after.
  */
 
@@ -83,7 +84,7 @@ adminApiTokensRoutes.get('/', async (c) => {
         <div class="flex items-center justify-between mb-6">
           <div>
             <h1 class="text-2xl font-semibold text-white">${t('API Tokens')}</h1>
-            <p class="text-sm text-zinc-400 mt-1">Read-only tokens for headless API access. Scoped to specific collections.</p>
+            <p class="text-sm text-zinc-400 mt-1">Tokens for headless API access, read-only or read-write, scoped to specific collections.</p>
           </div>
           <a href="/admin/api-tokens/create"
              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
@@ -118,7 +119,7 @@ adminApiTokensRoutes.get('/', async (c) => {
           <h3 class="text-sm font-medium text-zinc-300 mb-2">How to use API tokens</h3>
           <p class="text-xs text-zinc-400 mb-2">Include the token in your request headers:</p>
           <pre class="text-xs text-blue-300 bg-zinc-900 px-3 py-2 rounded font-mono overflow-x-auto">X-API-Key: st_your_token_here</pre>
-          <p class="text-xs text-zinc-500 mt-2">Tokens are read-only and scoped to specific collections. Write operations (POST, PUT, DELETE) will be rejected.</p>
+          <p class="text-xs text-zinc-500 mt-2">A read-only token rejects write operations (POST, PUT, DELETE) with 403; a read-write token may do anything the user who created it can.</p>
         </div>
       </div>
     `
@@ -186,6 +187,17 @@ adminApiTokensRoutes.get('/create', async (c) => {
             <p class="text-xs text-zinc-500 mt-1">Descriptive name to identify where this token is used.</p>
           </div>
 
+          <!-- Access -->
+          <div>
+            <label for="access" class="block text-sm font-medium text-zinc-300 mb-1.5">Access</label>
+            <select id="access" name="access"
+                    class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+              <option value="read">Read-only — GET requests only</option>
+              <option value="write">Read and write — create, update and delete</option>
+            </select>
+            <p class="text-xs text-zinc-500 mt-1">A write token is as powerful as the user who created it; it can also call the admin API it is allowed to reach.</p>
+          </div>
+
           <!-- Expiration -->
           <div>
             <label for="expiresAt" class="block text-sm font-medium text-zinc-300 mb-1.5">Expiration</label>
@@ -248,6 +260,7 @@ adminApiTokensRoutes.post('/', async (c) => {
     const name = (formData.get('name') as string | null)?.trim()
     const expiresAtStr = formData.get('expiresAt') as string | null
     const allowedCollectionsRaw = formData.getAll('allowedCollections') as string[]
+    const isReadOnly = formData.get('access') !== 'write'
 
     if (!name) {
       return c.html(renderAdminLayoutCatalyst({
@@ -275,6 +288,7 @@ adminApiTokensRoutes.post('/', async (c) => {
       userId: user!.userId,
       allowedCollections,
       expiresAt,
+      isReadOnly
     })
 
     const scopeDisplay = allowedCollections
@@ -345,7 +359,7 @@ adminApiTokensRoutes.post('/', async (c) => {
           </div>
           <div class="px-4 py-3 flex items-center justify-between">
             <span class="text-sm text-zinc-400">${t('Permissions')}</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20">Read-only</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${isReadOnly ? 'bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20' : 'bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-400/20'}">${isReadOnly ? t('Read-only') : t('Read and write')}</span>
           </div>
         </div>
 
