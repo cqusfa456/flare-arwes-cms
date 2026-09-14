@@ -76,9 +76,16 @@ const agentPrompt = (url: string): string =>
 adminAgentRoutes.get('/', async (c) => {
   const user = c.get('user')
   const state = await readState(c)
+  const origin = new URL(c.req.url).origin
 
   return c.html(
     renderAgentPage({
+      docs: {
+        openapi: `${origin}/api`,
+        reference: `${origin}/admin/api-reference`,
+        info: `${origin}/api/system/info`,
+        health: `${origin}/api/system/health`
+      },
       link: state.token && state.tokenIsValid ? onboardingUrl(c, state.token) : null,
       prompt: state.token && state.tokenIsValid ? agentPrompt(onboardingUrl(c, state.token)) : null,
       tokenPrefix: state.tokenPrefix,

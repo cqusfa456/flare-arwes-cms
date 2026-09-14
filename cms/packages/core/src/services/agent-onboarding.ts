@@ -108,7 +108,6 @@ export async function buildAgentOnboarding(
 - CMS 地址：${input.baseUrl}
 - 访问令牌：\`${input.token}\`
 - 认证方式：每个请求都带上 \`Authorization: Bearer ${input.token}\`
-- API 规范（OpenAPI）：\`GET ${input.baseUrl}/api\`
 - 后台（人类用）：\`${input.baseUrl}/admin\`
 - 版本：${input.version}
 
@@ -122,7 +121,23 @@ ${siteLines.join('\n') || '- （还没有注册站点）'}
 
 ${collectionLines.join('\n') || '- （还没有集合）'}
 
-## 2. 必须先知道的规则
+## 2. 其他文档地址
+
+这一页只是快速上手；细节按需去读下面这些地址，不必在这一页里全写完。
+
+| 文档 | 地址 | 说明 |
+| --- | --- | --- |
+| API 参考（最全） | \`${input.baseUrl}/admin/api-reference\` | 逐条列出所有端点的方法、路径、参数与说明（HTML）。后台路由：用 \`X-API-Key: ${input.token}\` 访问，不要用 Cookie。 |
+| OpenAPI 规范 | \`${input.baseUrl}/api\` | 机器可读的 OpenAPI 3.0.0（JSON）：核心内容 API 的路径与 schema，适合程序化解析。 |
+| 集合与字段定义 | \`GET ${input.baseUrl}/api/collections\` | 每个集合的 \`name\`、\`displayName\`、\`urlPrefix\` 和 \`schema\`（字段名、类型、是否必填）——写 \`data\` 之前先看它。 |
+| 系统信息 | \`GET ${input.baseUrl}/api/system/info\` | 名称、版本、能力开关（内容/媒体/缓存/存储后端）。 |
+| 健康检查 | \`GET ${input.baseUrl}/api/system/health\` | 数据库、缓存、存储的可用性。 |
+| 站点与其发布方式 | \`GET ${input.baseUrl}/api/site\`（带 \`X-Site\`）· \`GET ${input.baseUrl}/admin/sites/api/sites\` | 站点模式、主站、内容路由。 |
+| 待发布队列 | \`GET ${input.baseUrl}/admin/sync/api/pending\` | 后台编辑产生的待发布修订（含 diff）。 |
+
+调用这些地址时同样带上令牌：\`/api/*\` 用 \`Authorization: Bearer ${input.token}\`；\`/admin/*\` 用 \`X-API-Key: ${input.token}\`（后台页面走 Cookie 会话，脚本请用 API Key）。
+
+## 3. 必须先知道的规则
 
 1. **内容归属就是发布控制。** 一条内容发布在 \`siteIds\` 列出的站点上；数组为空 = 不属于任何站点 = **任何站点都读不到**（后台仍能看到它）。要让所有站点都能读到，就把每个站点都列进去。
 2. **站点有两种模式。** \`独立模式\` 自己部署、自己发布；\`路径模式\` 不部署，内容由它的「主站」按前缀发布（例如主站发布 \`/blog\`、\`/docs\`）。给路径模式站点写内容时，记得同时归属它的主站，否则主站构建看不到。
@@ -132,7 +147,7 @@ ${collectionLines.join('\n') || '- （还没有集合）'}
 6. **\`status\` 取值**：\`draft\` / \`published\`（还有 \`scheduled\`、\`deleted\` 由后台使用）。首次发布时会自动写入 \`published_at\`。
 7. **slug 一经发布不可修改**，并且在一个集合内唯一。
 
-## 3. 常用接口
+## 4. 常用接口（速查）
 
 | 用途 | 接口 |
 | --- | --- |
@@ -156,7 +171,7 @@ ${examples.join('\n\n')}
 \`POST /api/content\` 的字段：\`collectionId\`、\`title\`、\`slug\`（省略则由标题生成）、\`status\`、\`data\`（集合自己的字段，键名见集合的 \`schema\`）、\`siteIds\`（字符串数组，站点 id 或 slug 都可以）。
 \`PUT /api/content/:id\` 只更新传了的字段，\`siteIds\` 传了就整体替换。
 
-## 4. 建议的流程
+## 5. 建议的流程
 
 1. \`GET /api/collections\` 拿到集合和它们的 \`urlPrefix\`；后台 \`/admin/sites/api/sites\` 拿到站点 id/slug（这两个接口用同一个令牌即可）。
 2. \`GET /api/collections/:name/content\`（带 \`X-Site\`）看现有内容，避免重复创建、也用来照抄 \`data\` 的字段形状。
@@ -164,7 +179,7 @@ ${examples.join('\n\n')}
 4. 需要让网站更新时：\`POST /admin/sites/api/sites/:id/build\`；如果修改走的是后台表单（进入待发布队列），则 \`POST /admin/sync/api/approve-all\`。
 5. 改完读一遍确认：\`GET /api/content/:id\`（带 \`X-Site\`）应该能读到；读不到说明 \`siteIds\` 没包含那个站点。
 
-## 5. 注意
+## 6. 注意
 
 - 这枚令牌拥有全部集合的读写权限，等同 CMS 的写权限；链接泄露即等于凭据泄露。管理员可以在 后台 → Agent 接入 里刷新或吊销它（吊销后这个链接立即失效）。
 - 不要把这枚令牌写进公开仓库或前端代码。

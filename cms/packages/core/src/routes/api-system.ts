@@ -125,7 +125,8 @@ apiSystemRoutes.get('/info', (c) => {
       api: '/api',
       auth: '/auth',
       health: '/api/system/health',
-      docs: '/docs'
+      openapi: '/api',
+      docs: '/admin/api-reference'
     },
     features: {
       content: true,

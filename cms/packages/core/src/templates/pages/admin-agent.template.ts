@@ -8,7 +8,7 @@
 
 import { renderAdminLayoutCatalyst } from '../layouts/admin-layout-catalyst.template'
 import { t } from '../../i18n/admin'
-import { icon, Bot, Copy, ExternalLink, RefreshCw, Shield } from '../icons'
+import { icon, Bot, BookOpen, Copy, ExternalLink, RefreshCw, Shield } from '../icons'
 
 export interface AgentPageData {
   /** The onboarding URL, when a usable token exists. */
@@ -22,6 +22,8 @@ export interface AgentPageData {
   needsRotation: boolean
   /** The document itself, shown as a preview. */
   document: string | null
+  /** Where the rest of the CMS documentation lives. */
+  docs: { openapi: string; reference: string; info: string; health: string }
   user?: { name: string; email: string; role: string }
   version?: string
 }
@@ -145,6 +147,35 @@ export function renderAgentPage(data: AgentPageData): string {
       </div>
 
       ${linkBox}
+
+      <div class="${CARD} p-6 space-y-3">
+        <div class="flex items-center gap-2">
+          ${icon(BookOpen, 'h-5 w-5 text-teal-600 dark:text-teal-400')}
+          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Other documentation')}</h2>
+        </div>
+        <p class="text-sm text-zinc-600 dark:text-zinc-300">
+          ${t('The link above is the quick start. The details live in these pages, and the agent can read them with the same token.')}
+        </p>
+        <ul class="space-y-2 text-sm">
+          <li class="flex flex-wrap items-center gap-2">
+            <a href="${escapeHtml(data.docs.reference)}" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${t('API reference')}</a>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Every endpoint, with its method, path and description. Scripts read it with X-API-Key.')}</span>
+          </li>
+          <li class="flex flex-wrap items-center gap-2">
+            <a href="${escapeHtml(data.docs.openapi)}" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${t('OpenAPI specification')}</a>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Machine-readable paths and schemas of the content API.')}</span>
+          </li>
+          <li class="flex flex-wrap items-center gap-2">
+            <a href="${escapeHtml(data.docs.info)}" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${t('System info')}</a>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Name, version and the capabilities this deployment has turned on.')}</span>
+          </li>
+          <li class="flex flex-wrap items-center gap-2">
+            <a href="${escapeHtml(data.docs.health)}" target="_blank" rel="noopener noreferrer" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">${t('Health check')}</a>
+            <span class="text-zinc-500 dark:text-zinc-400">${t('Database, cache and storage availability.')}</span>
+          </li>
+        </ul>
+      </div>
+
       ${document}
     </div>
   `
