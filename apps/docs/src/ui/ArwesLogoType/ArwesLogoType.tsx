@@ -34,7 +34,7 @@ const ArwesLogoType = memo((props: ArwesLogoTypeProps): ReactElement => {
       style={{
         filter: 'drop-shadow(0 0 8px hsla(180, 100%, 70%, 0.5))'
       }}
-      viewBox="0 0 2504 400"
+      viewBox="0 0 2480 400"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       animated={[
@@ -90,7 +90,7 @@ const ArwesLogoType = memo((props: ArwesLogoTypeProps): ReactElement => {
           stroke-linejoin="miter"
         />
       </g>
-      <g transform="translate(854, 0)">
+      <g transform="translate(830, 0)">
         <path
           d="M39 0V322L78 361H312L351 322V0"
           fill="none"
@@ -106,7 +106,7 @@ const ArwesLogoType = memo((props: ArwesLogoTypeProps): ReactElement => {
           stroke-linejoin="miter"
         />
       </g>
-      <g transform="translate(-556.66, 0)">
+      <g transform="translate(-580.66, 0)">
         <path
           d="M1833.69 397.87L1859.26 336.004H2066.26C2078.59 336.004 2088.6 333.367 2095.78 328.195C2104.47 322.414 2109.02 311.46 2109.22 295.639C2109.62 273.124 2099.01 256.998 2077.79 247.465C2060.6 239.554 2033.11 232.556 1996.12 226.471C1959.43 220.487 1928.6 211.562 1904.34 199.797C1884.43 190.365 1869.27 177.789 1859.26 162.678C1849.26 147.566 1844.2 129.209 1844.1 108.316C1844.1 76.2678 1856.53 49.8986 1880.99 30.0203C1903.84 11.4605 1932.14 2.02844 1965.09 2.02844H2170.47L2144.9 63.8946H1970.55C1957.51 63.8946 1946.89 68.0528 1939.11 76.2678C1931.33 84.28 1927.39 95.0305 1927.39 108.316C1927.39 127.586 1941.44 142.495 1969.13 152.637H1969.23H1969.33C1985.51 156.795 2010.07 161.562 2042.21 166.633C2074.15 171.704 2102.75 179.817 2127.21 190.872C2151.06 201.623 2169.16 215.923 2180.88 233.367C2192.61 250.811 2198.37 272.008 2197.96 296.248C2197.46 330.02 2184.42 356.187 2159.25 374.037C2136.61 389.757 2109.02 397.769 2077.18 397.769H1833.69V397.87Z"
           fill="#00FFFF"
@@ -116,7 +116,7 @@ const ArwesLogoType = memo((props: ArwesLogoTypeProps): ReactElement => {
           fill="#66FFFF"
         />
       </g>
-      <g transform="translate(207.32, 0)">
+      <g transform="translate(183.32, 0)">
         <path
           d="M1467.7 397.87V2.02844H1814.49L1788.92 63.8946H1545.73V397.769H1467.7V397.87Z M1557.86 230.832L1589.09 168.966H1811.76L1786.19 230.832H1557.86Z"
           fill="#00FFFF"
@@ -126,7 +126,7 @@ const ArwesLogoType = memo((props: ArwesLogoTypeProps): ReactElement => {
           fill="#66FFFF"
         />
       </g>
-      <g transform="translate(2051.66, 0)">
+      <g transform="translate(2027.66, 0)">
         <path
           d="M365.182 397.87L226.204 108.925L114.922 338.641H295.036L325.358 397.87H3.33545L199.622 2.02844H252.484L448.77 397.87H365.182Z"
           fill="#00FFFF"
