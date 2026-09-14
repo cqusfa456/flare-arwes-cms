@@ -86,7 +86,12 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
 
   for (const key of wanted) {
     const match = entries.find((entry: any) => String(entry.data.key) === key)
-    if (match && match.data.items !== undefined && match.data.items !== null && match.data.items !== '') {
+    if (
+      match &&
+      match.data.items !== undefined &&
+      match.data.items !== null &&
+      match.data.items !== ''
+    ) {
       return parseItems(match.data.items)
     }
   }
