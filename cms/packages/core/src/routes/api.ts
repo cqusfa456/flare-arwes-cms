@@ -360,7 +360,7 @@ apiRoutes.get('/', (c) => {
           description: 'Creates a new content item',
           operationId: 'createContent',
           tags: ['Content'],
-          security: [{ bearerAuth: [] }],
+          security: [{ apiKeyAuth: [] }, { bearerAuth: [] }],
           requestBody: {
             required: true,
             content: {
@@ -411,7 +411,7 @@ apiRoutes.get('/', (c) => {
           description: 'Updates an existing content item',
           operationId: 'updateContent',
           tags: ['Content'],
-          security: [{ bearerAuth: [] }],
+          security: [{ apiKeyAuth: [] }, { bearerAuth: [] }],
           parameters: [
             {
               name: 'id',
@@ -432,7 +432,7 @@ apiRoutes.get('/', (c) => {
           description: 'Deletes a content item',
           operationId: 'deleteContent',
           tags: ['Content'],
-          security: [{ bearerAuth: [] }],
+          security: [{ apiKeyAuth: [] }, { bearerAuth: [] }],
           parameters: [
             {
               name: 'id',
@@ -489,10 +489,19 @@ apiRoutes.get('/', (c) => {
     },
     components: {
       securitySchemes: {
+        // API tokens travel in `X-API-Key`; `Authorization: Bearer` is for a user
+        // session (JWT) and does not authenticate a token.
+        apiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key',
+          description: 'API token; the same header carries it on /api/* and /admin/*'
+        },
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'JWT'
+          bearerFormat: 'JWT',
+          description: 'User session token (admin login), not an API token'
         }
       },
       schemas: {

@@ -229,6 +229,18 @@ export const requireAuth = () => {
       // Try to get token from Authorization header
       let token = c.req.header('Authorization')?.replace('Bearer ', '')
 
+      // An API token in `Authorization` is a common mistake — the header is for a user
+      // session. Saying so beats the bare 401 that means "your session expired".
+      if (token && token.startsWith('st_')) {
+        return c.json(
+          {
+            error:
+              'API tokens are sent in the `X-API-Key` header, not in `Authorization: Bearer` (that header is for a user session).'
+          },
+          401
+        )
+      }
+
       // If no header token, try cookie
       if (!token) {
         token = getCookie(c, 'auth_token')

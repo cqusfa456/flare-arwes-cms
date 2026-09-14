@@ -34,7 +34,7 @@ export type SiteScopeMode =
   | 'all'
   /** Identified site + shared content. */
   | 'site+shared'
-  /** Only shared content (no site identified on a multi-tenant deployment). */
+  /** Nothing: no site was identified on a deployment that publishes per site. */
   | 'shared-only'
 
 export interface ContentSiteScope {
@@ -151,7 +151,7 @@ export async function resolveContentSiteScope(
       mode: 'shared-only',
       unknown: false,
       reason:
-        'The API token is pinned to a site that no longer exists; only shared content is visible'
+        'The API token is pinned to a site that no longer exists; nothing is published to it'
     }
   }
 
@@ -184,7 +184,7 @@ export async function resolveContentSiteScope(
       source,
       mode: 'shared-only',
       unknown: true,
-      reason: `Site "${requested}" is not registered (or is inactive); only shared content is visible`
+      reason: `Site "${requested}" is not registered (or is inactive); nothing is published to it`
     }
   }
 
@@ -198,7 +198,7 @@ export async function resolveContentSiteScope(
       mode: 'shared-only',
       unknown: false,
       reason:
-        'No site identified (send X-Site or ?site=); only shared content is visible because this deployment has registered sites'
+        'No site identified (send X-Site or ?site=): content is published to the sites it is assigned to, so this request reads nothing'
     }
   }
 

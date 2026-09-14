@@ -86,16 +86,16 @@ export async function buildAgentOnboarding(
 
   const examples = [
     `curl -s ${input.baseUrl}/api/collections \\
-  -H "Authorization: Bearer ${input.token}"`,
+  -H "X-API-Key: ${input.token}"`,
     `curl -s "${input.baseUrl}/api/collections/pages/content?limit=50" \\
-  -H "Authorization: Bearer ${input.token}" \\
+  -H "X-API-Key: ${input.token}" \\
   -H "X-Site: ${sites[0]?.slug ?? '<site-slug>'}"`,
     `curl -s -X POST ${input.baseUrl}/api/content \\
-  -H "Authorization: Bearer ${input.token}" \\
+  -H "X-API-Key: ${input.token}" \\
   -H "Content-Type: application/json" \\
   -d '{"collectionId":"<collection-id>","title":"标题","slug":"slug","status":"published","siteIds":["<site-id>"],"data":{"title":"标题","slug":"slug","content":"正文"}}'`,
     `curl -s -X POST ${input.baseUrl}/admin/sync/api/approve-all \\
-  -H "Authorization: Bearer ${input.token}"`,
+  -H "X-API-Key: ${input.token}"`,
     `# 站点接口走后台路由，用 X-API-Key（下面是读站点列表）
 curl -s ${input.baseUrl}/admin/sites/api/sites \\
   -H "X-API-Key: ${input.token}"`
@@ -110,7 +110,9 @@ curl -s ${input.baseUrl}/admin/sites/api/sites \\
 
 - CMS 地址：${input.baseUrl}
 - 访问令牌：\`${input.token}\`
-- 认证方式：每个请求都带上 \`Authorization: Bearer ${input.token}\`
+- 认证方式：**每个请求都带 \`X-API-Key: ${input.token}\`**（内容接口与后台接口都是这个头）。
+- 写接口（\`POST\`/\`PUT\`/\`DELETE\`/\`PATCH\`）**只认 \`X-API-Key\`**：把令牌放进 \`Authorization: Bearer\` 会返回 401——那个头是给后台登录会话的 JWT 用的。
+- 读内容**必须带 \`X-Site: <站点 slug>\`**（除非令牌本身绑定到某个站点）：不带站点时返回 **0 条**，而不是报错。
 - 令牌权限：**读写**（全部集合），并且以创建它的管理员身份调用后台接口——**包括站点管理**。
 - 后台（人类用）：\`${input.baseUrl}/admin\`
 - 版本：${input.version}
@@ -144,7 +146,7 @@ ${collectionLines.join('\n') || '- （还没有集合）'}
 | 站点预设 | \`GET ${input.baseUrl}/admin/sites/api/presets\`、\`POST .../presets/import\` | Arwes 预设与一键导入。 |
 | 待发布队列 | \`GET ${input.baseUrl}/admin/sync/api/pending\` | 后台编辑产生的待发布修订（含 diff）。 |
 
-调用这些地址时同样带上令牌：\`/api/*\` 用 \`Authorization: Bearer ${input.token}\`；\`/admin/*\` 用 \`X-API-Key: ${input.token}\`（后台页面走 Cookie 会话，脚本请用 API Key）。
+调用这些地址时同样带上令牌：**一律用 \`X-API-Key: ${input.token}\`**（\`/api/*\` 的读接口不校验身份，但只有带上它才会按站点返回内容；\`/api/*\` 的写接口和 \`/admin/*\` 都必须用它）。\`Authorization: Bearer\` 只用于后台登录会话的 JWT。
 
 ## 3. 必须先知道的规则
 
@@ -184,7 +186,7 @@ ${examples.join('\n\n')}
 
 1. \`GET /api/collections\` 拿到集合和它们的 \`urlPrefix\`；后台 \`/admin/sites/api/sites\` 拿到站点 id/slug（这两个接口用同一个令牌即可）。
 2. \`GET /api/collections/:name/content\`（带 \`X-Site\`）看现有内容，避免重复创建、也用来照抄 \`data\` 的字段形状。
-3. 写内容：\`POST /api/content\` 或 \`PUT /api/content/:id\`，把 \`siteIds\` 写成「该内容应该出现在哪些站点」。
+3. 写内容：\`POST /api/content\` 或 \`PUT /api/content/:id\`，把 \`siteIds\` 写成「该内容应该出现在哪些站点」（读完再用带 \`X-Site\` 的读接口核对）。
 4. 需要让网站更新时：\`POST /admin/sites/api/sites/:id/build\`；如果修改走的是后台表单（进入待发布队列），则 \`POST /admin/sync/api/approve-all\`。
 5. 改完读一遍确认：\`GET /api/content/:id\`（带 \`X-Site\`）应该能读到；读不到说明 \`siteIds\` 没包含那个站点。
 
