@@ -15,6 +15,7 @@ import type {
   SciFiContentItem,
   SciFiD1Options,
   SciFiCollectionInfo,
+  SciFiSiteContentMode,
   SciFiSiteRouting
 } from './types'
 
@@ -260,8 +261,9 @@ export class SciFiD1Client {
       provider: string
       cf_project_name: string | null
       content_routes: string | null
+      content_mode: string | null
     }>(
-      `SELECT id, slug, name, provider, cf_project_name, content_routes
+      `SELECT id, slug, name, provider, cf_project_name, content_routes, content_mode
        FROM sites
        WHERE is_active = 1 AND (slug = ? OR id = ?)
        LIMIT 1`,
@@ -279,8 +281,9 @@ export class SciFiD1Client {
       provider: string
       cf_project_name: string | null
       content_routes: string | null
+      content_mode: string | null
     }>(
-      `SELECT id, slug, provider, cf_project_name, content_routes
+      `SELECT id, slug, provider, cf_project_name, content_routes, content_mode
        FROM sites
        WHERE is_active = 1`
     )
@@ -303,6 +306,17 @@ export class SciFiD1Client {
     }
 
     const contentRoutes = parseContentRoutes(current.content_routes)
+    // Rows that predate migration 051 carry no mode: a site with content routes
+    // was a content-only host, one without them built the website.
+    const modeOf = (row: { content_routes: string | null; content_mode: string | null }) =>
+      row.content_mode === 'paths' || row.content_mode === 'standalone'
+        ? (row.content_mode as SciFiSiteContentMode)
+        : parseContentRoutes(row.content_routes) === null
+          ? 'paths'
+          : 'standalone'
+    const contentMode = modeOf(current)
+    const publishesWebsite = (row: { content_routes: string | null; content_mode: string | null }) =>
+      modeOf(row) === 'paths' || parseContentRoutes(row.content_routes) === null
     const published = new Set(Object.keys(contentRoutes ?? {}))
 
     const external: Record<string, string> = {}
@@ -322,23 +336,21 @@ export class SciFiD1Client {
       }
     }
 
-    // The website itself is built by the active site that does not declare content
-    // routes; a content-only site links back to it. Several sites can qualify (the
-    // same website deployed as a Worker and to Pages), and a Worker with no custom
-    // domain has no host to link to, so the first candidate with a resolvable base
-    // URL wins.
+    // The website itself is built by an active site that publishes the website: a
+    // `paths` site, with or without content-route overrides. A content-only site
+    // links back to it. Several sites can qualify (the same website deployed as a
+    // Worker and to Pages), and a Worker with no custom domain has no host to link
+    // to, so the first candidate with a resolvable base URL wins.
     const appSite = siteRows.find(
-      (row) =>
-        row.id !== current.id &&
-        parseContentRoutes(row.content_routes) === null &&
-        baseUrlOf(row) !== null
+      (row) => row.id !== current.id && publishesWebsite(row) && baseUrlOf(row) !== null
     )
-    const appBaseUrl = contentRoutes === null || !appSite ? null : baseUrlOf(appSite)
+    const appBaseUrl = contentMode === 'standalone' && appSite ? baseUrlOf(appSite) : null
 
     return {
       slug: current.slug,
       name: current.name,
       domain: domainRows.find((row) => row.site_id === current.id)?.hostname ?? null,
+      contentMode,
       contentRoutes,
       external,
       appBaseUrl

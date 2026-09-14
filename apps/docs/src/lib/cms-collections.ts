@@ -5,11 +5,12 @@
  *
  * 1. Each collection records the path its entries are published under
  *    (`collections.url_prefix`, editable at Admin → Collections).
- * 2. A site (Admin → Sites) may declare `content_routes`: the collections it
- *    publishes itself, and at which prefix. A site without it is the "app site"
- *    and builds the whole website; a site with it is a content-only host, so the
- *    same repository can build e.g. a blog subdomain that publishes only the blog
- *    at its own root.
+ * 2. A site (Admin → Sites) declares a publishing mode and, with it,
+ *    `content_routes`: the collections it names and the prefix each is published
+ *    under. A `paths` site publishes the website itself — its own routes and every
+ *    collection, at the collection's own prefix unless overridden (`/blog`,
+ *    `/docs`, ...). A `standalone` site is a host of its own: it publishes only the
+ *    collections it names, at its own root.
  *
  * Everything the build generates comes from here, so no path is hardcoded.
  */
@@ -24,12 +25,21 @@ export type SiteRoutingInfo = {
   /** Site slug this build belongs to, when the CMS knows it. */
   slug: string | null
 
+  /** How the site publishes; see the CMS's `SiteContentMode`. */
+  mode: 'paths' | 'standalone'
+
   /**
-   * Collections this site publishes, with their prefix on this site. `null` for
-   * the app site, which publishes the website plus every routed collection at the
-   * collection's own prefix.
+   * Collections this site publishes, with their prefix on this site. `null` for a
+   * site that publishes the website; {@link overrides} then carries the prefixes it
+   * changes, if any.
    */
   routes: Map<string, string> | null
+
+  /**
+   * Prefixes a `paths` site changes for the collections it names; empty otherwise.
+   * A collection missing here keeps its own `url_prefix`.
+   */
+  overrides: Map<string, string>
 
   /** Absolute URLs of collections published on another site, by collection name. */
   external: Map<string, string>
@@ -59,23 +69,37 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
         )
         return {
           slug: SITE ?? null,
+          mode: 'paths' as const,
           routes: null,
+          overrides: new Map<string, string>(),
           external: new Map<string, string>(),
           appBaseUrl: null
         }
       }
 
-      const routes = routing.contentRoutes ? new Map(Object.entries(routing.contentRoutes)) : null
+      // Only a standalone site publishes *just* its content routes; on a `paths`
+      // site the same routes are prefix overrides on top of the whole website.
+      const contentRoutes = routing.contentRoutes
+        ? new Map(Object.entries(routing.contentRoutes))
+        : null
+      const routes = routing.contentMode === 'standalone' ? contentRoutes : null
+      const overrides = routing.contentMode === 'paths' && contentRoutes ? contentRoutes : new Map()
 
       if (routes) {
         console.info(
           `[routing] "${routing.slug}" is a content-only site: publishes ${[...routes.keys()].join(', ') || 'nothing'}`
         )
+      } else if (overrides.size > 0) {
+        console.info(
+          `[routing] "${routing.slug}" publishes the website, with ${[...overrides.keys()].join(', ')} under an overridden prefix`
+        )
       }
 
       return {
         slug: routing.slug,
+        mode: routing.contentMode,
         routes,
+        overrides,
         external: new Map(Object.entries(routing.external)),
         appBaseUrl: routing.appBaseUrl
       }
@@ -87,9 +111,10 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
 /**
  * Prefix of every collection on this build's site.
  *
- * On the app site these are the collections' own `url_prefix`; on a content-only
- * site only the collections it declares appear, so anything else resolves to
- * `undefined` and is simply not generated.
+ * A site that publishes the website uses the collections' own `url_prefix`, with
+ * the overrides it declares on top; a content-only site publishes only the
+ * collections it declares, so anything else resolves to `undefined` and is simply
+ * not generated.
  */
 export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
   if (!collectionsPromise) {
@@ -114,7 +139,13 @@ export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
         if (routing.external.has(collection.name)) {
           continue
         }
-        prefixes.set(collection.name, collection.urlPrefix)
+        // An override that is empty keeps the collection's own prefix: on a site
+        // that publishes the website, '' would otherwise mean its root.
+        const override = routing.overrides.get(collection.name)
+        prefixes.set(
+          collection.name,
+          override === undefined || override === '' ? collection.urlPrefix : override
+        )
       }
       return prefixes
     })()

@@ -78,7 +78,8 @@ describe('renderDynamicField - Text Fields', () => {
     const html = renderDynamicField(field);
 
     expect(html).toContain('data-pattern="^[a-z0-9-]+$"');
-    expect(html).toContain('Generate from title');
+    // The helper button that rebuilds the slug from the title.
+    expect(html).toContain('generateSlugFromTitle');
   });
 
   it('should render text field with custom pattern help text', () => {

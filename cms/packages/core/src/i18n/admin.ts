@@ -337,6 +337,7 @@ const zhCN: Record<string, string> = {
   'Domain': '域名',
   'Domains': '域名',
   'Deploy mode': '部署方式',
+  'Paths mode builds the whole website: its own routes plus every collection at the prefix set on the collection, and a route here overrides that prefix ({"blog-posts": "/blog"} publishes the blog under /blog). Standalone mode makes the site a content-only host that publishes only the collections listed here, at the prefix given for this host ("" is that host root).': '路径模式：本机发布整个网站——自己的路由，加上每个集合在其自身前缀下的内容；这里填写的路由会覆盖该前缀（{"blog-posts": "/blog"} 会把博客发布到 /blog）。独立模式：本机是一个只发布此处列出集合的独立站点，前缀相对于本机根目录（"" 表示本机根目录）。',
   'Paths serve this site at /blog, /docs and so on; standalone makes it the home of the collections in its content routes.': '路径模式：站点按 /blog、/docs 等前缀发布；独立模式：站点作为独立首页发布其内容路由中的集合。',
   'Publishing mode': '发布模式',
   'Provider': '服务商',

@@ -85,12 +85,12 @@ describe('Registration Settings', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true when no settings exist (default behavior)', async () => {
+    it('should return false when no settings exist (secure by default)', async () => {
       mockDb.first.mockResolvedValue(null)
 
       const result = await isRegistrationEnabled(mockDb as any)
 
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
     it('should return true when settings exist but registration key is missing', async () => {
@@ -120,22 +120,22 @@ describe('Registration Settings', () => {
       expect(result).toBe(true)
     })
 
-    it('should return true on database error (fail-safe)', async () => {
+    it('should return false on database error (secure by default)', async () => {
       mockDb.first.mockRejectedValue(new Error('Database connection failed'))
 
       const result = await isRegistrationEnabled(mockDb as any)
 
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
-    it('should return true on JSON parse error (fail-safe)', async () => {
+    it('should return false on JSON parse error (secure by default)', async () => {
       mockDb.first.mockResolvedValue({
         settings: 'invalid json {'
       })
 
       const result = await isRegistrationEnabled(mockDb as any)
 
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
     it('should handle empty settings string', async () => {
@@ -145,8 +145,8 @@ describe('Registration Settings', () => {
 
       const result = await isRegistrationEnabled(mockDb as any)
 
-      // Empty string will throw JSON parse error, which returns true (fail-safe)
-      expect(result).toBe(true)
+      // No settings at all is the same as disabled: registration has to be turned on.
+      expect(result).toBe(false)
     })
   })
 

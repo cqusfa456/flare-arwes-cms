@@ -22,6 +22,7 @@ import {
   computeDiff,
 } from '../services/revisions'
 import { SitesService, type Site } from '../services/sites'
+import { publishesWebsite } from '../services/site-routing'
 import { SettingsService } from '../services/settings'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import { logAudit, getClientIP } from '../services/audit-log'
@@ -33,9 +34,10 @@ const adminSyncRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 const CHROME_COLLECTIONS = ['components', 'layouts']
 
 /**
- * Which sites a change reaches: one that publishes the collection, every site when
- * the change is chrome (the navigation bar, the footer, a layout), and the app site
- * — which has no content routes of its own — for everything it is not denied.
+ * Which sites a change reaches: every site when the change is chrome (the
+ * navigation bar, the footer, a layout), a site that publishes the website for any
+ * content change — it renders every collection, at the collection's own prefix
+ * unless it overrides it — and a content-only host for the collections it names.
  */
 const sitesPublishing = (sites: Site[], collections: string[]): Site[] => {
   const touchesChrome = collections.some((name) => CHROME_COLLECTIONS.includes(name))
@@ -44,7 +46,8 @@ const sitesPublishing = (sites: Site[], collections: string[]): Site[] => {
   }
   return sites.filter(
     (site) =>
-      !site.contentRoutes || collections.some((name) => site.contentRoutes?.[name] !== undefined)
+      publishesWebsite(site) ||
+      collections.some((name) => site.contentRoutes?.[name] !== undefined)
   )
 }
 

@@ -188,13 +188,13 @@ describe('Auth Validation Service', () => {
       expect(result).toBe(false)
     })
 
-    it('should return true on database error (default)', async () => {
+    it('should return false on database error (secure by default)', async () => {
       const db = createMockDb({ shouldThrow: true })
       const result = await isRegistrationEnabled(db)
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
-    it('should return true when no plugin settings exist', async () => {
+    it('should return false when no plugin settings exist', async () => {
       const db = {
         prepare: vi.fn(() => ({
           bind: vi.fn(() => ({
@@ -204,7 +204,7 @@ describe('Auth Validation Service', () => {
       } as any
 
       const result = await isRegistrationEnabled(db)
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
     it('should return false when registration.enabled is 0 (SQLite boolean)', async () => {

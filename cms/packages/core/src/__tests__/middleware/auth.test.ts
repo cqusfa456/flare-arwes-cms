@@ -465,7 +465,13 @@ describe('requireAuth middleware - KV Cache', () => {
     }
 
     const mockKv = {
-      get: vi.fn().mockResolvedValue(cachedPayload),
+      // Answer the token cache only: the `revoked:` lookup is a different key, and
+      // a truthy answer there would read as a revoked session.
+      get: vi
+        .fn()
+        .mockImplementation(async (key: string) =>
+          String(key).startsWith('auth:') ? cachedPayload : null
+        ),
       put: vi.fn()
     }
 

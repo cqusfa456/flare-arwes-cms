@@ -653,11 +653,8 @@ export function renderSiteNewPage(data: {
         <div>
           <label class="${LABEL}">Content routes <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
           <textarea id="site-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'></textarea>
-          <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            Leave empty (or use <code>null</code>) and this site builds <strong>the whole website</strong>: its own routes plus every collection at the collection's own prefix.
-            A JSON object makes it a <strong>content-only site</strong> that publishes only the listed collections — the key is the collection name, the value is the path prefix on this host
-            (<code>""</code> = that host's root, so <code>{"blog-posts": ""}</code> serves the blog index at the domain root and posts at <code>/&lt;slug&gt;</code>;
-            <code>{"blog-posts": "/blog"}</code> keeps them under <code>/blog</code>).
+                    <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            ${t('Paths mode builds the whole website: its own routes plus every collection at the prefix set on the collection, and a route here overrides that prefix ({"blog-posts": "/blog"} publishes the blog under /blog). Standalone mode makes the site a content-only host that publishes only the collections listed here, at the prefix given for this host ("" is that host root).')}
           </p>
         </div>
 
@@ -1095,11 +1092,12 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <textarea id="s-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'>${escapeHtml(
             site.contentRoutes ? JSON.stringify(site.contentRoutes, null, 2) : ''
           )}</textarea>
+                      <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              ${t('Paths mode builds the whole website: its own routes plus every collection at the prefix set on the collection, and a route here overrides that prefix ({"blog-posts": "/blog"} publishes the blog under /blog). Standalone mode makes the site a content-only host that publishes only the collections listed here, at the prefix given for this host ("" is that host root).')}
+            </p>
           <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            Empty (or <code>null</code>) means this site builds <strong>the whole website</strong>: its own routes plus every collection at the collection's own prefix.
-            A JSON object makes it a <strong>content-only site</strong> publishing just those collections, at the path prefix given for this host
-            (<code>""</code> = that host's root, e.g. <code>{"blog-posts": ""}</code> for a blog host or <code>{"blog-posts": "/blog"}</code> for a sub-path).
-            Collection names must already exist in Admin → Collections.
+            On <strong>独立模式</strong> this site is a <strong>content-only host</strong> that publishes just the collections listed here, at the prefix given for this host
+            (<code>""</code> = that host's root, e.g. <code>{"blog-posts": ""}</code>). Collection names must already exist in Admin → Collections.
           </p>
         </div>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">

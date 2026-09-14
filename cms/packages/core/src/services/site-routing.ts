@@ -2,17 +2,20 @@
  * Site routing — what a build publishes, and where the rest of the deployment
  * lives.
  *
- * Contract (also documented in migration 043)
+ * Contract (also documented in migration 043 and 051)
  * -------------------------------------------
  * A site's `content_routes` column is a JSON object mapping collection name to
  * the path prefix that collection is published under **on that site**
- * (`''` = that host's root):
+ * (`''` = that host's root), and `content_mode` says which of the two things the
+ * site is:
  *
- *   * `NULL` — an **app site**: it publishes the website's own routes plus every
- *     routed collection at the collection's own `url_prefix`. This is what every
- *     site did before migration 043.
- *   * set — a **content-only site**: it publishes only the listed collections, at
- *     the listed prefixes, and no website routes.
+ *   * `paths` — the site **publishes the website**: its own routes and every
+ *     routed collection at the collection's own `url_prefix`, with `content_routes`
+ *     overriding the prefix of the collections it names (`/blog`, `/docs`, ...).
+ *     A site with no content routes is a `paths` site, which is what every site did
+ *     before migration 051.
+ *   * `standalone` — a **content-only site**: it publishes only the listed
+ *     collections, at the listed prefixes, and no website routes.
  *
  * That is enough for one repository to build two hosts: `GET /api/site`
  * (routes/api.ts) answers with this site's own routes, the absolute base URL of
@@ -22,7 +25,7 @@
  *
  * `external` is "collections published by a different active site" regardless of
  * who is asking: a collection can only be local to a site when no other active
- * site claims it in its `content_routes`. So an **app site** also receives
+ * site claims it in its `content_routes`. So a `paths` site also receives
  * `external` entries for collections another site has taken over — it must skip
  * generating those and link to the other host instead, exactly as a content-only
  * site does for collections it does not publish.
@@ -39,10 +42,22 @@
  * two implementations are kept in step deliberately.
  */
 
-import type { Site } from './sites'
+import type { Site, SiteContentMode } from './sites'
 import { SitesService, parseSiteContentRoutes } from './sites'
 import { resolveContentSiteScope } from './content-site-scope'
 import type { ContentSiteScope, ResolveSiteScopeInput } from './content-site-scope'
+
+/**
+ * How a site publishes (see {@link SiteContentMode} in `services/sites`), with the
+ * rows that predate migration 051 classified from what they already do: a site
+ * with content routes was a content-only host, one without them built the website.
+ */
+export const siteContentMode = (site: Site): SiteContentMode =>
+  site.contentMode ?? (parseSiteContentRoutes(site.contentRoutes) === null ? 'paths' : 'standalone')
+
+/** True when a site builds the website's own routes (see {@link siteContentMode}). */
+export const publishesWebsite = (site: Site): boolean =>
+  siteContentMode(site) === 'paths' || parseSiteContentRoutes(site.contentRoutes) === null
 
 /** How one site is wired: what it publishes and where everything else lives. */
 export interface SiteRouting {
@@ -50,7 +65,17 @@ export interface SiteRouting {
   name: string
   /** The site's primary custom domain hostname, when it has one. */
   domain: string | null
-  /** Collection name -> prefix on this site; null means "app site". */
+  /** The mode this site publishes in; see {@link siteContentMode}. */
+  contentMode: SiteContentMode
+  /**
+   * Collection name -> prefix on this site.
+   *
+   * `null` on a site that publishes the website. On a `standalone` site it is the
+   * complete list of collections the host publishes; on a `paths` site it is a set
+   * of prefix overrides — a collection listed here is published under this prefix
+   * instead of the collection's own `url_prefix`, and a collection missing from it
+   * keeps that own prefix.
+   */
   contentRoutes: Record<string, string> | null
   /**
    * Absolute base URL of a collection published on another active site, by
@@ -132,12 +157,14 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
     siteBaseUrl(candidate, domains.get(candidate.id) ?? null)
 
   const contentRoutes = parseSiteContentRoutes(site.contentRoutes)
-  // Collections that are local to this site. An app site nominally publishes
+  const contentMode = siteContentMode(site)
+  // Collections that are local to this site. A `paths` site nominally publishes
   // every collection at the collection's own `url_prefix`, but that is exactly
   // the case the rule inverts: a collection claimed by another active site is not
   // built here at all — it is linked to through `external` — so `published` is
   // deliberately only this site's *explicit* content routes, never "everything"
-  // for an app site. A collection can only be local when no other site claims it.
+  // for a site that publishes the website. A collection can only be local when no
+  // other site claims it.
   const published = new Set(Object.keys(contentRoutes ?? {}))
 
   // `external` = every collection published by a *different* active site,
@@ -160,28 +187,28 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
     }
   }
 
-  // The active site that builds the website itself is the one with no content
-  // routes. A content-only site links its shell's navigation back to it; the app
-  // site (and a deployment with no app site) resolves to null.
+  // The active site that builds the website itself is one that publishes the
+  // website: a `paths` site, with or without content-route overrides. A content-only
+  // (`standalone`) site links its shell's navigation back to it; the website site
+  // itself (and a deployment with no such site) resolves to null.
   //
-  // A deployment can have several sites with no content routes — the same website
+  // A deployment can have several sites that publish the website — the same website
   // deployed as a Worker and to Pages, for instance — and a Worker without a
   // custom domain has no host to link to. The first candidate with a resolvable
   // base URL wins, so a secondary host is not left pointing at nothing.
   const appSite = sites.find(
     (candidate) =>
-      candidate.id !== site.id &&
-      parseSiteContentRoutes(candidate.contentRoutes) === null &&
-      baseUrlOf(candidate) !== null
+      candidate.id !== site.id && publishesWebsite(candidate) && baseUrlOf(candidate) !== null
   )
 
   return {
     slug: site.slug,
     name: site.name,
     domain: domains.get(site.id) ?? null,
+    contentMode,
     contentRoutes,
     external,
-    appBaseUrl: contentRoutes === null || !appSite ? null : baseUrlOf(appSite)
+    appBaseUrl: contentMode === 'standalone' && appSite ? baseUrlOf(appSite) : null
   }
 }
 

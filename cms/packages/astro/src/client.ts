@@ -134,11 +134,21 @@ export class SciFiClient {
         return null
       }
 
+      const contentRoutes = (data.contentRoutes ?? null) as Record<string, string> | null
+      const reportedMode = data.contentMode
       return {
         slug: String(data.slug ?? target),
         name: String(data.name ?? data.slug ?? target),
         domain: (data.domain ?? null) as string | null,
-        contentRoutes: (data.contentRoutes ?? null) as Record<string, string> | null,
+        // An older CMS does not report the mode: a site with content routes was a
+        // content-only host, one without them built the website.
+        contentMode:
+          reportedMode === 'paths' || reportedMode === 'standalone'
+            ? reportedMode
+            : contentRoutes
+              ? 'standalone'
+              : 'paths',
+        contentRoutes,
         external: (data.external ?? {}) as Record<string, string>,
         appBaseUrl: (data.appBaseUrl ?? null) as string | null
       }

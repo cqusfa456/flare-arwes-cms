@@ -153,6 +153,9 @@ describe('renderAdminLayoutCatalyst', () => {
     content: '<div>Test Content</div>',
   };
 
+  /** The role the sidebar filters its admin-only items on. */
+  const adminUser = { name: 'Admin', email: 'admin@example.com', role: 'admin' };
+
   it('should render HTML document structure', () => {
     const html = renderAdminLayoutCatalyst(baseData);
 
@@ -275,22 +278,36 @@ describe('renderAdminLayoutCatalyst', () => {
     });
 
     it('should render default menu items', () => {
-      const html = renderAdminLayoutCatalyst(baseData);
+      const html = renderAdminLayoutCatalyst({ ...baseData, user: adminUser });
 
       expect(html).toContain('Dashboard');
-      expect(html).toContain('Collections');
-      expect(html).toContain('Forms');
       expect(html).toContain('Content');
       expect(html).toContain('Media');
+      expect(html).toContain('Analytics');
       expect(html).toContain('Users');
+      // Admin-only: a viewer or editor never sees these.
+      expect(html).toContain('Collections');
+      expect(html).toContain('Sites');
       expect(html).toContain('Plugins');
       expect(html).toContain('Cache');
-      expect(html).toContain('Settings');
+    });
+
+    it('should hide admin-only items from an editor', () => {
+      const html = renderAdminLayoutCatalyst({
+        ...baseData,
+        user: { ...adminUser, role: 'editor' },
+      });
+
+      expect(html).toContain('Dashboard');
+      expect(html).toContain('Forms');
+      expect(html).not.toContain('href="/admin/collections"');
+      expect(html).not.toContain('href="/admin/sites"');
     });
 
     it('should highlight active path', () => {
       const html = renderAdminLayoutCatalyst({
         ...baseData,
+        user: adminUser,
         currentPath: '/admin/collections',
       });
 
@@ -311,11 +328,13 @@ describe('renderAdminLayoutCatalyst', () => {
     it('should highlight nested paths correctly', () => {
       const html = renderAdminLayoutCatalyst({
         ...baseData,
-        currentPath: '/admin/settings/general',
+        user: adminUser,
+        currentPath: '/admin/sites/arwes-docs',
       });
 
-      // Settings should be highlighted because current path starts with /admin/settings
-      expect(html).toContain('data-current="true"');
+      // Sites is highlighted because the path is nested under it.
+      const sitesItem = html.slice(html.indexOf('href="/admin/sites"'));
+      expect(sitesItem.slice(0, 400)).toContain('data-current="true"');
     });
   });
 
@@ -571,7 +590,7 @@ describe('renderAdminLayoutCatalyst', () => {
     it('should include close button in mobile sidebar', () => {
       const html = renderAdminLayoutCatalyst(baseData);
 
-      expect(html).toContain('Close menu');
+      expect(html).toContain('Close navigation');
     });
   });
 

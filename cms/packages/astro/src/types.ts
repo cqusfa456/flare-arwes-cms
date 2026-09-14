@@ -84,6 +84,15 @@ export interface SciFiCollectionInfo {
 }
 
 /**
+ * How a site publishes; mirrors `SiteContentMode` in @sci-fi-cms/core.
+ *
+ * `paths` keeps one host serving the website and its collections at their own
+ * prefixes (`/blog`, `/docs`, ...); `standalone` makes the site a host of its own
+ * for the collections in its content routes.
+ */
+export type SciFiSiteContentMode = 'paths' | 'standalone'
+
+/**
  * How a site is wired: which collections it publishes, under which prefixes, and
  * where the rest of the deployment lives.
  *
@@ -98,12 +107,21 @@ export interface SciFiSiteRouting {
   domain: string | null
 
   /**
+   * How this site publishes; see `SiteContentMode` in @sci-fi-cms/core.
+   *
+   * `paths` — the site publishes the website, with `contentRoutes` overriding the
+   * prefix of the collections it names. `standalone` — a content-only host that
+   * publishes only the collections in `contentRoutes`.
+   */
+  contentMode: SciFiSiteContentMode
+
+  /**
    * Collection name → the prefix it is published under **on this site**.
    *
-   * `null` means this is the "app site": it publishes the site's own routes plus
-   * every routed collection at the collection's own `url_prefix`. An object means
-   * a content-only site that publishes only those collections (`''` is that
-   * host's root).
+   * `null` on a site that publishes the website and overrides no prefix. On a
+   * `standalone` site it is the complete list of collections that host publishes
+   * (`''` is that host's root); on a `paths` site it is a set of overrides, so a
+   * collection missing from it keeps its own `url_prefix`.
    */
   contentRoutes: Record<string, string> | null
 

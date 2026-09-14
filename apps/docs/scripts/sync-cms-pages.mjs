@@ -132,7 +132,10 @@ const run = async () => {
   // components frame the collections it does publish.
   const routing = await client.fetchSiteRouting(SITE).catch(() => null)
   const routes = routing?.contentRoutes ?? null
-  const publishesPages = !(routes && routes.pages === undefined)
+  // A site that publishes the website always publishes its pages; only a
+  // standalone host can be content-only, and it is when it does not name `pages`.
+  const mode = routing?.contentMode ?? (routes ? 'standalone' : 'paths')
+  const publishesPages = mode === 'paths' || !(routes && routes.pages === undefined)
   if (!publishesPages) {
     // A content-only site publishes no pages at all: every file this script wrote
     // on a previous run goes, manifest or not (the manifest of a content-only site

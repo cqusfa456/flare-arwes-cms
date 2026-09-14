@@ -63,11 +63,18 @@ const createDefaultPlugins = () => [
   }
 ]
 
-// Mock the requireAuth middleware to bypass authentication in tests
+// Mock the auth middlewares to bypass authentication in tests
 vi.mock('../../middleware', () => ({
   requireAuth: () => {
     return async (c: any, next: any) => {
       c.set('user', createMockUser(mockUserRole))
+      await next()
+    }
+  },
+  // The route chain also guards with requireRole('admin'); requireAuth above has
+  // already put a user on the context, so this only has to let the request through.
+  requireRole: () => {
+    return async (_c: any, next: any) => {
       await next()
     }
   }
@@ -369,40 +376,18 @@ describe('Admin Plugins Routes', () => {
       expect(json.success).toBe(true)
     })
 
-    it('should install core-auth plugin successfully', async () => {
-      const res = await app.request('/admin/plugins/install', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'core-auth' })
-      })
+    it('should reject installing a core plugin through the registry', async () => {
+      // Core plugins ship with the CMS and are seeded, never installed from the
+      // registry, so the endpoint deliberately answers 404 for them.
+      for (const name of ['core-auth', 'core-media', 'core-workflow']) {
+        const res = await app.request('/admin/plugins/install', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        })
 
-      expect(res.status).toBe(200)
-      const json = await res.json()
-      expect(json.success).toBe(true)
-    })
-
-    it('should install core-media plugin successfully', async () => {
-      const res = await app.request('/admin/plugins/install', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'core-media' })
-      })
-
-      expect(res.status).toBe(200)
-      const json = await res.json()
-      expect(json.success).toBe(true)
-    })
-
-    it('should install core-workflow plugin successfully', async () => {
-      const res = await app.request('/admin/plugins/install', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'core-workflow' })
-      })
-
-      expect(res.status).toBe(200)
-      const json = await res.json()
-      expect(json.success).toBe(true)
+        expect(res.status).toBe(404)
+      }
     })
 
     it('should install database-tools plugin successfully', async () => {
