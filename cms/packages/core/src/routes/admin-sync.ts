@@ -21,11 +21,70 @@ import {
   rejectRevision,
   computeDiff,
 } from '../services/revisions'
+import { SitesService, type Site } from '../services/sites'
+import { SettingsService } from '../services/settings'
 import { getCacheService, CACHE_CONFIGS } from '../services/cache'
 import { logAudit, getClientIP } from '../services/audit-log'
 import type { Bindings, Variables } from '../app'
 
 const adminSyncRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+/** Collections that are chrome rather than content: every site renders them. */
+const CHROME_COLLECTIONS = ['components', 'layouts']
+
+/**
+ * Which sites a change reaches: one that publishes the collection, every site when
+ * the change is chrome (the navigation bar, the footer, a layout), and the app site
+ * — which has no content routes of its own — for everything it is not denied.
+ */
+const sitesPublishing = (sites: Site[], collections: string[]): Site[] => {
+  const touchesChrome = collections.some((name) => CHROME_COLLECTIONS.includes(name))
+  if (touchesChrome) {
+    return sites
+  }
+  return sites.filter(
+    (site) =>
+      !site.contentRoutes || collections.some((name) => site.contentRoutes?.[name] !== undefined)
+  )
+}
+
+/**
+ * Build the sites a go-live reaches.
+ *
+ * The admin's Go Live publishes revisions in the CMS; a website is a static build, so
+ * without this the content would be live and the website would still be old. Failures
+ * are reported rather than thrown: the approval itself already happened.
+ */
+const buildSitesForCollections = async (
+  c: { env: Bindings },
+  collections: string[]
+): Promise<{ built: string[]; failed: string[] }> => {
+  const built: string[] = []
+  const failed: string[] = []
+  try {
+    const service = new SitesService(
+      c.env.DB,
+      c.env as unknown as Record<string, unknown>,
+      new SettingsService(c.env.DB)
+    )
+    const sites = (await service.list()).filter((site) => site.isActive !== false)
+    for (const site of sitesPublishing(sites, collections)) {
+      try {
+        const result = await service.triggerBuild(site.id)
+        if (result.ok) {
+          built.push(site.slug)
+        } else {
+          failed.push(site.slug)
+        }
+      } catch {
+        failed.push(site.slug)
+      }
+    }
+  } catch (err) {
+    console.error('admin-sync: could not build sites after go-live', err)
+  }
+  return { built, failed }
+}
 
 const CONTENT_VERSION_KEY = 'sci-fi:content_version'
 
@@ -103,6 +162,8 @@ adminSyncRoutes.post('/api/approve', async (c) => {
   }
 
   try {
+    // What this revision changes decides which sites have to be built again.
+    const revision = (await getPendingRevisions(db)).find((rev) => rev.versionId === body.versionId)
     await approveRevision(db, body.versionId, user!.userId)
 
     // Invalidate ALL caches (admin content cache + public API cache)
@@ -114,7 +175,18 @@ adminSyncRoutes.post('/api/approve', async (c) => {
 
     logAudit(db, { userId: user!.userId, userEmail: user!.email, action: 'content.sync_approve', resourceType: 'content', resourceId: body.versionId, ipAddress: getClientIP(c.req) })
 
-    return c.json({ success: true, message: 'Revision approved and published', contentVersion: newVersion })
+    const sites = await buildSitesForCollections(
+      c,
+      revision?.collectionName ? [revision.collectionName] : []
+    )
+
+    return c.json({
+      success: true,
+      message: 'Revision approved and published',
+      contentVersion: newVersion,
+      sitesBuilt: sites.built,
+      sitesFailed: sites.failed
+    })
   } catch (err: any) {
     return c.json({ error: err.message || 'Failed to approve revision' }, 500)
   }
@@ -126,6 +198,7 @@ adminSyncRoutes.post('/api/approve-all', requireRole('admin'), async (c) => {
   const db = c.env.DB
 
   try {
+    const pending = await getPendingRevisions(db)
     const count = await approveAllRevisions(db, user!.userId)
 
     // Invalidate ALL caches (admin content cache + public API cache)
@@ -137,7 +210,19 @@ adminSyncRoutes.post('/api/approve-all', requireRole('admin'), async (c) => {
 
     logAudit(db, { userId: user!.userId, userEmail: user!.email, action: 'content.sync_approve', resourceType: 'content', details: { count }, ipAddress: getClientIP(c.req) })
 
-    return c.json({ success: true, message: `${count} revision(s) approved and published`, count, contentVersion: newVersion })
+    const sites = await buildSitesForCollections(
+      c,
+      [...new Set(pending.map((rev) => rev.collectionName).filter(Boolean))]
+    )
+
+    return c.json({
+      success: true,
+      message: `${count} revision(s) approved and published`,
+      count,
+      contentVersion: newVersion,
+      sitesBuilt: sites.built,
+      sitesFailed: sites.failed
+    })
   } catch (err: any) {
     return c.json({ error: err.message || 'Failed to approve revisions' }, 500)
   }

@@ -50,6 +50,19 @@ export const setAdminLocale = (locale: AdminLocale): void => {
 export const getAdminLocale = (): AdminLocale => currentLocale
 
 const zhCN: Record<string, string> = {
+  'Review pending changes before going live': '发布前先检查这些修改',
+  'Loading pending changes...': '正在加载待发布的修改…',
+  'Everything is in sync': '已全部同步',
+  'No pending changes. All content is live.': '没有待发布的修改，内容都已生效。',
+  'Go Live': '立即发布',
+  'ready for review': '待审核',
+  'change': '处修改',
+  'changes': '处修改',
+  'field': '个字段',
+  'fields': '个字段',
+  'changed': '已修改',
+  'Published. Building the sites:': '已发布，正在构建站点：',
+  'Some sites could not be built:': '以下站点构建失败：',
   'Update your content': '更新内容',
   'Create new content': '新建内容',
   'Unsaved changes': '有未保存的修改',

@@ -710,7 +710,7 @@ export function renderAdminLayoutCatalyst(
         <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
           <div>
             <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Sync</h2>
-            <p id="sync-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400">Review pending changes before going live</p>
+            <p id="sync-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400">${t('Review pending changes before going live')}</p>
           </div>
           <button onclick="closeSyncModal()" class="rounded-lg p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -719,14 +719,14 @@ export function renderAdminLayoutCatalyst(
         <div id="sync-body" class="flex-1 overflow-y-auto px-6 py-4">
           <div class="flex items-center justify-center py-8">
             <div class="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600"></div>
-            <span class="ml-3 text-sm text-zinc-500">Loading pending changes...</span>
+            <span class="ml-3 text-sm text-zinc-500">${t('Loading pending changes...')}</span>
           </div>
         </div>
         <div id="sync-footer" class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
           <div id="sync-status" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
           <div class="flex gap-3">
             <button onclick="closeSyncModal()" class="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">${t('Cancel')}</button>
-            <button id="sync-confirm-btn" onclick="syncAll()" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Go Live</button>
+            <button id="sync-confirm-btn" onclick="syncAll()" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>${t('Go Live')}</button>
           </div>
         </div>
       </div>
@@ -776,6 +776,23 @@ export function renderAdminLayoutCatalyst(
       } catch (e) { /* silent */ }
     }
 
+    // Labels this script writes: the locale is decided on the server, so they are
+    // handed over with the page rather than hardcoded here.
+    const syncText = {
+      review: '${t('Review pending changes before going live')}',
+      inSync: '${t('Everything is in sync')}',
+      none: '${t('No pending changes. All content is live.')}',
+      goLive: '${t('Go Live')}',
+      ready: '${t('ready for review')}',
+      change: '${t('change')}',
+      changes: '${t('changes')}',
+      field: '${t('field')}',
+      fields: '${t('fields')}',
+      changed: '${t('changed')}',
+      published: '${t('Published. Building the sites:')}',
+      buildFailed: '${t('Some sites could not be built:')}'
+    };
+
     async function openSyncModal() {
       document.getElementById('sync-modal').classList.remove('hidden');
       const body = document.getElementById('sync-body');
@@ -784,7 +801,7 @@ export function renderAdminLayoutCatalyst(
       const status = document.getElementById('sync-status');
 
       confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Go Live';
+      confirmBtn.textContent = syncText.goLive;
       confirmBtn.className = 'rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
       try {
@@ -795,20 +812,20 @@ export function renderAdminLayoutCatalyst(
         body.textContent = '';
 
         if (_syncRevisions.length === 0) {
-          subtitle.textContent = 'Everything is in sync';
+          subtitle.textContent = syncText.inSync;
           const msg = document.createElement('div');
           msg.className = 'py-8 text-center';
           const p = document.createElement('p');
           p.className = 'text-zinc-500 dark:text-zinc-400';
-          p.textContent = 'No pending changes. All content is live.';
+          p.textContent = syncText.none;
           msg.appendChild(p);
           body.appendChild(msg);
           confirmBtn.disabled = true;
           status.textContent = '';
         } else {
-          subtitle.textContent = _syncRevisions.length + ' change' + (_syncRevisions.length === 1 ? '' : 's') + ' ready for review';
+          subtitle.textContent = _syncRevisions.length + ' ' + (_syncRevisions.length === 1 ? syncText.change : syncText.changes) + ' ' + syncText.ready;
           confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Go Live (' + _syncRevisions.length + ')';
+          confirmBtn.textContent = syncText.goLive + ' (' + _syncRevisions.length + ')';
           status.textContent = '';
 
           // Group by collection
@@ -857,7 +874,7 @@ export function renderAdminLayoutCatalyst(
               if (rev.diffs && rev.diffs.length > 0) {
                 var diffToggle = document.createElement('button');
                 diffToggle.className = 'text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 flex items-center gap-1';
-                diffToggle.textContent = rev.diffs.length + ' field' + (rev.diffs.length === 1 ? '' : 's') + ' changed';
+                diffToggle.textContent = rev.diffs.length + ' ' + (rev.diffs.length === 1 ? syncText.field : syncText.fields) + ' ' + syncText.changed;
                 var arrow = document.createElement('span');
                 arrow.className = 'transition-transform text-[10px]';
                 arrow.textContent = '\u25B6';
@@ -963,7 +980,10 @@ export function renderAdminLayoutCatalyst(
         const res = await fetch('/admin/sync/api/approve-all', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
-          status.textContent = data.count + ' change(s) are now live!';
+          status.textContent = data.count + ' ' + syncText.changes + ' ' + syncText.published + ' ' + ((data.sitesBuilt || []).join(', ') || '-');
+          if (data.sitesFailed && data.sitesFailed.length > 0) {
+            status.textContent += ' · ' + syncText.buildFailed + ' ' + data.sitesFailed.join(', ');
+          }
           btn.textContent = 'Synced';
           btn.className = 'rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
           checkPendingSync();
