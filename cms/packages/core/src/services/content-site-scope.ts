@@ -3,20 +3,20 @@
  * subset of content it may therefore read.
  *
  * Rule (enforced server-side, never widen-able by the caller):
- *   * a request that identifies an active site sees **that site's content, the
- *     content assigned to it, the content of the `paths` sites mounted on it (see
- *     migration 052), and shared content** (`site_id = ? OR site_id IS NULL` plus
- *     the `content_sites` assignments)
- *   * a request that identifies nothing sees **shared content only**, once at
- *     least one site is registered — a multi-tenant deployment must not leak
- *     every site's content just because a client omitted a header
+ *   * a request that identifies an active site sees **the content assigned to that
+ *     site and to the `paths` sites mounted on it** (migration 052/053). The
+ *     assignment *is* the publication control: an item assigned to no site is
+ *     returned to nobody, and "every site" is expressed by assigning every site.
+ *   * a request that identifies nothing sees **nothing**, once at least one site is
+ *     registered — a multi-tenant deployment must not leak every site's content
+ *     just because a client omitted a header
  *   * a single-tenant deployment (no sites registered at all) keeps the old
  *     behaviour and sees everything, so existing setups are unaffected
  *
  * A site identifies itself with `X-Site: <slug|id>` or `?site=<slug|id>`.
- * Content ownership is `content.site_id` (migration 038) — the primary site — and
- * `content_sites` (migration 052) holds every site an item is published by, so one
- * item can be published by several sites.
+ * Content ownership is `content_sites` (migration 052/053) — every site that
+ * publishes the item — and `content.site_id` (migration 038) stays as the
+ * primary/owning site that the admin list and the revisions already read.
  *
  * A request authenticated with a **site-pinned API token** (migration 040) gets
  * that site regardless of what it sends: a build token issued for one site must
@@ -224,22 +224,23 @@ export function contentSiteScopeFragment(
   scope: ContentSiteScope
 ): { sql: string; params: any[] } | null {
   if (scope.mode === 'all') return null
-  if (scope.mode === 'shared-only') return { sql: 'site_id IS NULL', params: [] }
 
-  // The site itself, the sites mounted on it, and everything explicitly assigned to
-  // any of them — plus the shared rows every site sees.
   const ids =
     scope.relatedSiteIds && scope.relatedSiteIds.length > 0
       ? scope.relatedSiteIds
       : scope.siteId
         ? [scope.siteId]
         : []
-  if (ids.length === 0) return { sql: 'site_id IS NULL', params: [] }
 
+  // No site identified (or a scope that resolved to none) reads nothing: content is
+  // published to the sites it is assigned to, and to no others.
+  if (ids.length === 0) return { sql: '1 = 0', params: [] }
+
+  // The site itself, the sites mounted on it, and every item assigned to any of them.
   const placeholders = ids.map(() => '?').join(', ')
   return {
     sql:
-      `site_id IS NULL OR site_id IN (${placeholders}) OR id IN ` +
+      `site_id IN (${placeholders}) OR id IN ` +
       `(SELECT content_id FROM content_sites WHERE site_id IN (${placeholders}))`,
     params: [...ids, ...ids]
   }

@@ -359,7 +359,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
               <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 ${primary ? `Primary domain <code>${escapeHtml(primary.hostname)}</code>` : 'No active domain'}
                 · ${activeDomains}/${site.domains.length} domains active
-                · ${site.contentOwned} content items (${site.contentShared} shared)
+                · ${site.contentOwned} content items · ${site.contentShared} unpublished
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -1157,10 +1157,10 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <div class="${CARD} p-6">
         <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Content')}</h2>
         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-          ${data.contentOwned} content item${data.contentOwned === 1 ? '' : 's'} owned by this site ·
-          ${data.contentShared} shared item${data.contentShared === 1 ? '' : 's'} readable by every site.
+          ${data.contentOwned} content item${data.contentOwned === 1 ? '' : 's'} assigned to this site ·
+          ${data.contentShared} item${data.contentShared === 1 ? '' : 's'} assigned to no site (published nowhere).
         </p>
-        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('Ownership is stored on')} <code>content.site_id</code>; shared content has no site.</p>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('Ownership is stored on')} <code>content_sites</code>; an item assigned to no site is published nowhere.</p>
       </div>
 
       <!-- Danger -->

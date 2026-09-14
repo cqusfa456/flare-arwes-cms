@@ -11,7 +11,10 @@
  * goes through {@link assignContentSites}, which keeps the two in step.
  */
 
-/** The sites an item is published by, primary first, or an empty list when shared. */
+/**
+ * The sites an item is published by, primary first. An empty list means it is published
+ * nowhere: the assignment is the publication control (migration 053).
+ */
 export async function listContentSiteIds(db: D1Database, contentId: string): Promise<string[]> {
   const { results } = await db
     .prepare('SELECT site_id FROM content_sites WHERE content_id = ? ORDER BY created_at ASC, site_id ASC')
@@ -24,8 +27,9 @@ export async function listContentSiteIds(db: D1Database, contentId: string): Pro
 /**
  * Replace an item's site assignment.
  *
- * The primary site (the first value) is mirrored onto `content.site_id`, and `null`
- * means "shared": visible to every site, which is what an empty list has always meant.
+ * The primary site (the first value) is mirrored onto `content.site_id`. An empty list
+ * assigns the item to no site, which publishes it nowhere — the admin still lists it, and
+ * no site's build or API read returns it.
  */
 export async function assignContentSites(
   db: D1Database,
@@ -91,7 +95,7 @@ export async function resolveContentSiteIds(
  * Read the site list a write asked for.
  *
  * Accepts `siteIds: string[]`, a single `siteId`/`site`, or the `''`/`null`/`[]` that
- * means shared content, so every write path (JSON API and admin form) can share it.
+ * means "assigned to no site", so every write path (JSON API and admin form) can express it.
  */
 export function readSubmittedSiteRefs(body: Record<string, unknown>): unknown[] | null {
   const raw = body.siteIds ?? body.site_ids ?? body.sites

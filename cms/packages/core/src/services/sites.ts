@@ -2216,18 +2216,30 @@ export class SitesService {
   // -- content ownership ----------------------------------------------------
 
   /** Number of content rows owned by a site (and how many are shared). */
+  /**
+   * How this site's content adds up: the items assigned to it, and the items assigned
+   * to nobody (which no site publishes — see migration 053 and `content_sites`).
+   */
   async contentCounts(siteId: string): Promise<{ owned: number; shared: number }> {
     const owned = await this.db
-      .prepare('SELECT COUNT(*) as count FROM content WHERE site_id = ? AND deleted_at IS NULL')
+      .prepare(
+        `SELECT COUNT(*) as count FROM content_sites cs
+           JOIN content c ON c.id = cs.content_id
+          WHERE cs.site_id = ? AND c.deleted_at IS NULL`
+      )
       .bind(siteId)
       .first()
-    const shared = await this.db
-      .prepare('SELECT COUNT(*) as count FROM content WHERE site_id IS NULL AND deleted_at IS NULL')
+    const unassigned = await this.db
+      .prepare(
+        `SELECT COUNT(*) as count FROM content c
+          WHERE c.deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM content_sites cs WHERE cs.content_id = c.id)`
+      )
       .first()
 
     return {
       owned: Number((owned as { count?: number })?.count ?? 0),
-      shared: Number((shared as { count?: number })?.count ?? 0)
+      shared: Number((unassigned as { count?: number })?.count ?? 0)
     }
   }
 }

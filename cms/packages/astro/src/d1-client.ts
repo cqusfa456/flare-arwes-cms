@@ -184,7 +184,10 @@ export class SciFiD1Client {
         )
       }
 
-      this.siteScopeResolved = hasSites ? { sql: 'site_id IS NULL', params: [] } : { sql: '', params: [] }
+      this.siteScopeResolved = hasSites
+        ? { sql: '1 = 0', params: [] }
+        // A single-tenant deployment (no sites at all) still sees everything.
+        : { sql: '', params: [] }
       return this.siteScopeResolved
     }
 
@@ -201,8 +204,9 @@ export class SciFiD1Client {
       )
     }
 
-    // The site itself, the sites mounted on it (their content is published here), what is
-    // explicitly assigned to any of them, and the shared rows every site sees.
+    // The site itself, the sites mounted on it (their content is published here) and every
+    // item assigned to any of them. Assignment is the publication control (migration 053),
+    // so an item assigned to no site is read by nobody.
     const mounted = await this.query<{ id: string }>(
       'SELECT id FROM sites WHERE parent_site_id = ? AND is_active = 1',
       [site.id]
@@ -211,7 +215,7 @@ export class SciFiD1Client {
     const placeholders = related.map(() => '?').join(', ')
     this.siteScopeResolved = {
       sql:
-        `(site_id IS NULL OR site_id IN (${placeholders}) OR id IN ` +
+        `(site_id IN (${placeholders}) OR id IN ` +
         `(SELECT content_id FROM content_sites WHERE site_id IN (${placeholders})))`,
       params: [...related, ...related]
     }

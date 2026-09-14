@@ -323,7 +323,7 @@ async function getSiteOptions(db: D1Database): Promise<Array<{ id: string; slug:
   }
 }
 
-/** Resolve a submitted `site_id`: '' means shared content, unknown names yield null. */
+/** Resolve a submitted legacy `site_id`: '' means no site, unknown names yield null. */
 async function resolveSubmittedSiteId(db: D1Database, raw: unknown): Promise<string | null> {
   const resolved = await resolveSiteId(db, raw)
   return resolved.siteId
@@ -332,7 +332,7 @@ async function resolveSubmittedSiteId(db: D1Database, raw: unknown): Promise<str
 /**
  * The sites a submitted form assigns this item to (migration 052).
  *
- * An admin form sends `site_ids` once per checked site, and sends none for shared
+ * An admin form sends `site_ids` once per checked site, and none when nothing is checked
  * content. `null` means the form had no site selector at all, which must leave the
  * stored assignment alone rather than silently unassign it.
  */

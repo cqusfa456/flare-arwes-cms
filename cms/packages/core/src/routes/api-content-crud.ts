@@ -133,9 +133,9 @@ apiContentCrudRoutes.post('/', requireAuth(), async (c) => {
       return c.json({ error: 'title is required' }, 400)
     }
 
-    // Content ownership: `siteIds` (a list of ids or slugs) assigns this item to the
-    // sites that publish it, `siteId`/`site` stays accepted for one site, and omitting
-    // all of them creates shared content readable by every site.
+    // Content ownership: `siteIds` (a list of ids or slugs) is the set of sites that
+    // publish this item — `siteId`/`site` stays accepted for one site. Omitting all of
+    // them assigns it to no site, which publishes it nowhere until one is chosen.
     const submittedSites = readSubmittedSiteRefs(body as Record<string, unknown>)
     const resolved = await resolveContentSiteIds(
       db,

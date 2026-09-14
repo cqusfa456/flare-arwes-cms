@@ -32,8 +32,9 @@ export interface ContentFormData {
   collection: Collection
   fields: FieldDefinition[]
   /**
-   * Sites this item is published by (migration 052). Empty/undefined means shared
-   * content, readable by every site. `siteId` stays the primary (first) one, which is
+   * Sites this item is published by (migration 052). Empty/undefined means it is not
+   * published anywhere: the assignment is the publication control, so every site that
+   * should read it has to be listed. `siteId` stays the primary (first) one, which is
    * what a form rendered without `siteIds` falls back to.
    */
   siteIds?: string[]
@@ -145,9 +146,9 @@ export function renderContentFormPage(data: ContentFormData): string {
   // Site assignment. Hidden when the deployment has no registered sites, so a
   // single-tenant install sees exactly the form it saw before.
   const siteOptions = data.sites || []
-  // The assignment is a set of sites (migration 052): an item may be published by
-  // several, which is what lets a mounted site’s content appear on its parent host.
-  // None checked means shared content.
+  // The assignment is the publication control (migration 053): an item is published
+  // by the sites checked here, by several at once if several are checked, and by none
+  // when nothing is checked.
   const assignedSiteIds = new Set(data.siteIds ?? (data.siteId ? [data.siteId] : []))
   const siteSelectorHTML = siteOptions.length === 0
     ? ''
@@ -155,13 +156,13 @@ export function renderContentFormPage(data: ContentFormData): string {
           <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 shadow-sm ring-1 ring-zinc-950/5 dark:ring-white/10 p-6">
             <h3 class="text-base/7 font-semibold text-zinc-950 dark:text-white mb-1">${t('Publishing sites')}</h3>
             <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
-              ${t('Checked sites publish this item; a site in paths mode is published by its parent. Leave every box clear for shared content, which every site can read.')}
+              ${t('Checked sites publish this item; a site in paths mode is published by its parent. An item assigned to no site is published nowhere, so check every site for content they should all read.')}
             </p>
             <div class="space-y-2">
               <!--
                 A form that submits no checkbox at all cannot be told from one that never
-                had the selector, and the difference matters: no box checked means "shared
-                content". This marker is what says the selector was submitted.
+                had the selector, and the difference matters: no box checked means "published
+                nowhere". This marker is what says the selector was submitted.
               -->
               <input type="hidden" name="site_ids_present" value="1" form="content-form" />
               ${siteOptions
