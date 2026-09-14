@@ -171,8 +171,13 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                   Without one the site's own logo is used, as before.
                 */}
                 {logoContent ? (
+                  /*
+                    The published markup decides its own height, so the box centres it
+                    here: without this the logo sat at the top of the header row while
+                    the menu beside it was centred.
+                  */
                   <div
-                    className={cx(styles.logo, HEIGHT_CLASS)}
+                    className={cx(styles.logo, HEIGHT_CLASS, 'flex items-center')}
                     onClick={() => bleeps.click?.play()}
                   >
                     {logoContent}
