@@ -91,13 +91,13 @@ const providerBadge = (provider: SiteProvider | string): string => {
 const buildBadge = (site: Site): string => {
   const status = (site.lastBuildStatus || '').toLowerCase()
   if (!site.lastBuildAt) {
-    return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">Never built</span>`
+    return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">${t('Never built')}</span>`
   }
   if (status === 'failed') {
     return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">${t('Failed')}</span>`
   }
   if (status === 'queued' || status === 'building') {
-    return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">Queued</span>`
+    return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">${t('Queued')}</span>`
   }
   return `<span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">${escapeHtml(site.lastBuildStatus || 'ok')}</span>`
 }
@@ -110,9 +110,9 @@ const domainBadge = (status: string): string => {
     return `<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">${t('Error')}</span>`
   }
   if (status === 'removed') {
-    return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Removed</span>`
+    return `<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">${t('Removed')}</span>`
   }
-  return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">Pending DNS</span>`
+  return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">${t('Pending DNS')}</span>`
 }
 
 const fmtTime = (value: number | string | null): string => {
@@ -161,7 +161,7 @@ const deployModeOptions = (
   modes: Array<{ id: SiteDeployMode; label: string }>,
   selected: SiteDeployMode | ''
 ): string =>
-  ['<option value="">Provider default</option>']
+  [`<option value="">${t('Provider default')}</option>`]
     .concat(
       modes.map(
         (mode) =>
@@ -174,12 +174,12 @@ const credentialsBanner = (credentials: CloudflareCredentialStatus): string => {
   if (credentials.configured) {
     return `<div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 p-4 ${CARD}">
       <p class="text-sm text-emerald-800 dark:text-emerald-300">
-        <strong>Cloudflare API connected</strong> — credentials from ${credentials.source === 'env' ? 'Worker secrets' : 'saved settings'}${credentials.accountId ? ` (account <code>${escapeHtml(credentials.accountId)}</code>)` : ''}. Domain bindings can be created and removed from here.
+        <strong>${t('Cloudflare API connected')}</strong> — credentials from ${credentials.source === 'env' ? 'Worker secrets' : 'saved settings'}${credentials.accountId ? ` (account <code>${escapeHtml(credentials.accountId)}</code>)` : ''}. Domain bindings can be created and removed from here.
       </p>
     </div>`
   }
   return `<div class="rounded-xl bg-amber-50 dark:bg-amber-500/10 p-4 ${CARD}">
-    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Cloudflare API credentials are not configured</p>
+    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">${t('Cloudflare API credentials are not configured')}</p>
     <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
       Registering sites and triggering builds works without them, but <strong>domain bindings cannot be managed</strong> until you set <code>CF_API_TOKEN</code> and <code>CF_ACCOUNT_ID</code> as Worker secrets, or save them below.
     </p>
@@ -193,7 +193,7 @@ const credentialsBanner = (credentials: CloudflareCredentialStatus): string => {
       <code>Workers Builds Configuration:Edit</code> (to read builds, trigger them and push the build environment).
       The Builds API only accepts a <strong>user-scoped</strong> token — account-scoped tokens are rejected with an "Invalid token" error.
     </p>
-    <button onclick="saveCredentials()" class="mt-3 ${SECONDARY_BTN}">Save credentials</button>
+    <button onclick="saveCredentials()" class="mt-3 ${SECONDARY_BTN}">${t('Save credentials')}</button>
     <div id="credentials-result" class="mt-2 text-sm"></div>
   </div>`
 }
@@ -347,7 +347,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
             </div>
             <div class="flex items-center gap-2">
               <button onclick="triggerBuild('${escapeHtml(site.id)}', this)" class="${SECONDARY_BTN}">${t('Build now')}</button>
-              <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="${PRIMARY_BTN}">Manage</a>
+              <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="${PRIMARY_BTN}">${t('Manage')}</a>
             </div>
           </div>`
         })
@@ -362,7 +362,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
               ${providerBadge(provider.id)}
               <span class="text-xs text-zinc-500 dark:text-zinc-400">${sites.length} site${sites.length === 1 ? '' : 's'}</span>
             </div>
-            ${typeFilter === provider.id ? `<a href="/admin/sites" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400">Clear filter</a>` : ''}
+            ${typeFilter === provider.id ? `<a href="/admin/sites" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400">${t('Clear filter')}</a>` : ''}
           </div>
           <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(provider.summary)}</p>
         </div>
@@ -374,7 +374,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
 
   const rows = data.sites.length === 0
     ? `<div class="p-10 text-center">
-         <p class="text-sm text-zinc-500 dark:text-zinc-400">No sites registered yet.</p>
+         <p class="text-sm text-zinc-500 dark:text-zinc-400">${t('No sites registered yet.')}</p>
          <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Register a site to own its build, domains and content from here — or import the Arwes presets to create the documentation site in one click.</p>
        </div>`
     : `<div class="divide-y divide-zinc-950/5 dark:divide-white/5">${sections}</div>`
@@ -384,11 +384,11 @@ export function renderSitesListPage(data: SitesListPageData): string {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Sites')}</h1>
-          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">One control plane for every website: builds, domain bindings and content.</p>
+          <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('One control plane for every website: builds, domain bindings and content.')}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="importPresets(this)" class="${SECONDARY_BTN}">Import Arwes presets</button>
-          <a href="/admin/sites/new" class="${PRIMARY_BTN}">Register site</a>
+          <button onclick="importPresets(this)" class="${SECONDARY_BTN}">${t('Import Arwes presets')}</button>
+          <a href="/admin/sites/new" class="${PRIMARY_BTN}">${t('Register site')}</a>
         </div>
       </div>
 
@@ -537,7 +537,7 @@ export function renderSiteNewPage(data: {
   const content = `
     <div class="space-y-6 max-w-3xl">
       <div>
-        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">Register a site</h1>
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Register a site')}</h1>
         <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
           A site owns a Cloudflare build target (builds + domains) and, optionally, a slice of content.
           Which fields apply depends on the hosting provider you pick.
@@ -548,7 +548,7 @@ export function renderSiteNewPage(data: {
 
       <div class="${CARD} p-6 space-y-5">
         <div>
-          <label class="${LABEL}">Start from</label>
+          <label class="${LABEL}">${t('Start from')}</label>
           <div class="flex flex-wrap items-center gap-2">
             <select id="site-preset" class="${INPUT} flex-1 min-w-56">
               <option value="">— Blank site —</option>
@@ -567,15 +567,15 @@ export function renderSiteNewPage(data: {
           <div>
             <label class="${LABEL}">${t('Name')}</label>
             <input id="site-name" class="${INPUT}" placeholder="ARWES Docs" />
-            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Human readable label shown in the admin.</p>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">${t('Human readable label shown in the admin.')}</p>
           </div>
           <div>
             <label class="${LABEL}">${t('Slug')}</label>
             <input id="site-slug" class="${INPUT}" placeholder="docs" />
-            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">URL-safe identifier, generated from the name when left blank.</p>
+            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">${t('URL-safe identifier, generated from the name when left blank.')}</p>
           </div>
           <div class="sm:col-span-2">
-            <label class="${LABEL}">Hosting provider</label>
+            <label class="${LABEL}">${t('Hosting provider')}</label>
             <select id="site-provider" class="${INPUT}">
               ${providerOptions(data.providers, defaultProvider)}
             </select>
@@ -602,11 +602,11 @@ export function renderSiteNewPage(data: {
             </p>
           </div>
           <div data-provider-field="project">
-            <label class="${LABEL}">Worker name / Pages project</label>
+            <label class="${LABEL}">${t('Worker name / Pages project')}</label>
             <input id="site-project" class="${INPUT}" placeholder="arwes-docs" />
           </div>
           <div data-provider-field="deployHook">
-            <label class="${LABEL}">Deploy Hook URL</label>
+            <label class="${LABEL}">${t('Deploy Hook URL')}</label>
             <input id="site-hook" class="${INPUT}" placeholder="https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/…" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
               Worker: Settings → Builds → Deploy Hooks (<code>/workers/builds/deploy_hooks/…</code>).
@@ -614,44 +614,44 @@ export function renderSiteNewPage(data: {
             </p>
           </div>
           <div data-provider-field="gitRepo">
-            <label class="${LABEL}">Git repository</label>
+            <label class="${LABEL}">${t('Git repository')}</label>
             <input id="site-repo" class="${INPUT}" placeholder="owner/repo" />
           </div>
           <div data-provider-field="gitBranch">
-            <label class="${LABEL}">Git branch</label>
+            <label class="${LABEL}">${t('Git branch')}</label>
             <input id="site-branch" class="${INPUT}" value="main" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div data-provider-field="buildCommand">
-            <label class="${LABEL}">Build command</label>
+            <label class="${LABEL}">${t('Build command')}</label>
             <input id="site-build-command" class="${INPUT}" placeholder="npm run build" />
           </div>
           <div data-provider-field="deployCommand">
-            <label class="${LABEL}">Deploy command</label>
+            <label class="${LABEL}">${t('Deploy command')}</label>
             <input id="site-deploy-command" class="${INPUT}" placeholder="npx wrangler deploy" />
           </div>
           <div data-provider-field="outputDir">
-            <label class="${LABEL}">Output directory</label>
+            <label class="${LABEL}">${t('Output directory')}</label>
             <input id="site-output-dir" class="${INPUT}" placeholder="apps/docs/build" />
           </div>
           <div data-provider-field="rootDir">
-            <label class="${LABEL}">Root directory</label>
+            <label class="${LABEL}">${t('Root directory')}</label>
             <input id="site-root-dir" class="${INPUT}" placeholder="/" />
           </div>
           <div data-provider-field="zoneId">
-            <label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
-            <input id="site-zone" class="${INPUT}" placeholder="auto-detected from the hostname" />
+            <label class="${LABEL}">${t('Pinned Cloudflare zone id')} <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+            <input id="site-zone" class="${INPUT}" placeholder="${t('auto-detected from the hostname')}" />
           </div>
           <div data-provider-field="contentPrefix">
-            <label class="${LABEL}">Content prefix</label>
+            <label class="${LABEL}">${t('Content prefix')}</label>
             <input id="site-prefix" class="${INPUT}" placeholder="docs" />
           </div>
         </div>
 
         <div>
-          <label class="${LABEL}">Content routes <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+          <label class="${LABEL}">${t('Content routes')} <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
           <textarea id="site-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'></textarea>
                     <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             ${t('Paths mode builds the whole website: its own routes plus every collection at the prefix set on the collection, and a route here overrides that prefix ({"blog-posts": "/blog"} publishes the blog under /blog). Standalone mode makes the site a content-only host that publishes only the collections listed here, at the prefix given for this host ("" is that host root).')}
@@ -667,7 +667,7 @@ export function renderSiteNewPage(data: {
           <div id="create-result" class="text-sm"></div>
           <div class="flex items-center gap-2">
             <a href="/admin/sites" class="${SECONDARY_BTN}">${t('Cancel')}</a>
-            <button onclick="createSite()" class="${PRIMARY_BTN}">Register site</button>
+            <button onclick="createSite()" class="${PRIMARY_BTN}">${t('Register site')}</button>
           </div>
         </div>
       </div>
@@ -842,30 +842,30 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       </p>`
     : `<p class="mt-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
         GitHub Actions is not configured yet: a dispatch needs <strong>both a token and a repository</strong>, so this button will fail until they are saved.
-        Set them in the <strong>GitHub deploy</strong> card below, or set the <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> Worker secrets.
+        Set them in the <strong>${t('GitHub deploy')}</strong> card below, or set the <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> Worker secrets.
       </p>`
 
   const githubCard = `
       <!-- GitHub deploy -->
       <div class="${CARD} p-6">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">GitHub deploy</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('GitHub deploy')}</h2>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
           This is how a site can be built with <strong>no Git connection on Cloudflare's side</strong>: the CMS dispatches
           <code>${escapeHtml(data.github.workflow)}</code>, which runs the site's build command and then its deploy command on a GitHub runner and uploads the output directly.
         </p>
         <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label class="${LABEL}">Repository (owner/name)</label>
+            <label class="${LABEL}">${t('Repository (owner/name)')}</label>
             <input id="gh-repo" class="${INPUT}" value="${escapeHtml(data.github.repo ?? '')}" placeholder="owner/repo" />
           </div>
           <div>
-            <label class="${LABEL}">Token</label>
+            <label class="${LABEL}">${t('Token')}</label>
             <input id="gh-token" type="password" class="${INPUT}" placeholder="leave blank to keep the saved token" autocomplete="new-password" />
           </div>
         </div>
         <p class="mt-3 text-xs ${data.github.configured ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}">${escapeHtml(githubStatus)}</p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
-          <button onclick="saveGithub(this)" class="${SECONDARY_BTN}">Save GitHub settings</button>
+          <button onclick="saveGithub(this)" class="${SECONDARY_BTN}">${t('Save GitHub settings')}</button>
           <div id="github-result" class="text-sm"></div>
         </div>
         <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
@@ -875,7 +875,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       </div>`
 
   const domainRows = domains.length === 0
-    ? `<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No domains bound yet.</td></tr>`
+    ? `<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">${t('No domains bound yet.')}</td></tr>`
     : domains.map((domain) => `
         <tr class="border-t border-zinc-950/5 dark:border-white/5">
           <td class="px-4 py-3">
@@ -886,8 +886,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           <td class="px-4 py-3 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(domain.validationErrors || domain.validationStatus || '—')}</td>
           <td class="px-4 py-3 text-right whitespace-nowrap">
             ${domain.status === 'removed' ? '' : `
-              ${domain.status === 'active' && !domain.isPrimary ? `<button onclick="makePrimary('${escapeHtml(domain.hostname)}')" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 mr-3">Make primary</button>` : ''}
-              <button onclick="removeDomain('${escapeHtml(domain.hostname)}')" class="text-xs text-red-600 dark:text-red-400 hover:underline">Unbind</button>
+              ${domain.status === 'active' && !domain.isPrimary ? `<button onclick="makePrimary('${escapeHtml(domain.hostname)}')" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 mr-3">${t('Make primary')}</button>` : ''}
+              <button onclick="removeDomain('${escapeHtml(domain.hostname)}')" class="text-xs text-red-600 dark:text-red-400 hover:underline">${t('Unbind')}</button>
             `}
           </td>
         </tr>`).join('')
@@ -907,7 +907,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       </div>`
 
   const buildRows = data.buildEnv.length === 0
-    ? `<tr><td colspan="2" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No build variables resolved for this site.</td></tr>`
+    ? `<tr><td colspan="2" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">${t('No build variables resolved for this site.')}</td></tr>`
     : data.buildEnv.map((entry) => `
         <tr class="border-t border-zinc-950/5 dark:border-white/5">
           <td class="px-4 py-2 align-top"><code class="text-xs text-zinc-900 dark:text-zinc-100">${escapeHtml(entry.key)}</code></td>
@@ -923,13 +923,13 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <!-- Build environment -->
       <div class="${CARD} p-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Build environment</h2>
-          <button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}">Push build environment</button>
+          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Build environment')}</h2>
+          <button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}">${t('Push build environment')}</button>
         </div>
         <div class="mt-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
-              <tr><th class="px-4 py-2 font-medium">Key</th><th class="px-4 py-2 font-medium">Value</th></tr>
+              <tr><th class="px-4 py-2 font-medium">${t('Key')}</th><th class="px-4 py-2 font-medium">${t('Value')}</th></tr>
             </thead>
             <tbody>${buildRows}</tbody>
           </table>
@@ -946,7 +946,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
     : `
       <!-- Build environment -->
       <div class="${CARD} p-6">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Build environment</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Build environment')}</h2>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
           Build variables for this provider are configured in Cloudflare (${escapeHtml(providerInfo.label)}), not by the CMS.
         </p>
@@ -961,14 +961,14 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             <span class="text-zinc-300 dark:text-zinc-600">/</span>
             <h1 class="text-xl font-semibold text-zinc-950 dark:text-white">${escapeHtml(site.name)}</h1>
             ${providerBadge(site.provider)}
-            ${data.isPreset ? '<span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">Arwes preset</span>' : ''}
+            ${data.isPreset ? `<span class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">${t('Arwes preset')}</span>` : ''}
             ${buildBadge(site)}
           </div>
           <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400"><code>${escapeHtml(site.slug)}</code></p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="triggerBuild(this, '${capabilities.triggerBuildViaApi ? 'api' : 'hook'}')" class="${SECONDARY_BTN}" ${capabilities.triggerBuild ? '' : 'disabled title="This provider cannot be built from the CMS"'}>${capabilities.triggerBuildViaGithubActions ? 'Deploy via GitHub Actions' : 'Build now'}</button>
-          ${capabilities.triggerBuildViaHook && site.deployHookUrl ? `<button onclick="triggerBuild(this, 'hook')" class="${SECONDARY_BTN}">Build via Deploy Hook</button>` : ''}
+          ${capabilities.triggerBuildViaHook && site.deployHookUrl ? `<button onclick="triggerBuild(this, 'hook')" class="${SECONDARY_BTN}">${t('Build via Deploy Hook')}</button>` : ''}
         </div>
       </div>
 
@@ -977,7 +977,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       ${credentialsBanner(data.credentials)}
 
       <div class="${CARD} p-6">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Hosting setup</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Hosting setup')}</h2>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.summary)}</p>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(providerInfo.setup)}</p>
       </div>
@@ -985,11 +985,11 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <!-- Build -->
       <div class="${CARD} p-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Builds</h2>
-          ${capabilities.listDeployments ? `<button onclick="refreshDeployments(this)" class="${SECONDARY_BTN}">Refresh deployments</button>` : ''}
+          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Builds')}</h2>
+          ${capabilities.listDeployments ? `<button onclick="refreshDeployments(this)" class="${SECONDARY_BTN}">${t('Refresh deployments')}</button>` : ''}
         </div>
         <dl class="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2 text-xs">
-          <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">Last triggered</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">${t('Last triggered')}</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(fmtTime(site.lastBuildAt))}</dd></div>
           <div class="flex justify-between gap-4"><dt class="text-zinc-500 dark:text-zinc-400">${t('Status')}</dt><dd class="text-zinc-900 dark:text-zinc-100">${escapeHtml(site.lastBuildStatus || '—')}</dd></div>
           <div class="flex items-center justify-between gap-4">
             <dt class="text-zinc-500 dark:text-zinc-400">${t('Publishing mode')}</dt>
@@ -1019,35 +1019,35 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       <!-- Domains -->
       <div class="${CARD} p-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Domain bindings</h2>
-          <button onclick="refreshDomains(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Refresh from Cloudflare</button>
+          <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Domain bindings')}</h2>
+          <button onclick="refreshDomains(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>${t('Refresh from Cloudflare')}</button>
         </div>
         <div class="mt-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
-              <tr><th class="px-4 py-2 font-medium">Hostname</th><th class="px-4 py-2 font-medium">${t('Status')}</th><th class="px-4 py-2 font-medium">${t('Validation')}</th><th class="px-4 py-2"></th></tr>
+              <tr><th class="px-4 py-2 font-medium">${t('Hostname')}</th><th class="px-4 py-2 font-medium">${t('Status')}</th><th class="px-4 py-2 font-medium">${t('Validation')}</th><th class="px-4 py-2"></th></tr>
             </thead>
             <tbody>${domainRows}</tbody>
           </table>
         </div>
         <div class="mt-4 flex flex-wrap items-end gap-3">
           <div class="flex-1 min-w-56">
-            <label class="${LABEL}">Bind a custom domain</label>
+            <label class="${LABEL}">${t('Bind a custom domain')}</label>
             <input id="new-domain" class="${INPUT}" placeholder="docs.example.com" ${data.credentials.configured ? '' : 'disabled'} />
           </div>
-          <button onclick="addDomain(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Bind domain</button>
+          <button onclick="addDomain(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>${t('Bind domain')}</button>
         </div>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">The domain is attached to ${escapeHtml(providerInfo.label)} through the Cloudflare API; DNS still has to point at the site for it to become active.</p>
       </div>` : ''}
 
       <!-- Settings -->
       <div class="${CARD} p-6 space-y-5">
-        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Site settings</h2>
+        <h2 class="text-sm font-semibold text-zinc-950 dark:text-white">${t('Site settings')}</h2>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div><label class="${LABEL}">${t('Name')}</label><input id="s-name" class="${INPUT}" value="${escapeHtml(site.name)}" /></div>
           <div><label class="${LABEL}">${t('Slug')}</label><input id="s-slug" class="${INPUT}" value="${escapeHtml(site.slug)}" /></div>
           <div class="sm:col-span-2">
-            <label class="${LABEL}">Hosting provider</label>
+            <label class="${LABEL}">${t('Hosting provider')}</label>
             <select id="s-provider" class="${INPUT}">
               ${providerOptions(SITE_PROVIDERS, site.provider)}
             </select>
@@ -1076,19 +1076,19 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
               pinned mode so the site follows the provider again.
             </p>
           </div>
-          <div data-provider-field="project"><label class="${LABEL}">Worker name / Pages project</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
-          <div data-provider-field="gitBranch"><label class="${LABEL}">Git branch</label><input id="s-branch" class="${INPUT}" value="${escapeHtml(site.gitBranch || '')}" /></div>
-          <div data-provider-field="deployHook" class="sm:col-span-2"><label class="${LABEL}">Deploy Hook URL</label><input id="s-hook" class="${INPUT}" value="${escapeHtml(site.deployHookUrl || '')}" /></div>
-          <div data-provider-field="gitRepo" class="sm:col-span-2"><label class="${LABEL}">Git repository</label><input id="s-repo" class="${INPUT}" value="${escapeHtml(site.gitRepo || '')}" /></div>
-          <div data-provider-field="buildCommand"><label class="${LABEL}">Build command</label><input id="s-build" class="${INPUT}" value="${escapeHtml(site.buildCommand || '')}" /></div>
-          <div data-provider-field="deployCommand"><label class="${LABEL}">Deploy command</label><input id="s-deploy" class="${INPUT}" value="${escapeHtml(site.deployCommand || '')}" placeholder="npx wrangler deploy" /></div>
-          <div data-provider-field="outputDir"><label class="${LABEL}">Output directory</label><input id="s-output" class="${INPUT}" value="${escapeHtml(site.outputDir || '')}" /></div>
-          <div data-provider-field="rootDir"><label class="${LABEL}">Root directory</label><input id="s-root" class="${INPUT}" value="${escapeHtml(site.rootDir || '')}" /></div>
-          <div data-provider-field="contentPrefix"><label class="${LABEL}">Content prefix</label><input id="s-prefix" class="${INPUT}" value="${escapeHtml(site.contentPrefix || '')}" placeholder="docs" /></div>
-          <div data-provider-field="zoneId"><label class="${LABEL}">Pinned Cloudflare zone id <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label><input id="s-zone" class="${INPUT}" value="${escapeHtml(site.cfZoneId || '')}" placeholder="auto-detected from the hostname" /></div>
+          <div data-provider-field="project"><label class="${LABEL}">${t('Worker name / Pages project')}</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
+          <div data-provider-field="gitBranch"><label class="${LABEL}">${t('Git branch')}</label><input id="s-branch" class="${INPUT}" value="${escapeHtml(site.gitBranch || '')}" /></div>
+          <div data-provider-field="deployHook" class="sm:col-span-2"><label class="${LABEL}">${t('Deploy Hook URL')}</label><input id="s-hook" class="${INPUT}" value="${escapeHtml(site.deployHookUrl || '')}" /></div>
+          <div data-provider-field="gitRepo" class="sm:col-span-2"><label class="${LABEL}">${t('Git repository')}</label><input id="s-repo" class="${INPUT}" value="${escapeHtml(site.gitRepo || '')}" /></div>
+          <div data-provider-field="buildCommand"><label class="${LABEL}">${t('Build command')}</label><input id="s-build" class="${INPUT}" value="${escapeHtml(site.buildCommand || '')}" /></div>
+          <div data-provider-field="deployCommand"><label class="${LABEL}">${t('Deploy command')}</label><input id="s-deploy" class="${INPUT}" value="${escapeHtml(site.deployCommand || '')}" placeholder="npx wrangler deploy" /></div>
+          <div data-provider-field="outputDir"><label class="${LABEL}">${t('Output directory')}</label><input id="s-output" class="${INPUT}" value="${escapeHtml(site.outputDir || '')}" /></div>
+          <div data-provider-field="rootDir"><label class="${LABEL}">${t('Root directory')}</label><input id="s-root" class="${INPUT}" value="${escapeHtml(site.rootDir || '')}" /></div>
+          <div data-provider-field="contentPrefix"><label class="${LABEL}">${t('Content prefix')}</label><input id="s-prefix" class="${INPUT}" value="${escapeHtml(site.contentPrefix || '')}" placeholder="docs" /></div>
+          <div data-provider-field="zoneId"><label class="${LABEL}">${t('Pinned Cloudflare zone id')} <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label><input id="s-zone" class="${INPUT}" value="${escapeHtml(site.cfZoneId || '')}" placeholder="${t('auto-detected from the hostname')}" /></div>
         </div>
         <div class="mt-5">
-          <label class="${LABEL}">Content routes <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
+          <label class="${LABEL}">${t('Content routes')} <span class="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span></label>
           <textarea id="s-content-routes" rows="3" class="${INPUT} font-mono text-xs" placeholder='{"blog-posts": ""}'>${escapeHtml(
             site.contentRoutes ? JSON.stringify(site.contentRoutes, null, 2) : ''
           )}</textarea>
@@ -1107,9 +1107,9 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="settings-result" class="text-sm"></div>
           <div class="flex items-center gap-2">
-            ${capabilities.pushBuildEnv ? `<button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Push build environment</button>` : ''}
-            ${capabilities.syncBuildConfig ? `<button onclick="syncBuildConfig(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>Push build config to Cloudflare</button>` : ''}
-            <button onclick="saveSite(this)" class="${PRIMARY_BTN}">Save changes</button>
+            ${capabilities.pushBuildEnv ? `<button onclick="pushBuildEnv(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>${t('Push build environment')}</button>` : ''}
+            ${capabilities.syncBuildConfig ? `<button onclick="syncBuildConfig(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>${t('Push build config to Cloudflare')}</button>` : ''}
+            <button onclick="saveSite(this)" class="${PRIMARY_BTN}">${t('Save changes')}</button>
           </div>
         </div>
         <p class="text-xs text-zinc-500 dark:text-zinc-400">Build config was last pushed ${escapeHtml(fmtTime(site.buildConfigSyncedAt))}.</p>
@@ -1122,15 +1122,15 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           ${data.contentOwned} content item${data.contentOwned === 1 ? '' : 's'} owned by this site ·
           ${data.contentShared} shared item${data.contentShared === 1 ? '' : 's'} readable by every site.
         </p>
-        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Ownership is stored on <code>content.site_id</code>; shared content has no site.</p>
+        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">${t('Ownership is stored on')} <code>content.site_id</code>; shared content has no site.</p>
       </div>
 
       <!-- Danger -->
       <div class="${CARD} p-6">
-        <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">Danger zone</h2>
+        <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">${t('Danger zone')}</h2>
         <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Unregistering removes the site and its domain records from the CMS. ${escapeHtml(providerInfo.label)} itself is left untouched.</p>
         <div class="mt-3 flex flex-wrap items-center gap-3">
-          <button onclick="deleteSite(this)" class="${SECONDARY_BTN}">Unregister site</button>
+          <button onclick="deleteSite(this)" class="${SECONDARY_BTN}">${t('Unregister site')}</button>
           <div id="delete-result" class="text-sm"></div>
         </div>
       </div>

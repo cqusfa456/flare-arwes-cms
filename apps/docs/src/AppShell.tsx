@@ -28,8 +28,11 @@ type AppShellProps = {
   navItems?: Array<{ label: string; href: string }>
   /** Links for the right-hand side from the CMS; empty means the built-in links. */
   actionItems?: Array<{ label: string; href: string; icon?: string }>
-  /** Whether the site publishes a logo component, which the header shows. */
-  logoContent?: boolean
+  /**
+   * The site's logo, rendered from the CMS `logo` component by the site layout.
+   * Undefined leaves the shell's own logo in place.
+   */
+  logo?: ReactNode
   /**
    * The site's navigation bar, rendered from the CMS `nav` component by the site
    * layout and placed in the header. Undefined falls back to `navItems`.
@@ -97,7 +100,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
     navItems,
     nav,
     actionItems,
-    logoContent,
+    logo,
     hideMenu,
     hasServerContent,
     children
@@ -127,7 +130,7 @@ const AppShell = (props: AppShellProps): JSX.Element => {
           navItems={navItems}
           navContent={nav}
           actionItems={actionItems}
-          hasLogoContent={logoContent}
+          logoContent={logo}
           hideMenu={hideMenu}
         >
           <PageContent
