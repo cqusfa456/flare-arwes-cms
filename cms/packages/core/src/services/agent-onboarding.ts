@@ -24,9 +24,10 @@ export interface AgentOnboardingInput {
 
 const describeMode = (site: Site): string => {
   if (site.contentMode !== 'paths') {
-    return Object.keys(parseRoutes(site.contentRoutes)).length === 0
-      ? '独立模式（发布整个网站）'
-      : '独立模式（只发布所列集合）'
+    if (Object.keys(parseRoutes(site.contentRoutes)).length === 0) {
+      return '独立模式（发布整个网站）'
+    }
+    return site.publishesApp ? '独立模式（所列集合 + 框架站）' : '独立模式（只发布所列集合）'
   }
   return `路径模式（不部署，由主站发布${site.parentSiteId ? '' : '：未设置主站'}）`
 }
@@ -152,6 +153,7 @@ ${collectionLines.join('\n') || '- （还没有集合）'}
 
 1. **内容归属就是发布控制。** 一条内容发布在 \`siteIds\` 列出的站点上；数组为空 = 不属于任何站点 = **任何站点都读不到**（后台仍能看到它）。要让所有站点都能读到，就把每个站点都列进去。
 2. **站点有两种模式。** \`独立模式\` 自己部署、自己发布；\`路径模式\` 不部署，内容由它的「主站」按前缀发布（例如主站发布 \`/blog\`、\`/docs\`）。给路径模式站点写内容时，记得同时归属它的主站，否则主站构建看不到。
+   独立模式的站点还可以开启「**同时发布框架站**」（\`publishesApp\`）：这样它除了自己的集合，还会发布网站自身的路由（首页、\`/demos\`、\`/docs\` 下的框架文档）；路由到 \`""\` 的集合仍然占用域名根目录，所以文档站是「根目录放文档、\`/docs\` 放框架文档」。
 3. **网站是静态构建。** 内容进 CMS ≠ 网站立刻更新：站点要重新构建才会体现修改。
 4. **后台编辑已发布内容会进入待发布队列（Sync）。** 通过 API 直接 \`PUT /api/content/:id\` 是立即生效的；走后台表单的修改要 \`POST /admin/sync/api/approve-all\` 才生效（该操作会让受影响站点自动重建，返回 \`sitesBuilt\`/\`sitesFailed\`）。
 5. **时间戳是毫秒**（\`created_at\`/\`updated_at\`/\`published_at\`）。
