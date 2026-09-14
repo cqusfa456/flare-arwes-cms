@@ -55,6 +55,11 @@ const navItems = await getNavigation(pathname, navKey)
 // a menu of their own, edited with the rest of the chrome.
 const actionItems = await getMenu('links')
 
+// Where the logo points is a link too, so it is edited like every other one: the
+// `logo` component carries a one-entry menu whose `href` is the site's home (the
+// `logo` markup falls back to `/` when that menu is empty or missing).
+const logoHref = (await getMenu('logo')).find((item) => item.href !== '')?.href ?? '/'
+
 // The navigation bar is a shared component too, but it belongs in the header —
 // that is where a menu sits on this site, on every page — so the site layout hands
 // it to the shell, which renders it in place of its own menu. Without such a
@@ -212,12 +217,13 @@ const serverPaths = cmsPages
       }
       {/*
         The logo, and the page it links to, are the site's too: `logo` in
-        Admin → Content → 组件, with its `href` and `title` props.
+        Admin → Content → 组件 renders it, and the `href` comes from the same
+        component's one-entry menu.
       */}
       {
         hasLogoComponent && (
           <Fragment slot="logo">
-            <CmsComponent name="logo" href="/" title={settings.title} />
+            <CmsComponent name="logo" href={logoHref} title={settings.title} />
           </Fragment>
         )
       }
