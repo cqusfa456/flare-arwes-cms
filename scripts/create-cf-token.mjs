@@ -71,7 +71,11 @@ const TOKEN_SPECS = {
     tokenName: 'Sci-Fi CMS Runtime (sites)',
     purpose: 'CMS Worker 管理自定义域名、触发构建、下发构建环境变量',
     account: ['Workers Scripts Read', 'Workers CI Write', 'Pages Write'],
-    zone: ['Workers Routes Write', 'Zone Read']
+    // DNS Write is what lets the CMS create the record for a bound domain
+    // (`POST /admin/sites/api/sites/:id/domains/dns`): without it a domain stays
+    // `pending` until someone edits DNS in the Cloudflare dashboard, which is the
+    // wiring the CMS is supposed to own.
+    zone: ['Workers Routes Write', 'Zone Read', 'DNS Write']
   }
 }
 
