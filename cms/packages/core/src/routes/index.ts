@@ -36,6 +36,8 @@ export { default as apiFaqRoutes } from './api-faq'
 export { default as publicFormsRoutes } from './public-forms'
 export { adminApiReferenceRoutes } from './admin-api-reference'
 export { adminApiTokensRoutes } from './admin-api-tokens'
+export { agentRoutes } from './agent'
+export { adminAgentRoutes } from './admin-agent'
 export { adminPreviewRoutes } from './admin-preview'
 export { adminSchemaMigrationsRoutes } from './admin-schema-migrations'
 export { adminDeployRoutes } from './admin-deploy'
@@ -76,6 +78,8 @@ export const ROUTES_INFO = {
     'publicFormsRoutes',
     'adminApiReferenceRoutes',
     'adminApiTokensRoutes',
+    'agentRoutes',
+    'adminAgentRoutes',
     'adminPreviewRoutes',
     'adminSchemaMigrationsRoutes',
     'adminDeployRoutes',

@@ -48,6 +48,8 @@ import {
   Sun,
   Moon,
   GitBranch,
+  Bot,
+  Sparkles
 } from 'lucide-static'
 
 /**
@@ -69,18 +71,18 @@ export function icon(svg: string, className: string = 'h-5 w-5'): string {
 export function collectionIcon(iconHint?: string): string {
   const map: Record<string, string> = {
     'file-text': FileText,
-    'newspaper': Newspaper,
+    newspaper: Newspaper,
     'book-open': BookOpen,
     'folder-open': FolderOpen,
-    'globe': Globe,
-    'image': Image,
-    'users': Users,
-    'code': Code,
-    'layers': Layers,
+    globe: Globe,
+    image: Image,
+    users: Users,
+    code: Code,
+    layers: Layers,
     'clipboard-list': ClipboardList,
-    'shield': Shield,
-    'settings': Settings,
-    'activity': Activity,
+    shield: Shield,
+    settings: Settings,
+    activity: Activity
   }
   return map[iconHint || ''] || FileText
 }
@@ -133,4 +135,6 @@ export {
   Sun,
   Moon,
   GitBranch,
+  Bot,
+  Sparkles
 }

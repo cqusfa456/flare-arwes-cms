@@ -28,6 +28,8 @@ import {
   publicFormsRoutes,
   adminApiReferenceRoutes,
   adminApiTokensRoutes,
+  agentRoutes,
+  adminAgentRoutes,
   adminPreviewRoutes,
   adminSchemaMigrationsRoutes,
   adminTestimonialsRoutes,
@@ -128,7 +130,7 @@ export interface SciFiConfig {
   plugins?: {
     directory?: string
     autoLoad?: boolean
-    disableAll?: boolean  // Disable all plugins including core plugins
+    disableAll?: boolean // Disable all plugins including core plugins
     /** Plugin instances to install during app initialization */
     instances?: Plugin[]
   }
@@ -304,6 +306,8 @@ export function createSciFiApp(config: SciFiConfig = {}): SciFiApp {
   app.route('/api/forms', publicFormsRoutes) // API endpoint for form submissions
   app.route('/admin/api-reference', adminApiReferenceRoutes)
   app.route('/admin/api-tokens', adminApiTokensRoutes)
+  app.route('/agent', agentRoutes)
+  app.route('/admin/agent', adminAgentRoutes)
   app.route('/api/preview', adminPreviewRoutes)
   app.route('/admin/preview', adminPreviewRoutes)
   app.route('/admin/schema-migrations', adminSchemaMigrationsRoutes)
@@ -486,4 +490,3 @@ export function setupCoreRoutes(_app: SciFiApp): void {
   console.warn('setupCoreRoutes is deprecated. Use createSciFiApp() instead.')
   // Backward compatibility implementation
 }
-

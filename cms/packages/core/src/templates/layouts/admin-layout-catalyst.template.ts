@@ -1,7 +1,7 @@
-import { HtmlEscapedString } from "hono/utils/html";
-import { renderLogo } from "../components/logo.template"
-import { getAdminLocale, otherAdminLocale, t } from "../../i18n/admin";
-import { getVersionDisplay } from "../../utils/version";
+import { HtmlEscapedString } from 'hono/utils/html'
+import { renderLogo } from '../components/logo.template'
+import { getAdminLocale, otherAdminLocale, t } from '../../i18n/admin'
+import { getVersionDisplay } from '../../utils/version'
 import {
   icon,
   LayoutDashboard,
@@ -29,26 +29,19 @@ import {
   Sun,
   Moon,
   GitBranch,
-} from "../icons";
+  Bot
+} from '../icons'
 
 // Catalyst Checkbox Component (HTML implementation)
 export interface CatalystCheckboxProps {
-  id: string;
-  name: string;
-  checked?: boolean;
-  disabled?: boolean;
-  label?: string;
-  description?: string;
-  color?:
-    | "dark/zinc"
-    | "dark/white"
-    | "white"
-    | "dark"
-    | "zinc"
-    | "blue"
-    | "green"
-    | "red";
-  className?: string;
+  id: string
+  name: string
+  checked?: boolean
+  disabled?: boolean
+  label?: string
+  description?: string
+  color?: 'dark/zinc' | 'dark/white' | 'white' | 'dark' | 'zinc' | 'blue' | 'green' | 'red'
+  className?: string
 }
 
 export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
@@ -59,49 +52,48 @@ export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
     disabled = false,
     label,
     description,
-    color = "dark/zinc",
-    className = "",
-  } = props;
+    color = 'dark/zinc',
+    className = ''
+  } = props
 
   const colorConfig = {
-    "dark/zinc": {
-      bg: "#18181b",
-      border: "#09090b",
-      check: "#ffffff",
-      darkBg: "#52525b",
+    'dark/zinc': {
+      bg: '#18181b',
+      border: '#09090b',
+      check: '#ffffff',
+      darkBg: '#52525b'
     },
-    "dark/white": {
-      bg: "#18181b",
-      border: "#09090b",
-      check: "#ffffff",
-      darkBg: "#ffffff",
-      darkCheck: "#18181b",
+    'dark/white': {
+      bg: '#18181b',
+      border: '#09090b',
+      check: '#ffffff',
+      darkBg: '#ffffff',
+      darkCheck: '#18181b'
     },
-    white: { bg: "#ffffff", border: "#09090b", check: "#18181b" },
-    dark: { bg: "#18181b", border: "#09090b", check: "#ffffff" },
-    zinc: { bg: "#52525b", border: "#3f3f46", check: "#ffffff" },
-    blue: { bg: "#2563eb", border: "#1d4ed8", check: "#ffffff" },
-    green: { bg: "#16a34a", border: "#15803d", check: "#ffffff" },
-    red: { bg: "#dc2626", border: "#b91c1c", check: "#ffffff" },
-  };
+    white: { bg: '#ffffff', border: '#09090b', check: '#18181b' },
+    dark: { bg: '#18181b', border: '#09090b', check: '#ffffff' },
+    zinc: { bg: '#52525b', border: '#3f3f46', check: '#ffffff' },
+    blue: { bg: '#2563eb', border: '#1d4ed8', check: '#ffffff' },
+    green: { bg: '#16a34a', border: '#15803d', check: '#ffffff' },
+    red: { bg: '#dc2626', border: '#b91c1c', check: '#ffffff' }
+  }
 
-  const _config = colorConfig[color] || colorConfig["dark/zinc"];
+  const _config = colorConfig[color] || colorConfig['dark/zinc']
 
   const colorClasses = {
-    "dark/zinc":
-      "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-zinc-600",
-    "dark/white":
-      "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-white",
-    white: "peer-checked:bg-white peer-checked:before:bg-white",
-    dark: "peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900",
-    zinc: "peer-checked:bg-zinc-600 peer-checked:before:bg-zinc-600",
-    blue: "peer-checked:bg-blue-600 peer-checked:before:bg-blue-600",
-    green: "peer-checked:bg-green-600 peer-checked:before:bg-green-600",
-    red: "peer-checked:bg-red-600 peer-checked:before:bg-red-600",
-  };
+    'dark/zinc':
+      'peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-zinc-600',
+    'dark/white':
+      'peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900 dark:peer-checked:bg-white',
+    white: 'peer-checked:bg-white peer-checked:before:bg-white',
+    dark: 'peer-checked:bg-zinc-900 peer-checked:before:bg-zinc-900',
+    zinc: 'peer-checked:bg-zinc-600 peer-checked:before:bg-zinc-600',
+    blue: 'peer-checked:bg-blue-600 peer-checked:before:bg-blue-600',
+    green: 'peer-checked:bg-green-600 peer-checked:before:bg-green-600',
+    red: 'peer-checked:bg-red-600 peer-checked:before:bg-red-600'
+  }
 
-  const checkColor =
-    color === "dark/white" ? "dark:text-zinc-900" : "text-white";
+  const checkColor = color === 'dark/white' ? 'dark:text-zinc-900' : 'text-white'
 
   const baseClasses = `
     relative isolate flex w-4 h-4 items-center justify-center rounded-[0.3125rem]
@@ -116,13 +108,13 @@ export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
     dark:peer-disabled:border-white/20 dark:peer-disabled:bg-white/2.5
   `
     .trim()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, ' ')
 
   const checkIconClasses = `
     w-4 h-4 opacity-0 peer-checked:opacity-100 pointer-events-none
   `
     .trim()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, ' ')
 
   if (description) {
     // Field layout with description
@@ -133,22 +125,22 @@ export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
             type="checkbox"
             id="${id}"
             name="${name}"
-            ${checked ? "checked" : ""}
-            ${disabled ? "disabled" : ""}
+            ${checked ? 'checked' : ''}
+            ${disabled ? 'disabled' : ''}
             class="peer sr-only"
           />
           <label for="${id}" class="inline-flex cursor-pointer">
-            <span class="${baseClasses} ${colorClasses[color] || colorClasses["dark/zinc"]}">
+            <span class="${baseClasses} ${colorClasses[color] || colorClasses['dark/zinc']}">
               <svg class="${checkIconClasses} ${checkColor}" viewBox="0 0 14 14" fill="none" stroke="currentColor">
                 <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </label>
         </div>
-        ${label ? `<label for="${id}" class="col-start-2 row-start-1 text-sm/6 font-medium text-zinc-950 dark:text-white cursor-pointer">${label}</label>` : ""}
-        ${description ? `<p class="col-start-2 row-start-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${description}</p>` : ""}
+        ${label ? `<label for="${id}" class="col-start-2 row-start-1 text-sm/6 font-medium text-zinc-950 dark:text-white cursor-pointer">${label}</label>` : ''}
+        ${description ? `<p class="col-start-2 row-start-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${description}</p>` : ''}
       </div>
-    `;
+    `
   } else {
     // Simple checkbox with optional label
     return `
@@ -157,41 +149,41 @@ export function renderCatalystCheckbox(props: CatalystCheckboxProps): string {
           type="checkbox"
           id="${id}"
           name="${name}"
-          ${checked ? "checked" : ""}
-          ${disabled ? "disabled" : ""}
+          ${checked ? 'checked' : ''}
+          ${disabled ? 'disabled' : ''}
           class="peer sr-only"
         />
-        <span class="${baseClasses} ${colorClasses[color] || colorClasses["dark/zinc"]}">
+        <span class="${baseClasses} ${colorClasses[color] || colorClasses['dark/zinc']}">
           <svg class="${checkIconClasses} ${checkColor}" viewBox="0 0 14 14" fill="none" stroke="currentColor">
             <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        ${label ? `<span class="text-sm/6 font-medium text-zinc-950 dark:text-white">${label}</span>` : ""}
+        ${label ? `<span class="text-sm/6 font-medium text-zinc-950 dark:text-white">${label}</span>` : ''}
       </label>
-    `;
+    `
   }
 }
 
 export interface AdminLayoutCatalystData {
-  title: string;
-  pageTitle?: string;
-  currentPath?: string;
-  version?: string;
-  enableExperimentalFeatures?: boolean;
+  title: string
+  pageTitle?: string
+  currentPath?: string
+  version?: string
+  enableExperimentalFeatures?: boolean
   user?: {
-    name: string;
-    email: string;
-    role: string;
-  };
-  scripts?: string[];
-  styles?: string[];
-  content: string | HtmlEscapedString;
+    name: string
+    email: string
+    role: string
+  }
+  scripts?: string[]
+  styles?: string[]
+  content: string | HtmlEscapedString
   dynamicMenuItems?: Array<{
-    label: string;
-    slug: string;
-    collectionId: string;
-    icon: string;
-  }>;
+    label: string
+    slug: string
+    collectionId: string
+    icon: string
+  }>
 }
 
 /**
@@ -205,16 +197,14 @@ export function setCatalystDynamicMenuItems(items: AdminLayoutCatalystData['dyna
   _pendingMenuItems = items
 }
 
-export function renderAdminLayoutCatalyst(
-  data: AdminLayoutCatalystData
-): string {
+export function renderAdminLayoutCatalyst(data: AdminLayoutCatalystData): string {
   // Auto-inject menu items from middleware if not explicitly provided
   if (_pendingMenuItems && !data.dynamicMenuItems) {
     data = { ...data, dynamicMenuItems: _pendingMenuItems }
   }
-  if (!data.version) data.version = getVersionDisplay();
+  if (!data.version) data.version = getVersionDisplay()
   const locale = getAdminLocale()
-  const otherLocaleMobile = otherAdminLocale(locale);
+  const otherLocaleMobile = otherAdminLocale(locale)
   return `<!DOCTYPE html>
 <html lang="${getAdminLocale()}">
 <head>
@@ -375,17 +365,13 @@ export function renderAdminLayoutCatalyst(
 
   ${
     data.styles
-      ? data.styles
-          .map((style) => `<link rel="stylesheet" href="${style}">`)
-          .join("\n  ")
-      : ""
+      ? data.styles.map((style) => `<link rel="stylesheet" href="${style}">`).join('\n  ')
+      : ''
   }
   ${
     data.scripts
-      ? data.scripts
-          .map((script) => `<script src="${script}"></script>`)
-          .join("\n  ")
-      : ""
+      ? data.scripts.map((script) => `<script src="${script}"></script>`).join('\n  ')
+      : ''
   }
 </head>
 <body class="min-h-screen bg-slate-50 dark:bg-zinc-900">
@@ -423,7 +409,7 @@ export function renderAdminLayoutCatalyst(
           ${icon(Menu, 'h-5 w-5')}
         </button>
         <div class="ml-4 flex-1 text-zinc-900 dark:text-white">
-          ${renderLogo({ size: "sm", showText: true, href: "/admin" })}
+          ${renderLogo({ size: 'sm', showText: true, href: '/admin' })}
         </div>
         <a href="/admin/language/${otherLocaleMobile.value}?next=${encodeURIComponent(data.currentPath || '/admin')}" class="rounded-lg p-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-950/5 dark:text-zinc-300 dark:hover:bg-white/5">
           ${otherLocaleMobile.short}
@@ -1074,11 +1060,11 @@ export function renderAdminLayoutCatalyst(
     }
   </style>
 </body>
-</html>`;
+</html>`
 }
 
 function renderCatalystSidebar(
-  currentPath: string = "",
+  currentPath: string = '',
   user?: any,
   dynamicMenuItems?: Array<{ label: string; slug: string; collectionId: string; icon: string }>,
   isMobile: boolean = false,
@@ -1105,9 +1091,17 @@ function renderCatalystSidebar(
   `
 
   // --- Helper: render a collection nav item with Alpine.js flyout ---
-  const collectionNavItem = (item: { label: string; slug: string; collectionId: string; icon: string }) => {
+  const collectionNavItem = (item: {
+    label: string
+    slug: string
+    collectionId: string
+    icon: string
+  }) => {
     const contentPath = `/admin/content?collection=${item.collectionId}`
-    const isActive = currentPath === contentPath || currentPath?.includes(`collection=${item.collectionId}`) || currentPath?.includes(`model=${item.slug}`)
+    const isActive =
+      currentPath === contentPath ||
+      currentPath?.includes(`collection=${item.collectionId}`) ||
+      currentPath?.includes(`model=${item.slug}`)
     return `
     <div x-data="{ open: false }" class="relative">
       <span class="relative">
@@ -1163,7 +1157,7 @@ function renderCatalystSidebar(
   // CONTENT section: dynamic collections + Content (all) + Media
   const hasCollections = dynamicMenuItems && dynamicMenuItems.length > 0
   const collectionItems = hasCollections
-    ? dynamicMenuItems!.map(item => collectionNavItem(item)).join('')
+    ? dynamicMenuItems!.map((item) => collectionNavItem(item)).join('')
     : ''
   const contentAllItem = navLink(
     { label: t('Content'), path: '/admin/content', iconHtml: icon(FileText, 'h-5 w-5') },
@@ -1185,31 +1179,78 @@ function renderCatalystSidebar(
   )
 
   // Workflow (admin/editor only, between analytics and system)
-  const workflowItem = isEditorOrAbove ? navLink(
-    { label: t('Workflow'), path: '/admin/workflow/dashboard', iconHtml: icon(GitBranch, 'h-5 w-5') },
-    isActivePath('/admin/workflow')
-  ) : ''
+  const workflowItem = isEditorOrAbove
+    ? navLink(
+        {
+          label: t('Workflow'),
+          path: '/admin/workflow/dashboard',
+          iconHtml: icon(GitBranch, 'h-5 w-5')
+        },
+        isActivePath('/admin/workflow')
+      )
+    : ''
 
   // SYSTEM section — filtered by role
   // Admin-only: Users, Collections, Plugins, Cache, Migrations
   // Editor+: Forms, FAQs
   const systemItemsList: Array<{ label: string; path: string; iconHtml: string }> = []
   if (isAdmin) {
-    systemItemsList.push({ label: t('Users'), path: '/admin/users', iconHtml: icon(Users, 'h-5 w-5') })
-    systemItemsList.push({ label: t('Collections'), path: '/admin/collections', iconHtml: icon(Layers, 'h-5 w-5') })
+    systemItemsList.push({
+      label: t('Users'),
+      path: '/admin/users',
+      iconHtml: icon(Users, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Collections'),
+      path: '/admin/collections',
+      iconHtml: icon(Layers, 'h-5 w-5')
+    })
   }
   if (isEditorOrAbove) {
-    systemItemsList.push({ label: t('Forms'), path: '/admin/forms', iconHtml: icon(ClipboardList, 'h-5 w-5') })
-    systemItemsList.push({ label: t('FAQs'), path: '/admin/faq', iconHtml: icon(CircleHelp, 'h-5 w-5') })
+    systemItemsList.push({
+      label: t('Forms'),
+      path: '/admin/forms',
+      iconHtml: icon(ClipboardList, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('FAQs'),
+      path: '/admin/faq',
+      iconHtml: icon(CircleHelp, 'h-5 w-5')
+    })
   }
   if (isAdmin) {
-    systemItemsList.push({ label: t('Audit Log'), path: '/admin/audit-log', iconHtml: icon(ClipboardList, 'h-5 w-5') })
-    systemItemsList.push({ label: t('Sites'), path: '/admin/sites', iconHtml: icon(Globe, 'h-5 w-5') })
-    systemItemsList.push({ label: t('Plugins'), path: '/admin/plugins', iconHtml: icon(Plug, 'h-5 w-5') })
-    systemItemsList.push({ label: t('Cache'), path: '/admin/cache', iconHtml: icon(HardDrive, 'h-5 w-5') })
-    systemItemsList.push({ label: t('Migrations'), path: '/admin/schema-migrations', iconHtml: icon(Database, 'h-5 w-5') })
+    systemItemsList.push({
+      label: t('Audit Log'),
+      path: '/admin/audit-log',
+      iconHtml: icon(ClipboardList, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Sites'),
+      path: '/admin/sites',
+      iconHtml: icon(Globe, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Agent onboarding'),
+      path: '/admin/agent',
+      iconHtml: icon(Bot, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Plugins'),
+      path: '/admin/plugins',
+      iconHtml: icon(Plug, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Cache'),
+      path: '/admin/cache',
+      iconHtml: icon(HardDrive, 'h-5 w-5')
+    })
+    systemItemsList.push({
+      label: t('Migrations'),
+      path: '/admin/schema-migrations',
+      iconHtml: icon(Database, 'h-5 w-5')
+    })
   }
-  const systemItems = systemItemsList.map(item => navLink(item, isActivePath(item.path))).join('')
+  const systemItems = systemItemsList.map((item) => navLink(item, isActivePath(item.path))).join('')
 
   // Sync button (always visible, disabled when no pending changes)
   const syncItem = `
@@ -1229,20 +1270,24 @@ function renderCatalystSidebar(
   `
 
   // Settings (admin only, pinned bottom)
-  const settingsItem = isAdmin ? navLink(
-    { label: t('Settings'), path: '/admin/settings', iconHtml: icon(Settings, 'h-5 w-5') },
-    isActivePath('/admin/settings')
-  ) : ''
+  const settingsItem = isAdmin
+    ? navLink(
+        { label: t('Settings'), path: '/admin/settings', iconHtml: icon(Settings, 'h-5 w-5') },
+        isActivePath('/admin/settings')
+      )
+    : ''
 
   // Close button for mobile
-  const closeButton = isMobile ? `
+  const closeButton = isMobile
+    ? `
     <div class="-mb-3 px-4 pt-3">
       <button onclick="closeMobileSidebar()" class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/5 sm:text-sm/5" aria-label="${t('Close navigation')}">
         ${icon(X, 'h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500')}
         <span>${t('Close navigation')}</span>
       </button>
     </div>
-  ` : ''
+  `
+    : ''
 
   return `
     <nav class="flex h-full min-h-0 flex-col bg-white shadow-sm ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10 ${
@@ -1279,12 +1324,16 @@ function renderCatalystSidebar(
         </div>
 
         <!-- SYSTEM -->
-        ${systemItemsList.length > 0 ? `
+        ${
+          systemItemsList.length > 0
+            ? `
           ${sectionHeader(t('System'))}
           <div class="flex flex-col gap-0.5">
             ${systemItems}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <!-- Sync + Settings (Bottom) -->
@@ -1295,7 +1344,9 @@ function renderCatalystSidebar(
 
 
       <!-- Sidebar Footer (User) -->
-      ${user ? `
+      ${
+        user
+          ? `
         <div class="flex flex-col border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
           <a href="/admin/language/${otherLocale.value}?next=${encodeURIComponent(currentPath || '/admin')}" class="mb-1 flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5">
             ${icon(Globe, 'h-4 w-4')}
@@ -1343,7 +1394,9 @@ function renderCatalystSidebar(
             </div>
           </div>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     </nav>
   `
 }
