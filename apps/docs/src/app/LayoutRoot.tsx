@@ -56,7 +56,9 @@ const LayoutRoot = (props: {
                 <Background />
               </Animator>
 
-              <Animator combine manager="sequence">
+              {/* The page is not held behind the header: both come in together, a
+                  step apart, so the content in the middle is not left waiting. */}
+              <Animator combine manager="stagger">
                 <div className="relative flex-1 flex flex-col min-w-0 min-h-0">
                   <Animator combine>
                     <Header

@@ -10,7 +10,10 @@ import { ArwesLogoType, ButtonSimple } from '@/ui'
 
 const PageHome = (): JSX.Element => {
   return (
-    <Animator combine manager="sequenceReverse">
+    // The three pieces come in together, a step apart. Played one after another
+    // (sequenceReverse), the wordmark in the middle only started around 1.5s in,
+    // which read as a slow page rather than a transition.
+    <Animator combine manager="stagger">
       <BleepsOnAnimator<BleepNames> transitions={{ entering: 'intro' }} continuous />
 
       <Animated

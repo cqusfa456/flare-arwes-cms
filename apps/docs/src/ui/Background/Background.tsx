@@ -75,6 +75,13 @@ const Background = memo((props: BackgroundProps): ReactElement => {
           <img
             className="absolute inset-0 size-full object-cover object-center"
             src="/assets/images/background-small.jpg"
+            alt=""
+            // The backdrop is what the page opens on: it should not queue behind the
+            // island's own JavaScript, which is where an image's default priority puts
+            // it. (Lowercase, because React 18 passes unknown lowercase attributes
+            // through and would warn about the camelCase spelling.)
+            {...{ fetchpriority: 'high' }}
+            decoding="async"
           />
         </Animated>
       </Animator>
