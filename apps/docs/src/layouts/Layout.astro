@@ -61,6 +61,8 @@ const actionItems = await getMenu('links')
 // component the shell falls back to the CMS menus above, then to the built-in
 // navigation, so a site that manages no chrome still has a menu.
 const hasNavComponent = Object.keys(import.meta.glob('/src/cms-components/nav.astro')).length > 0
+const hasLogoComponent =
+  Object.keys(import.meta.glob('/src/cms-components/logo.astro')).length > 0
 
 // A page's layout may render the chrome itself; then the shell keeps its menu out
 // of the way. By default the header owns the menu.
@@ -192,6 +194,7 @@ const serverPaths = cmsPages
       serverPaths={serverPaths}
       navItems={navItems}
       actionItems={actionItems}
+      logoContent={hasLogoComponent}
       hideMenu={hideMenu}
       hasServerContent={!!hasServerContent}
     >
@@ -204,6 +207,17 @@ const serverPaths = cmsPages
         hasNavComponent && (
           <Fragment slot="nav">
             <CmsComponent name="nav" navKey={navKey} pathname={pathname} />
+          </Fragment>
+        )
+      }
+      {/*
+        The logo, and the page it links to, are the site's too: `logo` in
+        Admin → Content → 组件, with its `href` and `title` props.
+      */}
+      {
+        hasLogoComponent && (
+          <Fragment slot="logo">
+            <CmsComponent name="logo" href="/" title={settings.title} />
           </Fragment>
         )
       }

@@ -337,6 +337,8 @@ const zhCN: Record<string, string> = {
   'Domain': '域名',
   'Domains': '域名',
   'Deploy mode': '部署方式',
+  'Paths serve this site at /blog, /docs and so on; standalone makes it the home of the collections in its content routes.': '路径模式：站点按 /blog、/docs 等前缀发布；独立模式：站点作为独立首页发布其内容路由中的集合。',
+  'Publishing mode': '发布模式',
   'Provider': '服务商',
   'Build': '构建',
   'Deploy': '部署',

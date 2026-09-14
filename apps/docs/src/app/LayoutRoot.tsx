@@ -23,6 +23,8 @@ const LayoutRoot = (props: {
   navContent?: ReactNode
   /** The header's right-hand links from the CMS. */
   actionItems?: Array<{ label: string; href: string; icon?: string }>
+  /** Whether the site publishes a logo component (the shell then shows it). */
+  hasLogoContent?: boolean
   hideMenu?: boolean
 }): JSX.Element => {
   const [isMotionEnabled] = useAtom(atomMotionEnabled)
@@ -62,6 +64,7 @@ const LayoutRoot = (props: {
                       navItems={props.navItems}
                       navContent={props.navContent}
                       actionItems={props.actionItems}
+                      logoContent={props.hasLogoContent}
                       hideMenu={props.hideMenu}
                     />
                   </Animator>

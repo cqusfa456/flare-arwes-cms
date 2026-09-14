@@ -57,6 +57,11 @@ interface HeaderProps {
    * site's built-in links are used.
    */
   actionItems?: Array<{ label: string; href: string; icon?: string }>
+  /**
+   * The site's logo, rendered from the CMS `logo` component. It is shown where the
+   * built-in logo sits, and replaces it (including the link to the front page).
+   */
+  logoContent?: ReactNode
   /** Set when the page's layout renders the chrome: no menu from the shell. */
   hideMenu?: boolean
 }
@@ -84,7 +89,16 @@ const DEFAULT_ACTION_LINKS: Array<{ label: string; href: string; icon?: string }
 ]
 
 const Header = memo((props: HeaderProps): JSX.Element => {
-  const { className, animated, blogPath, navItems, navContent, actionItems, hideMenu } = props
+  const {
+    className,
+    animated,
+    blogPath,
+    navItems,
+    navContent,
+    actionItems,
+    logoContent,
+    hideMenu
+  } = props
   const actionLinks = actionItems && actionItems.length > 0 ? actionItems : DEFAULT_ACTION_LINKS
   const hasCmsNav = !navContent && !!navItems && navItems.length > 0
   const hasNavContent = !!navContent
@@ -151,28 +165,45 @@ const Header = memo((props: HeaderProps): JSX.Element => {
             {/* LEFT PANEL */}
             <Animator combine manager="stagger" refreshOn={[isIndex, isMD]}>
               <Animated className="flex flex-row gap-4" animated={[['x', theme.spacen(4), 0, 0]]}>
-                <Link className={styles.logo} href="/" onClick={() => bleeps.click?.play()}>
-                  <h1
-                    className={cx('flex flex-row justify-center items-center gap-2', HEIGHT_CLASS)}
-                    title={settings.title}
+                {/*
+                  The logo (and the page it links to) is a CMS component: the site
+                  layout passes it in, and the markup it publishes is shown here.
+                  Without one the site's own logo is used, as before.
+                */}
+                {logoContent ? (
+                  <div
+                    className={cx(styles.logo, HEIGHT_CLASS)}
+                    onClick={() => bleeps.click?.play()}
                   >
-                    <Animator>
-                      <ArwesLogoIcon
-                        className={cx('w-5 h-5 md:w-6 md:h-6', styles.logoImage)}
-                        animated={['flicker']}
-                      />
-                    </Animator>
-
-                    <Animator
-                      merge
-                      condition={!isIndex && isMD}
-                      unmountOnExited
-                      unmountOnDisabled={isIndex || !isMD}
+                    {logoContent}
+                  </div>
+                ) : (
+                  <Link className={styles.logo} href="/" onClick={() => bleeps.click?.play()}>
+                    <h1
+                      className={cx(
+                        'flex flex-row justify-center items-center gap-2',
+                        HEIGHT_CLASS
+                      )}
+                      title={settings.title}
                     >
-                      <ArwesLogoType className="h-3 md:h-4" animated={['flicker']} />
-                    </Animator>
-                  </h1>
-                </Link>
+                      <Animator>
+                        <ArwesLogoIcon
+                          className={cx('w-5 h-5 md:w-6 md:h-6', styles.logoImage)}
+                          animated={['flicker']}
+                        />
+                      </Animator>
+
+                      <Animator
+                        merge
+                        condition={!isIndex && isMD}
+                        unmountOnExited
+                        unmountOnDisabled={isIndex || !isMD}
+                      >
+                        <ArwesLogoType className="h-3 md:h-4" animated={['flicker']} />
+                      </Animator>
+                    </h1>
+                  </Link>
+                )}
 
                 <Animator
                   combine

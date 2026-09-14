@@ -18,8 +18,8 @@
  *   cms/packages/cms/content/components/<key>.json  -> components/<key> (field `items`)
  *   cms/packages/cms/content/layouts/<key>.astro    -> layouts/<key>    (field `astro`)
  *
- * Entries that already exist are updated in place; the rest of their fields (and
- * every other entry, including pages) are left alone.
+ * An entry that already exists is left as it is — the CMS is the source of truth once
+ * an operator has edited it there; `--force` replaces it with the fixture.
  *
  * Usage:
  *   SCIFI_ADMIN_PASSWORD=... node scripts/seed-cms-chrome.mjs <base-url> \
@@ -32,6 +32,9 @@ import { join, resolve } from 'node:path'
 const args = process.argv.slice(2)
 const baseUrl = args.find((a) => !a.startsWith('-'))?.replace(/\/+$/, '')
 const dryRun = args.includes('--dry-run')
+// Fixtures are a starting point, not a source of truth: an entry that already
+// exists is left as it is unless the operator asks for it to be replaced.
+const force = args.includes('--force')
 
 if (!baseUrl) {
   console.error(
@@ -74,7 +77,7 @@ const run = async () => {
   )
   // Said before anything is written: an entry with the same key is replaced by the
   // repository's fixture, so an edit made in the admin is lost.
-  log('note: entries with the same key are overwritten by the repository fixtures')
+  log('note: existing entries are left as they are; --force replaces them')
 
   const login = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
@@ -98,6 +101,7 @@ const run = async () => {
   }
 
   const upsert = async (name, key, title, data) => {
+    const replaceExisting = force
     const existing =
       (
         await (
@@ -112,6 +116,10 @@ const run = async () => {
       status: 'published',
       // Keep the rest of the entry: this script owns only the fields it uploads.
       data: { ...(match?.data ?? {}), title, slug: key, ...data }
+    }
+    if (match && !replaceExisting) {
+      log(`${name}/${key}: exists, left as it is (--force replaces it)`)
+      return
     }
     if (dryRun) {
       log(`${name}/${key}: ${match ? 'would be updated' : 'would be created'}`)

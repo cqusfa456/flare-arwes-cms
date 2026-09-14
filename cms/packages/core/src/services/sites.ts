@@ -155,6 +155,18 @@ export type SiteContentRoutes = Record<string, string>
  */
 export type SiteContentRoutesInput = SiteContentRoutes | string | null
 
+/** How a site publishes: at its own path prefixes, or as a host of its own. */
+export type SiteContentMode = 'paths' | 'standalone'
+
+export const SITE_CONTENT_MODES: SiteContentMode[] = ['paths', 'standalone']
+
+export const normalizeContentMode = (value: unknown): SiteContentMode | null => {
+  const candidate = typeof value === 'string' ? value.trim() : ''
+  return (SITE_CONTENT_MODES as string[]).includes(candidate)
+    ? (candidate as SiteContentMode)
+    : null
+}
+
 export interface Site {
   id: string
   slug: string
@@ -189,6 +201,12 @@ export interface Site {
    * every collection at its own `url_prefix`.
    */
   contentRoutes: SiteContentRoutes | null
+
+  /**
+   * `paths` serves the collections at their own prefixes on this host; `standalone`
+   * makes this site the home of the collections in its content routes.
+   */
+  contentMode: SiteContentMode | null
   /** Extra/overriding build-time env vars pushed to the trigger (migration 040). */
   buildEnv: Record<string, SiteBuildEnvVar>
   /** Read-only API token the CMS minted for this site's builds (never serialized). */
@@ -230,6 +248,9 @@ export interface SiteInput {
    * site". Omitted on update means "leave the stored value alone".
    */
   contentRoutes?: SiteContentRoutesInput
+
+  /** How the site publishes; see {@link SiteContentMode}. */
+  contentMode?: SiteContentMode | null
   buildEnv?: Record<string, SiteBuildEnvVar> | null
   isActive?: boolean
 }
@@ -471,6 +492,7 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   buildConfigSyncedAt: (row.build_config_synced_at as number | null) ?? null,
   contentPrefix: (row.content_prefix as string | null) ?? null,
   contentRoutes: parseSiteContentRoutes(row.content_routes),
+  contentMode: normalizeContentMode(row.content_mode),
   buildEnv: parseBuildEnv(row.build_env),
   contentToken: (row.content_token as string | null) ?? null,
   contentTokenId: (row.content_token_id as string | null) ?? null,
@@ -934,9 +956,9 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, content_routes, build_env, content_token, content_token_id, deploy_mode,
+           content_prefix, content_routes, content_mode, build_env, content_token, content_token_id, deploy_mode,
            is_active, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
       )
       .bind(
         id,
@@ -958,6 +980,8 @@ export class SitesService {
         input.nodeVersion ?? null,
         input.contentPrefix ?? null,
         contentRoutes ? JSON.stringify(contentRoutes) : null,
+        // The mode follows what the site publishes unless it says otherwise.
+        normalizeContentMode(input.contentMode) ?? (contentRoutes ? 'standalone' : 'paths'),
         input.buildEnv && Object.keys(input.buildEnv).length > 0
           ? JSON.stringify(input.buildEnv)
           : null,
@@ -1007,6 +1031,7 @@ export class SitesService {
       nodeVersion: 'node_version',
       contentPrefix: 'content_prefix',
       contentRoutes: 'content_routes',
+      contentMode: 'content_mode',
       buildEnv: 'build_env',
       isActive: 'is_active'
     }
