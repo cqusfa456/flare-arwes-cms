@@ -28,27 +28,48 @@ export type NavItem = {
 export const defaultNavKey = (pathname: string): string =>
   pathname === '/' || pathname === '' ? 'home' : 'default'
 
+const toItems = (parsed: unknown): NavItem[] =>
+  (Array.isArray(parsed) ? parsed : [parsed])
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .map((item) => ({
+      label: String(item.label ?? ''),
+      href: String(item.href ?? ''),
+      icon: typeof item.icon === 'string' && item.icon ? item.icon : undefined
+    }))
+    .filter((item) => item.label !== '' && item.href !== '')
+
+/**
+ * Read a menu's `items` field.
+ *
+ * The field is JSON, and the CMS field is a plain textarea, so hand-editing it is
+ * normal: a single object (`{...}`) and a list that lost its enclosing brackets
+ * (`{...},{...}`) are both read as the menu the author meant, rather than silently
+ * falling back to the built-in one.
+ */
 const parseItems = (raw: unknown): NavItem[] => {
+  if (Array.isArray(raw)) {
+    return toItems(raw)
+  }
   if (typeof raw !== 'string' || raw.trim() === '') {
     return []
   }
-  try {
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) {
-      return []
-    }
-    return parsed
-      .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
-      .map((item) => ({
-        label: String(item.label ?? ''),
-        href: String(item.href ?? ''),
-        icon: typeof item.icon === 'string' && item.icon ? item.icon : undefined
-      }))
-      .filter((item) => item.label !== '' && item.href !== '')
-  } catch {
-    console.warn('[navigation] the selected menu has invalid JSON in its items field; ignoring it')
-    return []
+
+  const text = raw.trim()
+  const shapes = [text]
+  if (!text.startsWith('[') && text.includes('{')) {
+    shapes.push(`[${text}]`)
   }
+
+  for (const shape of shapes) {
+    try {
+      return toItems(JSON.parse(shape) as unknown)
+    } catch {
+      // Try the next shape.
+    }
+  }
+
+  console.warn('[navigation] the selected menu has invalid JSON in its items field; ignoring it')
+  return []
 }
 
 /**
@@ -65,7 +86,7 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
 
   for (const key of wanted) {
     const match = entries.find((entry: any) => String(entry.data.key) === key)
-    if (match && typeof match.data.items === 'string' && match.data.items.trim() !== '') {
+    if (match && match.data.items !== undefined && match.data.items !== null && match.data.items !== '') {
       return parseItems(match.data.items)
     }
   }
@@ -80,7 +101,9 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
 export const getMenu = async (key: string): Promise<NavItem[]> => {
   const entries = await getCollection('components')
   const match = entries.find((entry: any) => String(entry.data.key) === key)
-  return match && typeof match.data.items === 'string' ? parseItems(match.data.items) : []
+  return match && match.data.items !== undefined && match.data.items !== null
+    ? parseItems(match.data.items)
+    : []
 }
 
 /** Source of the layout a page should be wrapped in, or null when there is none. */

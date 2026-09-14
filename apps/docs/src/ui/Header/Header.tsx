@@ -364,7 +364,15 @@ const Header = memo((props: HeaderProps): JSX.Element => {
                               target={item.icon ?? item.label.toLowerCase()}
                               title={item.label}
                             >
-                              {ACTION_ICONS[item.icon ?? item.label.toLowerCase()] ?? null}
+                              {ACTION_ICONS[item.icon ?? item.label.toLowerCase()] ?? (
+                                /*
+                                  An icon this shell does not know is not a reason to
+                                  hide the link: the label is shown instead.
+                                */
+                                <span className="font-cta text-size-10 uppercase">
+                                  {item.label}
+                                </span>
+                              )}
                               {isSponsor && (
                                 <div
                                   className={cx(
