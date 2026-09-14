@@ -709,7 +709,7 @@ export function renderAdminLayoutCatalyst(
       <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl ring-1 ring-zinc-950/5 dark:ring-white/10 max-h-[80vh] flex flex-col">
         <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
           <div>
-            <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Sync</h2>
+            <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">${t('Sync')}</h2>
             <p id="sync-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400">${t('Review pending changes before going live')}</p>
           </div>
           <button onclick="closeSyncModal()" class="rounded-lg p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
@@ -742,12 +742,12 @@ export function renderAdminLayoutCatalyst(
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20">
             <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </div>
-          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Reject Revision</h3>
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">${t('Reject Revision')}</h3>
         </div>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-5">This revision will be discarded. The live content will remain unchanged.</p>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-5">${t('This revision will be discarded. The live content will remain unchanged.')}</p>
         <div class="flex justify-end gap-3">
           <button onclick="closeRejectConfirm()" class="rounded-lg bg-zinc-100 dark:bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">${t('Cancel')}</button>
-          <button onclick="confirmReject()" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">Reject</button>
+          <button onclick="confirmReject()" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">${t('Reject')}</button>
         </div>
       </div>
     </div>
@@ -767,11 +767,11 @@ export function renderAdminLayoutCatalyst(
         if (data.count > 0) {
           if (badge) { badge.textContent = data.count; badge.classList.remove('hidden'); }
           if (btn) { btn.disabled = false; btn.classList.add('ring-2', 'ring-blue-500/50'); btn.style.animation = 'sync-pulse 2s ease-in-out infinite'; }
-          if (subtext) { subtext.textContent = data.count + ' pending'; subtext.classList.remove('hidden'); }
+          if (subtext) { subtext.textContent = data.count + ' ' + syncText.pending; subtext.classList.remove('hidden'); }
         } else {
           if (badge) badge.classList.add('hidden');
           if (btn) { btn.disabled = true; btn.classList.remove('ring-2', 'ring-blue-500/50'); btn.style.animation = ''; }
-          if (subtext) { subtext.textContent = 'Up to date'; subtext.classList.remove('hidden'); }
+          if (subtext) { subtext.textContent = syncText.upToDate; subtext.classList.remove('hidden'); }
         }
       } catch (e) { /* silent */ }
     }
@@ -783,6 +783,23 @@ export function renderAdminLayoutCatalyst(
       inSync: '${t('Everything is in sync')}',
       none: '${t('No pending changes. All content is live.')}',
       goLive: '${t('Go Live')}',
+      pending: '${t('pending')}',
+      upToDate: '${t('Up to date')}',
+      by: '${t('by')}',
+      unknown: '${t('Unknown')}',
+      reject: '${t('Reject')}',
+      rejectTitle: '${t('Reject Revision')}',
+      rejectBody: '${t('This revision will be discarded. The live content will remain unchanged.')}',
+      loadFailed: '${t('Failed to load pending changes')}',
+      publishing: '${t('Publishing...')}',
+      pushing: '${t('Pushing changes live...')}',
+      synced: '${t('Synced')}',
+      syncFailed: '${t('Sync failed')}',
+      networkError: '${t('Network error')}',
+      justNow: '${t('just now')}',
+      minutesAgo: '${t('{n}m ago')}',
+      hoursAgo: '${t('{n}h ago')}',
+      daysAgo: '${t('{n}d ago')}',
       ready: '${t('ready for review')}',
       change: '${t('change')}',
       changes: '${t('changes')}',
@@ -831,7 +848,7 @@ export function renderAdminLayoutCatalyst(
           // Group by collection
           const groups = {};
           for (const rev of _syncRevisions) {
-            const col = rev.collectionName || 'Unknown';
+            const col = rev.collectionName || syncText.unknown;
             if (!groups[col]) groups[col] = [];
             groups[col].push(rev);
           }
@@ -865,7 +882,7 @@ export function renderAdminLayoutCatalyst(
 
               const meta = document.createElement('p');
               meta.className = 'text-xs text-zinc-500 dark:text-zinc-400 mt-0.5';
-              meta.textContent = 'by ' + rev.submittedByEmail + ' \u00b7 ' + formatTimeAgo(rev.submittedAt);
+              meta.textContent = syncText.by + ' ' + rev.submittedByEmail + ' \u00b7 ' + formatTimeAgo(rev.submittedAt);
 
               info.appendChild(titleLink);
               info.appendChild(meta);
@@ -942,8 +959,8 @@ export function renderAdminLayoutCatalyst(
 
               const rejectBtn = document.createElement('button');
               rejectBtn.className = 'shrink-0 ml-2 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors';
-              rejectBtn.textContent = 'Reject';
-              rejectBtn.title = 'Reject';
+              rejectBtn.textContent = syncText.reject;
+              rejectBtn.title = syncText.reject;
               rejectBtn.setAttribute('data-version-id', rev.versionId);
               rejectBtn.addEventListener('click', function() { showRejectConfirm(this.getAttribute('data-version-id')); });
 
@@ -961,7 +978,7 @@ export function renderAdminLayoutCatalyst(
         body.textContent = '';
         const err = document.createElement('div');
         err.className = 'py-8 text-center text-red-500';
-        err.textContent = 'Failed to load pending changes';
+        err.textContent = syncText.loadFailed;
         body.appendChild(err);
       }
     }
@@ -974,8 +991,8 @@ export function renderAdminLayoutCatalyst(
       const btn = document.getElementById('sync-confirm-btn');
       const status = document.getElementById('sync-status');
       btn.disabled = true;
-      btn.textContent = 'Publishing...';
-      status.textContent = 'Pushing changes live...';
+      btn.textContent = syncText.publishing;
+      status.textContent = syncText.pushing;
       try {
         const res = await fetch('/admin/sync/api/approve-all', { method: 'POST' });
         const data = await res.json();
@@ -984,18 +1001,18 @@ export function renderAdminLayoutCatalyst(
           if (data.sitesFailed && data.sitesFailed.length > 0) {
             status.textContent += ' · ' + syncText.buildFailed + ' ' + data.sitesFailed.join(', ');
           }
-          btn.textContent = 'Synced';
+          btn.textContent = syncText.synced;
           btn.className = 'rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
           checkPendingSync();
           setTimeout(closeSyncModal, 2000);
         } else {
-          status.textContent = data.error || 'Sync failed';
-          btn.textContent = 'Go Live';
+          status.textContent = data.error || syncText.syncFailed;
+          btn.textContent = syncText.goLive;
           btn.disabled = false;
         }
       } catch (e) {
-        status.textContent = 'Network error';
-        btn.textContent = 'Go Live';
+        status.textContent = syncText.networkError;
+        btn.textContent = syncText.goLive;
         btn.disabled = false;
       }
     }
@@ -1039,12 +1056,12 @@ export function renderAdminLayoutCatalyst(
     function formatTimeAgo(ts) {
       var diff = Date.now() - ts;
       var mins = Math.floor(diff / 60000);
-      if (mins < 1) return 'just now';
-      if (mins < 60) return mins + 'm ago';
+      if (mins < 1) return syncText.justNow;
+      if (mins < 60) return syncText.minutesAgo.replace('{n}', String(mins));
       var hours = Math.floor(mins / 60);
-      if (hours < 24) return hours + 'h ago';
+      if (hours < 24) return syncText.hoursAgo.replace('{n}', String(hours));
       var days = Math.floor(hours / 24);
-      return days + 'd ago';
+      return syncText.daysAgo.replace('{n}', String(days));
     }
 
     document.addEventListener('DOMContentLoaded', checkPendingSync);
@@ -1204,7 +1221,7 @@ function renderCatalystSidebar(
         class="relative flex w-full items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5 sm:text-sm/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
       >
         ${icon(Rocket, 'h-5 w-5 shrink-0')}
-        <span>Sync</span>
+        <span>${t('Sync')}</span>
         <span id="sync-badge" class="ml-auto hidden min-w-[20px] rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white"></span>
       </button>
       <span id="sync-subtext" class="hidden pl-10 -mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">${t('Up to date')}</span>

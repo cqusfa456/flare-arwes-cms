@@ -257,16 +257,6 @@ export function renderContentListPage(data: ContentListPageData): string {
         <div>
           <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Content Management')}</h1>
           <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">${t('Manage and organize your content items')}</p>
-
-      ${/*
-        The site is a static build: an edit here is content in the CMS, and it reaches
-        the website when the site is built again. Saying so, with the way to do it, is
-        cheaper than leaving an operator to wonder why the page did not change.
-      */ ''}
-      <div class="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 px-3 py-2 text-sm text-blue-800 dark:text-blue-200 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
-        <span>${t('Changes are published when the site is built again:')}</span>
-        <a href="/admin/sites" class="font-semibold underline hover:no-underline">${t('Sites')} → ${t('Build now')}</a>
-      </div>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <a href="/admin/content/new" class="inline-flex items-center justify-center rounded-lg bg-zinc-950 dark:bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white dark:text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm">
