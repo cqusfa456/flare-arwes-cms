@@ -61,6 +61,9 @@ const buildSitesForCollections = async (
 ): Promise<{ built: string[]; failed: string[] }> => {
   const built: string[] = []
   const failed: string[] = []
+  if (collections.length === 0) {
+    return { built, failed }
+  }
   try {
     const service = new SitesService(
       c.env.DB,
