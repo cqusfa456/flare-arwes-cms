@@ -203,6 +203,50 @@ describe('ensureDomainDns', () => {
     expect(domain.dnsStatus).toBe('unsupported')
   })
 
+  it('creates the record beside the mail rows an apex carries', async () => {
+    const { db } = fakeDb(siteRow(), domainRow({ hostname: 'example.com' }))
+    const writes: string[] = []
+    vi.stubGlobal('fetch', async (url: string, init: { method?: string; body?: string } = {}) => {
+      const path = String(url).replace('https://api.cloudflare.com/client/v4', '')
+      if (path.startsWith('/zones?')) return json([{ id: 'zone-1', name: 'example.com' }])
+      if (path.startsWith('/zones/zone-1/dns_records?')) {
+        // A mail-enabled apex: MX and SPF/DKIM rows live at the same name.
+        return json([
+          { id: 'mx-1', type: 'MX', name: 'example.com', content: 'mail.example.com' },
+          { id: 'spf-1', type: 'TXT', name: 'example.com', content: 'v=spf1 -all' }
+        ])
+      }
+      if (path !== '/zones/zone-1/dns_records') throw new Error(`unexpected call ${path}`)
+      writes.push(String(init.body))
+      return json({ id: 'record-1' })
+    })
+
+    const domain = await service(db).ensureDomainDns('site-1', 'example.com')
+
+    expect(domain.dnsStatus).toBe('created')
+    expect(writes).toHaveLength(1)
+    expect(JSON.parse(writes[0])).toMatchObject({ type: 'CNAME', name: 'example.com' })
+  })
+
+  it('never rewrites a mail row, even when asked to take the name over', async () => {
+    const { db } = fakeDb(siteRow(), domainRow({ hostname: 'example.com' }))
+    const touched: string[] = []
+    vi.stubGlobal('fetch', async (url: string, init: { method?: string } = {}) => {
+      const path = String(url).replace('https://api.cloudflare.com/client/v4', '')
+      if (path.startsWith('/zones?')) return json([{ id: 'zone-1', name: 'example.com' }])
+      if (path.startsWith('/zones/zone-1/dns_records?')) {
+        return json([{ id: 'mx-1', type: 'MX', name: 'example.com', content: 'mail.example.com' }])
+      }
+      touched.push(`${init.method} ${path}`)
+      return json({ id: 'record-1' })
+    })
+
+    const domain = await service(db).ensureDomainDns('site-1', 'example.com', { takeOver: true })
+
+    expect(domain.dnsStatus).toBe('created')
+    expect(touched).toEqual(['POST /zones/zone-1/dns_records'])
+  })
+
   it('refuses a hostname that is not bound to the site', async () => {
     const { db } = fakeDb(siteRow(), domainRow())
     const prepare = (db as { prepare: (sql: string) => unknown }).prepare

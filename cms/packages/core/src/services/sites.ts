@@ -134,6 +134,15 @@ export type SiteDomainStatus = 'pending' | 'active' | 'error' | 'removed'
  */
 export type SiteDomainDnsStatus = 'created' | 'current' | 'updated' | 'conflict' | 'unsupported'
 
+/**
+ * Record types that decide where a hostname's HTTP traffic goes.
+ *
+ * Everything else a name may carry — MX, TXT, CAA, NS — belongs to another service
+ * (mail, certificates, delegation) and is neither a conflict nor a take-over target
+ * when the CMS prepares a site's DNS.
+ */
+const DNS_ADDRESS_RECORD_TYPES: readonly string[] = ['CNAME', 'A', 'AAAA']
+
 export interface SiteDomain {
   id: string
   siteId: string
@@ -2158,7 +2167,15 @@ export class SitesService {
     return await remember('updated', { id: recordId, target: desired })
   }
 
-  /** The zone's record for a hostname, whatever its type, or null when the name is free. */
+  /**
+   * The record that decides where a hostname's traffic goes, if there is one.
+   *
+   * Only the address-record types count. A name may carry MX, TXT (SPF, DKIM, DMARC),
+   * CAA and other rows for services that are not HTTP — the apex of a mail-enabled
+   * zone always does — and those must never be mistaken for "the name is taken", let
+   * alone be rewritten by a take-over. (Reported from production: a take-over turned
+   * the second MX of a zone into the site's CNAME.)
+   */
   private async findDnsRecord(
     zoneId: string,
     hostname: string
@@ -2167,7 +2184,9 @@ export class SitesService {
       `/zones/${zoneId}/dns_records?per_page=100&name=${encodeURIComponent(hostname)}`
     )
     const match = (list ?? []).find(
-      (record) => String(record.name ?? '').toLowerCase() === hostname
+      (record) =>
+        String(record.name ?? '').toLowerCase() === hostname &&
+        DNS_ADDRESS_RECORD_TYPES.includes(String(record.type ?? '').toUpperCase())
     )
     return match ?? null
   }
