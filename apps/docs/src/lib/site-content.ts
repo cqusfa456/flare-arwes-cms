@@ -24,6 +24,13 @@ export type NavItem = {
   icon?: string
 }
 
+/**
+ * Identity of a component: its `key`, or the slug when a write dropped it. Both name
+ * the same entry (the admin creates one per key), and the chrome must not go blank
+ * because a field is missing.
+ */
+const componentKey = (entry: any): string => String(entry?.data?.key ?? entry?.slug ?? '')
+
 /** Key of the menu a path uses when the page names none. */
 export const defaultNavKey = (pathname: string): string =>
   pathname === '/' || pathname === '' ? 'home' : 'default'
@@ -85,7 +92,7 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
   const wanted = [pageKey, defaultNavKey(pathname)].filter((key): key is string => !!key)
 
   for (const key of wanted) {
-    const match = entries.find((entry: any) => String(entry.data.key) === key)
+    const match = entries.find((entry: any) => componentKey(entry) === key)
     if (match?.data.items !== undefined && match.data.items !== null && match.data.items !== '') {
       return parseItems(match.data.items)
     }
@@ -100,7 +107,7 @@ export const getNavigation = async (pathname: string, pageKey?: string): Promise
  */
 export const getMenu = async (key: string): Promise<NavItem[]> => {
   const entries = await getCollection('components')
-  const match = entries.find((entry: any) => String(entry.data.key) === key)
+  const match = entries.find((entry: any) => componentKey(entry) === key)
   return match?.data.items !== undefined && match.data.items !== null
     ? parseItems(match.data.items)
     : []
@@ -114,7 +121,7 @@ export const getLayout = async (
   const wanted = [pageKey, 'default'].filter((key): key is string => !!key)
 
   for (const key of wanted) {
-    const match = entries.find((entry: any) => String(entry.data.key) === key)
+    const match = entries.find((entry: any) => componentKey(entry) === key)
     const astro = match?.data?.astro
     if (match && typeof astro === 'string' && astro.trim() !== '') {
       return { key, astro }
