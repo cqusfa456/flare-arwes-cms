@@ -130,6 +130,10 @@ export const TOKEN_TEMPLATES = {
       { key: 'zone', type: 'read' },
       // Bind / unbind Worker custom domains.
       { key: 'workers_routes', type: 'edit' },
+      // The CMS also owns the zone record that sends a bound hostname to the site
+      // (`POST .../domains/dns`): without DNS write, binding a domain leaves the
+      // record to be edited by hand in the dashboard.
+      { key: 'dns_records', type: 'edit' },
       // One type only: the form treats each (key, type) pair as its own row, so
       // listing several types for one permission pre-fills duplicate rows
       // (observed with workers_ci before this was fixed). Pages is not listed at
@@ -140,6 +144,7 @@ export const TOKEN_TEMPLATES = {
       'Workers Scripts: Read（解析 Worker tag）',
       'Zone: Read（按主机名解析所属 zone）',
       'Workers Routes: Edit（绑定/解绑自定义域名）',
+      'DNS：「编辑」（= DNS Write，键名 dns_records）—— CMS 用它创建/核对自定义域名的 DNS 记录；缺失时绑定域名会停在 pending，需要手工去面板加记录',
       'Workers 构建配置：「编辑」（= Workers CI Write，**账户级**；链接已预填）',
       '⚠ Cloudflare Pages：「编辑」（= Pages Write，**账户级**）—— **无法通过链接预填，必须手动加**：资源选「帐户」→ 权限选「Cloudflare Pages」→ 级别选「编辑」。仅当还用 CMS 管理 Pages 站点时需要'
     ]

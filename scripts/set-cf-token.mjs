@@ -30,7 +30,8 @@
  *
  * Note: this is the CI token. The token the CMS uses at runtime to manage
  * domains and builds is a DIFFERENT secret and needs different scopes (Workers
- * Scripts: Read, Workers Builds Configuration: Edit, Zone: Read) and must be
+ * Scripts: Read, Workers Builds Configuration: Edit, Zone: Read, DNS: Edit — the
+ * CMS creates the record that sends a bound domain to the site) and must be
  * user-scoped for the Workers Builds API.
  *
  * Usage

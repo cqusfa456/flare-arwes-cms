@@ -19,7 +19,8 @@ on:
 #                           Must be user-scoped (the Workers Builds API rejects
 #                           account-scoped tokens) and carry Workers Builds
 #                           Configuration: Edit, Workers Scripts: Read,
-#                           Zone: Read and, for Pages sites, Pages: Edit.
+#                           Zone: Read, DNS: Edit (the CMS creates the record for
+#                           a bound domain) and, for Pages sites, Pages: Edit.
 #                           Create it with: node scripts/set-cf-token.mjs runtime
 #   JWT_SECRET            — CMS auth secret
 #   SCIFI_API_URL         — deployed CMS worker URL
