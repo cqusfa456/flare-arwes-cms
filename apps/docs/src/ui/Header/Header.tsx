@@ -33,6 +33,7 @@ import { atomAudioEnabled, atomMotionEnabled, settings, theme } from '@/config'
 import { useAppBleeps, useAppBreakpoint } from '@/tools'
 import { ArwesLogoIcon } from '../ArwesLogoIcon'
 import { ArwesLogoType } from '../ArwesLogoType'
+import { QqIcon } from '../QqIcon'
 import { Menu } from '../Menu'
 import { MenuItem } from '../MenuItem'
 import { MobileMenu } from './MobileMenu'
@@ -68,6 +69,7 @@ const ACTION_ICONS: Record<string, JSX.Element> = {
   github: <Github />,
   x: <X />,
   discord: <Discord />,
+  qq: <QqIcon />,
   docs: <Page />,
   blog: <Post />,
   demos: <CollageFrame />
