@@ -300,9 +300,10 @@ export class SciFiD1Client {
       cf_project_name: string | null
       content_routes: string | null
       content_mode: string | null
+      publishes_app: number | null
       parent_site_id: string | null
     }>(
-      `SELECT id, slug, provider, cf_project_name, content_routes, content_mode, parent_site_id
+      `SELECT id, slug, provider, cf_project_name, content_routes, content_mode, publishes_app, parent_site_id
        FROM sites
        WHERE is_active = 1`
     )
@@ -335,6 +336,14 @@ export class SciFiD1Client {
     // Only a deployed site with no content routes builds the website.
     const publishesWebsite = (row: { content_routes: string | null; content_mode: string | null }) =>
       modeOf(row) === 'standalone' && parseContentRoutes(row.content_routes) === null
+
+    // A content host may ask for the website's routes beside its own content
+    // (migration 055): then it publishes them itself.
+    const publishesAppRoutes = (row: {
+      content_routes: string | null
+      content_mode: string | null
+      publishes_app: number | null
+    }) => modeOf(row) === 'standalone' && (parseContentRoutes(row.content_routes) === null || Number(row.publishes_app ?? 0) === 1)
 
     // The sites mounted on this one (migration 052) publish through it, at the prefixes
     // their own routes name.
@@ -386,6 +395,10 @@ export class SciFiD1Client {
         : null
     const homeBase = parent ? baseUrlOf(parent) : appSite ? baseUrlOf(appSite) : null
 
+    // A site that publishes the app's own routes serves them here, so its links to
+    // them stay on this host instead of pointing at the website site.
+    const publishesApp = publishesAppRoutes(current)
+
     return {
       slug: current.slug,
       name: current.name,
@@ -394,9 +407,10 @@ export class SciFiD1Client {
       parentSiteId: current.parent_site_id ?? null,
       parentSlug: parent?.slug ?? null,
       contentRoutes,
+      publishesApp,
       mounts,
       external,
-      appBaseUrl: contentMode === 'standalone' && contentRoutes === null ? null : homeBase
+      appBaseUrl: publishesApp ? null : homeBase
     }
   }
 

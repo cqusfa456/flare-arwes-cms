@@ -7,10 +7,11 @@
  *    (`collections.url_prefix`, editable at Admin → Collections).
  * 2. A site (Admin → Sites) declares a publishing mode and, with it,
  *    `content_routes`: the collections it names and the prefix each is published
- *    under. A `paths` site publishes the website itself — its own routes and every
- *    collection, at the collection's own prefix unless overridden (`/blog`,
- *    `/docs`, ...). A `standalone` site is a host of its own: it publishes only the
- *    collections it names, at its own root.
+ *    under. A `standalone` site is a host of its own: it publishes the collections
+ *    it names, at its own root — and, when it also publishes the app
+ *    (`publishes_app`), the website's own routes beside them. A site that names no
+ *    collection publishes the website and every collection at the collection's own
+ *    prefix unless overridden (`/blog`, `/docs`, ...).
  *
  * Everything the build generates comes from here, so no path is hardcoded.
  */
@@ -43,6 +44,13 @@ export type SiteRoutingInfo = {
    * changes, if any.
    */
   routes: Map<string, string> | null
+
+  /**
+   * Whether this build publishes the website's own routes (`publishes_app`): true for
+   * the site that builds the website itself, and for a content host that asked for
+   * them beside its own collections. {@link isAppSite} reads it.
+   */
+  publishesApp: boolean
 
   /**
    * Prefixes this build changes for the collections it names: its own content routes,
@@ -82,6 +90,7 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
           mode: 'standalone' as const,
           parentSlug: null,
           routes: null,
+          publishesApp: true,
           overrides: new Map<string, string>(),
           external: new Map<string, string>(),
           appBaseUrl: null
@@ -115,6 +124,7 @@ export const getSiteRouting = (): Promise<SiteRoutingInfo> => {
         mode: routing.contentMode,
         parentSlug: routing.parentSlug ?? null,
         routes,
+        publishesApp: routing.publishesApp,
         overrides,
         external: new Map(Object.entries(routing.external)),
         appBaseUrl: routing.appBaseUrl
@@ -172,7 +182,7 @@ export const getCollectionPrefixes = (): Promise<CollectionPrefixes> => {
 /** True when this build publishes the website's own routes. */
 export const isAppSite = async (): Promise<boolean> => {
   const routing = await getSiteRouting()
-  return routing.mode === 'standalone' && routing.routes === null
+  return routing.publishesApp
 }
 
 const stripTrailing = (value: string): string => value.replace(/\/+$/, '')

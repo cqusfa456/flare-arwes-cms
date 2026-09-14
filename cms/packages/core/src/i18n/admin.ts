@@ -424,6 +424,12 @@ const zhCN: Record<string, string> = {
   'Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.':
     '更改后会切换用于域名、构建和构建环境的 Cloudflare API；已有的绑定不会自动迁移。',
   'Active (inactive sites cannot be built)': '启用（未启用的站点无法构建）',
+  'Framework site': '框架站',
+  'Also publish the framework site on this host': '在本机同时发布框架站',
+  'The website’s own routes — the front page, /demos and the framework documentation under /docs — are generated here beside the collections above. The collection routed at "" keeps the host root. A site that declares no content routes publishes them anyway, so this matters once the site names collections.':
+    '网站自身的路由（首页、/demos、/docs 下的框架文档）会与上面的集合一起在本机构建。路由到 "" 的集合仍然占用主机根目录。未声明内容路由的站点本来就会发布这些页面，所以这一项在站点声明了集合之后才有意义。',
+  'Generate the website’s own routes (front page, /demos, the framework documentation under /docs) beside the collections above. The collection routed at "" keeps the host root.':
+    '与上面的集合一起构建网站自身的路由（首页、/demos、/docs 下的框架文档）。路由到 "" 的集合仍然占用主机根目录。',
   'Token permissions — Pages sites: <code>Pages:Edit</code>, <code>Zone:Read</code>. Worker sites additionally need <code>Workers Scripts:Read</code> (to resolve the Worker tag) and <code>Workers Builds Configuration:Edit</code> (to read builds, trigger them and push the build environment). The Builds API only accepts a <strong>user-scoped</strong> token — account-scoped tokens are rejected with an "Invalid token" error.':
     '令牌权限：Pages 站点需要 <code>Pages:Edit</code> 与 <code>Zone:Read</code>；Worker 站点还需要 <code>Workers Scripts:Read</code>（解析 Worker tag）和 <code>Workers Builds Configuration:Edit</code>（读取构建、触发构建并推送构建环境）。Builds API 只接受<strong>用户级</strong>令牌，账户级令牌会报 "Invalid token"。',
   'Registering sites and triggering builds works without them, but <strong>domain bindings cannot be managed</strong> until you set <code>CF_API_TOKEN</code> and <code>CF_ACCOUNT_ID</code> as Worker secrets, or save them below.':

@@ -1,0 +1,19 @@
+-- Migration 055: a site can publish the website's own routes beside its content
+--
+-- `content_routes` (043/051) draws a hard line: a deployed site that declares
+-- routes publishes *only* the collections it names, and a site that declares none
+-- publishes the website itself. That left no way to say "this host serves its own
+-- collection at the root *and* the framework site at /docs, /demos, ...", which is
+-- what a documentation or blog subdomain wants: the collection at the domain root,
+-- with the application's own pages beside it.
+--
+-- `publishes_app` is that extra axis, independent of the mode:
+--
+--   standalone + no content routes   the website itself (unchanged)
+--   standalone + routes              only those collections (unchanged)
+--   standalone + routes + this flag  those collections, plus the website's routes
+--   paths                            published by the parent site (unchanged)
+--
+-- The build still gives the site's own content the root: a collection routed at ''
+-- keeps `/`, and the app's front page steps aside there.
+ALTER TABLE sites ADD COLUMN publishes_app INTEGER NOT NULL DEFAULT 0;

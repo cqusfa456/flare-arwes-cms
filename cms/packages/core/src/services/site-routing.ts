@@ -15,7 +15,9 @@
  *     A site with no content routes is a `paths` site, which is what every site did
  *     before migration 051.
  *   * `standalone` — a **content-only site**: it publishes only the listed
- *     collections, at the listed prefixes, and no website routes.
+ *     collections, at the listed prefixes. `publishes_app` (migration 055) adds the
+ *     website's own routes to that — the collection routed at `''` still owns the
+ *     root, and the app's pages sit beside it (`/docs`, `/demos`, ...).
  *
  * That is enough for one repository to build two hosts: `GET /api/site`
  * (routes/api.ts) answers with this site's own routes, the absolute base URL of
@@ -66,6 +68,17 @@ export const isDeployed = (site: Site): boolean => siteContentMode(site) === 'st
 export const publishesWebsite = (site: Site): boolean =>
   isDeployed(site) && parseSiteContentRoutes(site.contentRoutes) === null
 
+/**
+ * True when this site's build publishes the website's own routes (the front page,
+ * `/demos`, the framework documentation, ...).
+ *
+ * That is the classic app site — deployed, no content routes — and, since migration
+ * 055, also a content host that asked for them beside the collections it names
+ * (`publishes_app`). A `paths` site is never one: it is not built at all.
+ */
+export const publishesAppRoutes = (site: Site): boolean =>
+  isDeployed(site) && (parseSiteContentRoutes(site.contentRoutes) === null || site.publishesApp)
+
 /** How one site is wired: what it publishes and where everything else lives. */
 export interface SiteRouting {
   slug: string
@@ -87,6 +100,14 @@ export interface SiteRouting {
    * from it keeps its own `url_prefix`.
    */
   contentRoutes: Record<string, string> | null
+  /**
+   * Whether this build publishes the website's own routes (migration 055) — true for
+   * the site that builds the website itself, and for a content host that asked for
+   * them beside its collections. Such a build generates them *and* keeps the root of
+   * a collection it routed at `''`, which is what puts a documentation or blog index
+   * on the front page of its own subdomain.
+   */
+  publishesApp: boolean
   /**
    * What the sites mounted on this one publish, as collection -> prefix (migration
    * 052). The build merges these into its own prefixes, so a `paths` site's content
@@ -242,6 +263,11 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
       : null
   const homeBase = parent ? baseUrlOf(parent) : appSite ? baseUrlOf(appSite) : null
 
+  // The app's own routes are only "elsewhere" for a site that does not publish them:
+  // a content host that asked for them (migration 055) serves them itself, so its
+  // links to /demos and the like stay on this host.
+  const publishesApp = publishesAppRoutes(site)
+
   return {
     slug: site.slug,
     name: site.name,
@@ -250,9 +276,10 @@ export async function buildSiteRouting(db: D1Database, site: Site): Promise<Site
     parentSiteId: site.parentSiteId ?? null,
     parentSlug: parent?.slug ?? null,
     contentRoutes,
+    publishesApp,
     mounts,
     external,
-    appBaseUrl: contentMode === 'standalone' && contentRoutes === null ? null : homeBase
+    appBaseUrl: publishesApp ? null : homeBase
   }
 }
 

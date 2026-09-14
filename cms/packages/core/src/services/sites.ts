@@ -236,6 +236,16 @@ export interface Site {
   contentMode: SiteContentMode | null
 
   /**
+   * Whether this site also publishes the website's own routes (migration 055).
+   *
+   * Only meaningful beside {@link contentRoutes}: a site that declares no routes
+   * publishes them anyway, and a `paths` site is published by its parent. It is what
+   * makes "the documentation at the domain root *and* the framework site under
+   * /docs" expressible; the site's own content keeps the root it was routed at.
+   */
+  publishesApp: boolean
+
+  /**
    * The site a `paths` site is mounted on (migration 052): its content is published
    * by that site, at the prefixes this site's content routes name. Always an active
    * `standalone` site; null on a site that is deployed on its own.
@@ -285,6 +295,12 @@ export interface SiteInput {
 
   /** How the site publishes; see {@link SiteContentMode}. */
   contentMode?: SiteContentMode | null
+  /**
+   * Publish the website's own routes beside the collections this site names
+   * (migration 055). Ignored without content routes: such a site publishes them
+   * already, and a `paths` site is published by its parent.
+   */
+  publishesApp?: boolean
   /**
    * The site this one is mounted on; required by `paths` and rejected with a
    * `standalone` target that does not exist. `null` clears it.
@@ -532,6 +548,7 @@ const rowToSite = (row: Record<string, unknown>): Site => ({
   contentPrefix: (row.content_prefix as string | null) ?? null,
   contentRoutes: parseSiteContentRoutes(row.content_routes),
   contentMode: normalizeContentMode(row.content_mode),
+  publishesApp: Number(row.publishes_app ?? 0) === 1,
   parentSiteId: (row.parent_site_id as string | null) ?? null,
   buildEnv: parseBuildEnv(row.build_env),
   contentToken: (row.content_token as string | null) ?? null,
@@ -1067,7 +1084,7 @@ export class SitesService {
            cf_worker_tag, cf_trigger_uuid, cf_zone_id,
            git_repo, git_branch,
            deploy_hook_url, build_command, deploy_command, output_dir, root_dir, node_version,
-           content_prefix, content_routes, content_mode, parent_site_id, build_env, content_token, content_token_id, deploy_mode,
+           content_prefix, content_routes, content_mode, publishes_app, parent_site_id, build_env, content_token, content_token_id, deploy_mode,
            is_active, created_at, updated_at
          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?)`
       )
@@ -1093,6 +1110,11 @@ export class SitesService {
         contentRoutes ? JSON.stringify(contentRoutes) : null,
         // The mode follows what the site publishes unless it says otherwise.
         contentMode,
+        // Stored as asked, even though a site with no content routes publishes the
+        // website's routes anyway: the flag is what keeps them published once the
+        // site starts naming collections, and the routing reports the effective
+        // answer (see `SiteRouting.publishesApp`).
+        input.publishesApp ? 1 : 0,
         parentSiteId,
         input.buildEnv && Object.keys(input.buildEnv).length > 0
           ? JSON.stringify(input.buildEnv)
@@ -1144,6 +1166,7 @@ export class SitesService {
       contentPrefix: 'content_prefix',
       contentRoutes: 'content_routes',
       contentMode: 'content_mode',
+      publishesApp: 'publishes_app',
       parentSiteId: 'parent_site_id',
       buildEnv: 'build_env',
       isActive: 'is_active'
@@ -1169,7 +1192,7 @@ export class SitesService {
       if (value === undefined) continue
       assignments.push(`${column} = ?`)
       if (key === 'slug') values.push(normalizeSiteSlug(String(value)))
-      else if (key === 'isActive') values.push(value ? 1 : 0)
+      else if (key === 'isActive' || key === 'publishesApp') values.push(value ? 1 : 0)
       else if (key === 'deployMode') values.push(normalizeDeployMode(value))
       else if (key === 'parentSiteId') values.push(value === null ? null : String(value))
       else if (key === 'contentRoutes') {

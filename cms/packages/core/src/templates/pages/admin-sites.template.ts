@@ -388,6 +388,7 @@ export function renderSitesListPage(data: SitesListPageData): string {
                 <a href="/admin/sites/${encodeURIComponent(site.slug)}" class="text-sm font-semibold text-zinc-950 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400">${escapeHtml(site.name)}</a>
                 ${providerBadge(site.provider)}
                 ${site.contentMode === 'paths' ? `<span class="inline-flex items-center rounded-md bg-teal-50 dark:bg-teal-500/10 px-2 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20 dark:ring-teal-400/20">${t('Paths mode')}</span>` : ''}
+                ${site.contentRoutes === null || site.publishesApp ? `<span class="inline-flex items-center rounded-md bg-cyan-50 dark:bg-cyan-500/10 px-2 py-1 text-xs font-medium text-cyan-700 dark:text-cyan-300 ring-1 ring-inset ring-cyan-600/20 dark:ring-cyan-400/20">${t('Framework site')}</span>` : ''}
                 ${site.isActive ? '' : '<span class="inline-flex items-center rounded-md bg-zinc-100 dark:bg-white/10 px-2 py-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">Inactive</span>'}
                 ${buildBadge(site)}
               </div>
@@ -726,6 +727,16 @@ export function renderSiteNewPage(data: {
           <input id="site-description" class="${INPUT}" placeholder="${t('Documentation site')}" />
         </div>
 
+        <label class="inline-flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <input type="checkbox" id="site-publishes-app" class="mt-0.5 rounded border-zinc-300 dark:border-white/20" />
+          <span>
+            ${t('Also publish the framework site on this host')}
+            <span class="block mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              ${t('Generate the website’s own routes (front page, /demos, the framework documentation under /docs) beside the collections above. The collection routed at "" keeps the host root.')}
+            </span>
+          </span>
+        </label>
+
         <div class="flex items-center justify-between pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="create-result" class="text-sm"></div>
           <div class="flex items-center gap-2">
@@ -834,6 +845,7 @@ export function renderSiteNewPage(data: {
               content_routes: contentRoutes.value,
               contentMode: val('site-content-mode') || undefined,
               parentSiteId: val('site-parent') || undefined,
+              publishesApp: document.getElementById('site-publishes-app').checked,
               // Omitted when empty so the site stays on its provider default.
               deployMode: val('site-deploy-mode') || undefined
             })
@@ -1069,6 +1081,13 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
                     )}</span>`
                   : ''
               }
+              ${
+                // A site with no content routes publishes the website's routes anyway,
+                // so the badge marks what the build actually does.
+                site.contentRoutes === null || site.publishesApp
+                  ? `<span class="ml-2 inline-flex items-center rounded-md bg-cyan-50 dark:bg-cyan-500/10 px-2 py-0.5 text-[11px] font-medium text-cyan-700 dark:text-cyan-300 ring-1 ring-inset ring-cyan-600/20 dark:ring-cyan-400/20">${t('Framework site')}</span>`
+                  : ''
+              }
             </dd>
           </div>
           <div class="flex items-center justify-between gap-4">
@@ -1178,6 +1197,15 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             ${t('Which collections this site publishes, and under which prefix on its host. On a standalone site this is the complete list: only these collections are published, at the prefixes given ("" is the host root, so {"blog-posts": ""} serves the blog at the domain root). On a paths site it is what the parent publishes for it, and a collection left out keeps its own prefix. Collection names must already exist in Admin → Collections.')}
           </p>
         </div>
+        <label class="inline-flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <input type="checkbox" id="s-publishes-app" ${site.publishesApp ? 'checked' : ''} class="mt-0.5 rounded border-zinc-300 dark:border-white/20" />
+          <span>
+            ${t('Also publish the framework site on this host')}
+            <span class="block mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              ${t('The website’s own routes — the front page, /demos and the framework documentation under /docs — are generated here beside the collections above. The collection routed at "" keeps the host root. A site that declares no content routes publishes them anyway, so this matters once the site names collections.')}
+            </span>
+          </span>
+        </label>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input type="checkbox" id="s-active" ${site.isActive ? 'checked' : ''} class="rounded border-zinc-300 dark:border-white/20" />
           ${t('Active (inactive sites cannot be built)')}
@@ -1340,7 +1368,8 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           // An empty select means "provider default": the API stores null and
           // effectiveDeployMode() falls back to the provider's own mode.
           deployMode: val('s-deploy-mode') || null,
-          isActive: document.getElementById('s-active').checked
+          isActive: document.getElementById('s-active').checked,
+          publishesApp: document.getElementById('s-publishes-app').checked
         };
         var data = await call('/admin/sites/api/sites/' + SITE_ID, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)

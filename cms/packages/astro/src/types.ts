@@ -134,6 +134,15 @@ export interface SciFiSiteRouting {
   contentRoutes: Record<string, string> | null
 
   /**
+   * Whether this build publishes the website's own routes (migration 055): true for
+   * the site that builds the website itself, and for a content host that asked for
+   * them beside its own collections. Such a build generates them *and* lets the
+   * collection it routed at `''` keep the root, so a documentation host can serve
+   * `/docs` and still show its own index on the front page.
+   */
+  publishesApp: boolean
+
+  /**
    * What the sites mounted on this one publish, as collection → prefix (migration 052).
    * Merged into this build prefixes, so a mounted site content appears on this host.
    */

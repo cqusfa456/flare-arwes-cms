@@ -15,6 +15,7 @@ import {
   collectionIndexPath,
   contentPath,
   getCollectionPrefixes,
+  getSiteRouting,
   isAppSite,
   pagePath
 } from '@/lib/cms-collections'
@@ -123,8 +124,26 @@ export async function getStaticPaths() {
   }
 
   // 2. The app's own routes, minus the ones a CMS page took over. A content-only
-  //    site has none: it serves its collections and nothing else.
-  const appRoutePaths = appSite ? routes.filter((route) => !claimed.has(stripTrailing(route))) : []
+  //    site that asked for the app (a site with `publishes_app`) serves them too —
+  //    the framework documentation under /docs and everything else — so only a site
+  //    that publishes no app at all has none.
+  //
+  //    A collection the site *routes at its own root* ("" or "/") keeps the front
+  //    page: there the host's own index is the page, and the app's front page steps
+  //    aside. That only applies to a site that declares routes — on a site that
+  //    publishes the website, a collection's own prefix (often "") says nothing about
+  //    whose page the root is, and the front page stays the app's (a CMS page can
+  //    still take it over in step 1). The index itself is generated in step 5.
+  const siteRoutes = (await getSiteRouting()).routes
+  const contentOwnsRoot =
+    siteRoutes !== null &&
+    [...siteRoutes.values()].some((prefix) => ['', '/'].includes(stripTrailing(prefix)))
+
+  const appRoutePaths = appSite
+    ? routes.filter(
+        (route) => !claimed.has(stripTrailing(route)) && !(contentOwnsRoot && route === '/')
+      )
+    : []
   for (const route of appRoutePaths) {
     claimed.add(stripTrailing(route))
   }
