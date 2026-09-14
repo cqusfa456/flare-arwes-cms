@@ -181,17 +181,14 @@ const credentialsBanner = (credentials: CloudflareCredentialStatus): string => {
   return `<div class="rounded-xl bg-amber-50 dark:bg-amber-500/10 p-4 ${CARD}">
     <p class="text-sm font-medium text-amber-800 dark:text-amber-300">${t('Cloudflare API credentials are not configured')}</p>
     <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
-      Registering sites and triggering builds works without them, but <strong>domain bindings cannot be managed</strong> until you set <code>CF_API_TOKEN</code> and <code>CF_ACCOUNT_ID</code> as Worker secrets, or save them below.
+      ${t('Registering sites and triggering builds works without them, but <strong>domain bindings cannot be managed</strong> until you set <code>CF_API_TOKEN</code> and <code>CF_ACCOUNT_ID</code> as Worker secrets, or save them below.')}
     </p>
     <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <input id="cf-account-id" class="${INPUT}" placeholder="Cloudflare account ID" />
-      <input id="cf-api-token" type="password" class="${INPUT}" placeholder="API token (see permissions below)" />
+      <input id="cf-account-id" class="${INPUT}" placeholder="${t('Cloudflare account ID')}" />
+      <input id="cf-api-token" type="password" class="${INPUT}" placeholder="${t('API token (see permissions below)')}" />
     </div>
     <p class="mt-3 text-xs text-amber-700 dark:text-amber-400">
-      Token permissions — Pages sites: <code>Pages:Edit</code>, <code>Zone:Read</code>.
-      Worker sites additionally need <code>Workers Scripts:Read</code> (to resolve the Worker tag) and
-      <code>Workers Builds Configuration:Edit</code> (to read builds, trigger them and push the build environment).
-      The Builds API only accepts a <strong>user-scoped</strong> token — account-scoped tokens are rejected with an "Invalid token" error.
+      ${t('Token permissions — Pages sites: <code>Pages:Edit</code>, <code>Zone:Read</code>. Worker sites additionally need <code>Workers Scripts:Read</code> (to resolve the Worker tag) and <code>Workers Builds Configuration:Edit</code> (to read builds, trigger them and push the build environment). The Builds API only accepts a <strong>user-scoped</strong> token — account-scoped tokens are rejected with an "Invalid token" error.')}
     </p>
     <button onclick="saveCredentials()" class="mt-3 ${SECONDARY_BTN}">${t('Save credentials')}</button>
     <div id="credentials-result" class="mt-2 text-sm"></div>
@@ -539,8 +536,7 @@ export function renderSiteNewPage(data: {
       <div>
         <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white sm:text-xl/8">${t('Register a site')}</h1>
         <p class="mt-2 text-sm/6 text-zinc-500 dark:text-zinc-400">
-          A site owns a Cloudflare build target (builds + domains) and, optionally, a slice of content.
-          Which fields apply depends on the hosting provider you pick.
+          ${t('A site owns a Cloudflare build target (builds + domains) and, optionally, a slice of content. Which fields apply depends on the hosting provider you pick.')}
         </p>
       </div>
 
@@ -551,7 +547,7 @@ export function renderSiteNewPage(data: {
           <label class="${LABEL}">${t('Start from')}</label>
           <div class="flex flex-wrap items-center gap-2">
             <select id="site-preset" class="${INPUT} flex-1 min-w-56">
-              <option value="">— Blank site —</option>
+              <option value="">${t('— Blank site —')}</option>
               ${presetOptions}
             </select>
             <button onclick="applyPreset()" class="${SECONDARY_BTN}">${t('Apply')}</button>
@@ -597,8 +593,7 @@ export function renderSiteNewPage(data: {
               ${deployModeOptions(data.deployModes, '')}
             </select>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              How the CMS starts a build. Leave it on the provider default unless this site builds through GitHub Actions
-              (no Git connection in Cloudflare) or a Deploy Hook.
+              ${t('How the CMS starts a build. Leave it on the provider default unless this site builds through GitHub Actions (no Git connection in Cloudflare) or a Deploy Hook.')}
             </p>
           </div>
           <div data-provider-field="project">
@@ -609,8 +604,7 @@ export function renderSiteNewPage(data: {
             <label class="${LABEL}">${t('Deploy Hook URL')}</label>
             <input id="site-hook" class="${INPUT}" placeholder="https://api.cloudflare.com/client/v4/workers/builds/deploy_hooks/…" />
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Worker: Settings → Builds → Deploy Hooks (<code>/workers/builds/deploy_hooks/…</code>).
-              Pages: Settings → Builds (<code>/pages/webhooks/deploy_hooks/…</code>). The CMS rejects a mismatched hook.
+              ${t('Worker: Settings → Builds → Deploy Hooks (<code>/workers/builds/deploy_hooks/…</code>). Pages: Settings → Builds (<code>/pages/webhooks/deploy_hooks/…</code>). The CMS rejects a mismatched hook.')}
             </p>
           </div>
           <div data-provider-field="gitRepo">
@@ -660,7 +654,7 @@ export function renderSiteNewPage(data: {
 
         <div>
           <label class="${LABEL}">${t('Description')}</label>
-          <input id="site-description" class="${INPUT}" placeholder="Documentation site" />
+          <input id="site-description" class="${INPUT}" placeholder="${t('Documentation site')}" />
         </div>
 
         <div class="flex items-center justify-between pt-4 border-t border-zinc-950/5 dark:border-white/10">
@@ -1054,7 +1048,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-summary"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400" id="provider-setup"></p>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.
+              ${t('Changing this switches which Cloudflare API is used for domains, builds and the build environment; existing bindings are not migrated automatically.')}
             </p>
           </div>
           <div class="sm:col-span-2">
@@ -1072,8 +1066,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
               ${deployModeOptions(data.deployModes, data.effectiveDeployMode)}
             </select>
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              How the CMS starts a build. The provider default is shown resolved above; picking "Provider default" clears the
-              pinned mode so the site follows the provider again.
+              ${t('How the CMS starts a build. The provider default is shown resolved above; picking "Provider default" clears the pinned mode so the site follows the provider again.')}
             </p>
           </div>
           <div data-provider-field="project"><label class="${LABEL}">${t('Worker name / Pages project')}</label><input id="s-project" class="${INPUT}" value="${escapeHtml(site.cfProjectName || '')}" /></div>
@@ -1102,7 +1095,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         </div>
         <label class="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input type="checkbox" id="s-active" ${site.isActive ? 'checked' : ''} class="rounded border-zinc-300 dark:border-white/20" />
-          Active (inactive sites cannot be built)
+          ${t('Active (inactive sites cannot be built)')}
         </label>
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-zinc-950/5 dark:border-white/10">
           <div id="settings-result" class="text-sm"></div>
