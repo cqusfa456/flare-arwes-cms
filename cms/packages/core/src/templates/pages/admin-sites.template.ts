@@ -117,6 +117,44 @@ const domainBadge = (status: string): string => {
   return `<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">${t('Pending DNS')}</span>`
 }
 
+/**
+ * What the CMS found or wrote in the zone for a bound hostname.
+ *
+ * A bound name is only reachable once its record points at the site, so the state of
+ * that record is shown beside the binding: created/current/updated are settled,
+ * `conflict` means the name serves something else until the operator claims it, and
+ * `unsupported` is a provider that makes its own record.
+ */
+const dnsCell = (domain: SiteDomain): string => {
+  if (!domain.dnsStatus) {
+    return `<span class="text-xs text-zinc-400 dark:text-zinc-500">${t('Not checked')}</span>`
+  }
+
+  const label =
+    domain.dnsStatus === 'created'
+      ? t('Record created')
+      : domain.dnsStatus === 'current'
+        ? t('Points here')
+        : domain.dnsStatus === 'updated'
+          ? t('Record repointed')
+          : domain.dnsStatus === 'conflict'
+            ? t('Points elsewhere')
+            : t('Handled by Cloudflare')
+
+  const tone =
+    domain.dnsStatus === 'conflict'
+      ? 'text-amber-600 dark:text-amber-400'
+      : domain.dnsStatus === 'unsupported'
+        ? 'text-zinc-500 dark:text-zinc-400'
+        : 'text-emerald-600 dark:text-emerald-400'
+
+  return `<span class="text-xs ${tone}">${label}</span>${
+    domain.dnsTarget
+      ? `<div class="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500"><code>${escapeHtml(domain.dnsTarget)}</code></div>`
+      : ''
+  }`
+}
+
 const fmtTime = (value: number | string | null): string => {
   if (value === null || value === undefined || value === '') return '—'
   const date = typeof value === 'number' ? new Date(value) : new Date(value)
@@ -901,7 +939,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
       </div>`
 
   const domainRows = domains.length === 0
-    ? `<tr><td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">${t('No domains bound yet.')}</td></tr>`
+    ? `<tr><td colspan="5" class="px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">${t('No domains bound yet.')}</td></tr>`
     : domains.map((domain) => `
         <tr class="border-t border-zinc-950/5 dark:border-white/5">
           <td class="px-4 py-3">
@@ -909,9 +947,11 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
             ${domain.isPrimary ? '<span class="ml-2 inline-flex items-center rounded-md bg-indigo-600 px-2 py-0.5 text-[11px] font-medium text-white">Primary</span>' : ''}
           </td>
           <td class="px-4 py-3">${domainBadge(domain.status)}</td>
+          <td class="px-4 py-3">${dnsCell(domain)}</td>
           <td class="px-4 py-3 text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(domain.validationErrors || domain.validationStatus || '—')}</td>
           <td class="px-4 py-3 text-right whitespace-nowrap">
             ${domain.status === 'removed' ? '' : `
+              <button onclick="syncDomainDns('${escapeHtml(domain.hostname)}', ${domain.dnsStatus === 'conflict' ? 'true' : 'false'})" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 mr-3" title="${escapeHtml(domain.dnsStatus === 'conflict' ? 'Point this name at this site' : 'Check or create the DNS record')}">${t(domain.dnsStatus === 'conflict' ? 'Point here' : 'Sync DNS')}</button>
               ${domain.status === 'active' && !domain.isPrimary ? `<button onclick="makePrimary('${escapeHtml(domain.hostname)}')" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 mr-3">${t('Make primary')}</button>` : ''}
               <button onclick="removeDomain('${escapeHtml(domain.hostname)}')" class="text-xs text-red-600 dark:text-red-400 hover:underline">${t('Unbind')}</button>
             `}
@@ -1059,7 +1099,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         <div class="mt-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead class="text-xs uppercase text-zinc-500 dark:text-zinc-400">
-              <tr><th class="px-4 py-2 font-medium">${t('Hostname')}</th><th class="px-4 py-2 font-medium">${t('Status')}</th><th class="px-4 py-2 font-medium">${t('Validation')}</th><th class="px-4 py-2"></th></tr>
+              <tr><th class="px-4 py-2 font-medium">${t('Hostname')}</th><th class="px-4 py-2 font-medium">${t('Status')}</th><th class="px-4 py-2 font-medium">${t('DNS')}</th><th class="px-4 py-2 font-medium">${t('Validation')}</th><th class="px-4 py-2"></th></tr>
             </thead>
             <tbody>${domainRows}</tbody>
           </table>
@@ -1071,7 +1111,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
           </div>
           <button onclick="addDomain(this)" class="${SECONDARY_BTN}" ${data.credentials.configured ? '' : 'disabled'}>${t('Bind domain')}</button>
         </div>
-        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">The domain is attached to ${escapeHtml(providerInfo.label)} through the Cloudflare API; DNS still has to point at the site for it to become active.</p>
+        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">${t('The domain is attached to')} ${escapeHtml(providerInfo.label)} ${t('and its DNS record is created in the site’s zone, both through the Cloudflare API. A name that already points somewhere else is reported as a conflict and left alone until you point it here.')}</p>
       </div>` : ''}
 
       <!-- Settings -->
@@ -1343,7 +1383,7 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         if (button) button.disabled = true;
         var data = await call('/admin/sites/api/sites/' + SITE_ID + '/domains', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hostname: hostname })
-        }, 'action-result', 'Domain bound — finish DNS configuration to activate it');
+        }, 'action-result', 'Domain bound — its DNS record was created in the zone');
         if (button) button.disabled = false;
         if (data) location.reload();
       }
@@ -1352,6 +1392,20 @@ export function renderSiteDetailPage(data: SiteDetailPageData): string {
         if (!confirm('Unbind ' + hostname + ' from this site?')) return;
         var data = await call('/admin/sites/api/sites/' + SITE_ID + '/domains/' + encodeURIComponent(hostname), { method: 'DELETE' },
           'action-result', 'Domain unbound');
+        if (data) location.reload();
+      }
+
+      /*
+       * Create or check the record that sends a name to this site. Taking over is the
+       * operator claiming a name that currently points somewhere else, so it asks
+       * first.
+       */
+      async function syncDomainDns(hostname, takeOver) {
+        if (takeOver && !confirm('Point ' + hostname + ' at this site? The record currently points somewhere else.')) return;
+        var data = await call('/admin/sites/api/sites/' + SITE_ID + '/domains/dns', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hostname: hostname, takeOver: !!takeOver })
+        }, 'action-result', takeOver ? 'DNS record now points here' : 'DNS record checked');
         if (data) location.reload();
       }
 

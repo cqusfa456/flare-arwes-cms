@@ -326,6 +326,25 @@ adminSitesRoutes.post('/api/sites/:id/domains/primary', async (c) => {
   }
 })
 
+/**
+ * Check or create the zone record that sends a bound hostname to this site.
+ *
+ * `takeOver: true` is the operator saying "yes, this name is mine now" — without it a
+ * record pointing somewhere else comes back as a `conflict` and is left alone.
+ */
+adminSitesRoutes.post('/api/sites/:id/domains/dns', async (c) => {
+  const body = await readJson(c)
+  const hostname = str(body.hostname) ?? ''
+  try {
+    const domain = await sitesService(c).ensureDomainDns(c.req.param('id'), hostname, {
+      takeOver: body.takeOver === true
+    })
+    return c.json({ success: true, domain })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to prepare the DNS record')
+  }
+})
+
 adminSitesRoutes.post('/api/sites/:id/sync-build-config', async (c) => {
   const body = await readJson(c)
   const id = c.req.param('id')

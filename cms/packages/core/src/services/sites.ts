@@ -123,6 +123,17 @@ export const normalizeRootDirectory = (value: string | null | undefined): string
 /** 'pending' | 'active' | 'error' | 'removed' */
 export type SiteDomainStatus = 'pending' | 'active' | 'error' | 'removed'
 
+/**
+ * What the CMS last did (or found) in the zone's DNS for a bound hostname.
+ *
+ * A custom domain is two pieces of wiring — the hostname registered on the hosting
+ * target, and the record that sends traffic there — and the CMS owns both: it creates
+ * the record when the name is free, reports `conflict` instead of silently repointing
+ * a name that serves something else, and leaves providers that provision their own
+ * record (Workers) at `unsupported`.
+ */
+export type SiteDomainDnsStatus = 'created' | 'current' | 'updated' | 'conflict' | 'unsupported'
+
 export interface SiteDomain {
   id: string
   siteId: string
@@ -134,6 +145,11 @@ export interface SiteDomain {
   validationStatus: string | null
   validationErrors: string | null
   isPrimary: boolean
+  /** What the CMS found or wrote in DNS, and where that record points. */
+  dnsStatus: SiteDomainDnsStatus | null
+  dnsTarget: string | null
+  dnsRecordId: string | null
+  dnsCheckedAt: number | null
   createdAt: number
   updatedAt: number
 }
@@ -531,6 +547,10 @@ const rowToDomain = (row: Record<string, unknown>): SiteDomain => ({
   validationStatus: (row.validation_status as string | null) ?? null,
   validationErrors: (row.validation_errors as string | null) ?? null,
   isPrimary: Number(row.is_primary ?? 0) === 1,
+  dnsStatus: (row.dns_status as SiteDomainDnsStatus | null) ?? null,
+  dnsTarget: (row.dns_target as string | null) ?? null,
+  dnsRecordId: (row.dns_record_id as string | null) ?? null,
+  dnsCheckedAt: row.dns_checked_at === null || row.dns_checked_at === undefined ? null : Number(row.dns_checked_at),
   createdAt: Number(row.created_at ?? 0),
   updatedAt: Number(row.updated_at ?? 0)
 })
@@ -2013,7 +2033,143 @@ export class SitesService {
       .bind(id)
       .first()
     if (!row) throw new Error('Domain was saved but could not be read back')
-    return rowToDomain(row as Record<string, unknown>)
+
+    // Binding the name and pointing DNS at the site are one action for the operator: a
+    // hostname that is attached but has no record stays `pending` until someone edits
+    // DNS in the Cloudflare dashboard, which is what left the wiring half outside the
+    // CMS. Best-effort, because the binding has already happened: a zone the token
+    // cannot write, or a name that already serves something else, is recorded on the
+    // row (`conflict`) instead of thrown away.
+    return await this.ensureDomainDns(site.id, hostname).catch((error) => {
+      console.error(`DNS for "${hostname}" could not be prepared:`, error)
+      return rowToDomain(row as Record<string, unknown>)
+    })
+  }
+
+  /**
+   * Point a bound hostname's DNS record at this site.
+   *
+   * Creates the record when the name is free, leaves an equivalent one alone, and
+   * reports `conflict` rather than overwriting a name that already points somewhere
+   * else — repointing someone else's host must be a decision, so it takes
+   * `takeOver: true`. Providers that provision their own record (Workers custom
+   * domains) are `unsupported`: there is nothing for the operator to maintain.
+   */
+  async ensureDomainDns(
+    siteId: string,
+    rawHostname: string,
+    options: { takeOver?: boolean } = {}
+  ): Promise<SiteDomain> {
+    const site = await this.get(siteId)
+    if (!site) throw new SitesConfigError('Site not found')
+    const target = this.requireTarget(site)
+
+    const hostname = normalizeHostname(rawHostname)
+    if (!isHostname(hostname)) {
+      throw new SitesConfigError(`"${rawHostname}" is not a valid hostname`)
+    }
+
+    const known = await this.db
+      .prepare('SELECT id FROM site_domains WHERE site_id = ? AND hostname = ? LIMIT 1')
+      .bind(site.id, hostname)
+      .first()
+    if (!known) {
+      throw new SitesConfigError(`"${hostname}" is not bound to this site`)
+    }
+
+    const remember = async (
+      status: SiteDomainDnsStatus,
+      record: { id?: string | null; target?: string | null } = {}
+    ): Promise<SiteDomain> => {
+      const now = Date.now()
+      await this.db
+        .prepare(
+          `UPDATE site_domains
+              SET dns_status = ?, dns_target = ?, dns_record_id = ?, dns_checked_at = ?, updated_at = ?
+            WHERE site_id = ? AND hostname = ?`
+        )
+        .bind(
+          status,
+          record.target ?? null,
+          record.id ?? null,
+          now,
+          now,
+          site.id,
+          hostname
+        )
+        .run()
+
+      const saved = await this.db
+        .prepare('SELECT * FROM site_domains WHERE site_id = ? AND hostname = ? LIMIT 1')
+        .bind(site.id, hostname)
+        .first()
+      if (!saved) throw new Error('Domain was updated but could not be read back')
+      return rowToDomain(saved as Record<string, unknown>)
+    }
+
+    if (site.provider !== 'cloudflare-pages') {
+      return await remember('unsupported')
+    }
+
+    const desired = `${target}.pages.dev`
+    const zoneId = await this.resolveZoneId(site, hostname)
+    const existing = await this.findDnsRecord(zoneId, hostname)
+
+    if (!existing) {
+      const created =
+        (await this.cf<Record<string, unknown>>(`/zones/${zoneId}/dns_records`, {
+          method: 'POST',
+          body: {
+            type: 'CNAME',
+            name: hostname,
+            content: desired,
+            proxied: true,
+            ttl: 1,
+            comment: `sci-fi-cms site ${site.slug}`
+          }
+        })) ?? {}
+      return await remember('created', {
+        id: created.id ? String(created.id) : null,
+        target: desired
+      })
+    }
+
+    const recordId = existing.id ? String(existing.id) : null
+    const current = String(existing.content ?? '')
+
+    if (String(existing.type ?? '').toUpperCase() === 'CNAME' && current.toLowerCase() === desired) {
+      return await remember('current', { id: recordId, target: current })
+    }
+
+    if (!options.takeOver) {
+      return await remember('conflict', { id: recordId, target: current })
+    }
+
+    if (!recordId) {
+      throw new SitesConfigError(
+        `Cloudflare reported a record for "${hostname}" without an id, so it cannot be repointed`
+      )
+    }
+
+    await this.cf(`/zones/${zoneId}/dns_records/${recordId}`, {
+      method: 'PATCH',
+      body: { type: 'CNAME', name: hostname, content: desired, proxied: true, ttl: 1 }
+    })
+    return await remember('updated', { id: recordId, target: desired })
+  }
+
+  /** The zone's record for a hostname, whatever its type, or null when the name is free. */
+  private async findDnsRecord(
+    zoneId: string,
+    hostname: string
+  ): Promise<Record<string, unknown> | null> {
+    const list = await this.cf<Array<Record<string, unknown>>>(
+      `/zones/${zoneId}/dns_records?per_page=100&name=${encodeURIComponent(hostname)}`
+    )
+    const match = (list ?? []).find(
+      (record) => String(record.name ?? '').toLowerCase() === hostname
+    )
+    return match ?? null
   }
 
   /** Detach a custom domain from the hosting target and mark the row removed. */
@@ -2063,9 +2219,34 @@ export class SitesService {
       if (!/404|not found/i.test(message)) throw error
     }
 
+    // A record the CMS created goes with the binding: leaving a name pointing at a
+    // project that no longer serves it would be worse than an orphaned registry row.
+    // A record someone else put there is left alone.
+    const owned = await this.db
+      .prepare('SELECT dns_record_id, dns_status FROM site_domains WHERE site_id = ? AND hostname = ? LIMIT 1')
+      .bind(site.id, hostname)
+      .first()
+    const ownedRecord = owned as { dns_record_id?: string | null; dns_status?: string | null } | null
+    if (
+      site.provider === 'cloudflare-pages' &&
+      ownedRecord?.dns_record_id &&
+      (ownedRecord.dns_status === 'created' || ownedRecord.dns_status === 'updated')
+    ) {
+      try {
+        const zoneId = await this.resolveZoneId(site, hostname)
+        await this.cf(`/zones/${zoneId}/dns_records/${ownedRecord.dns_record_id}`, {
+          method: 'DELETE'
+        })
+      } catch (error) {
+        // The binding is what the operator asked to remove; a record that could not
+        // be reached is reported and left rather than failing the whole removal.
+        console.error(`DNS record for "${hostname}" could not be removed:`, error)
+      }
+    }
+
     await this.db
       .prepare(
-        `UPDATE site_domains SET status = 'removed', is_primary = 0, updated_at = ? 
+        `UPDATE site_domains SET status = 'removed', is_primary = 0, dns_status = NULL, dns_record_id = NULL, updated_at = ? 
           WHERE site_id = ? AND hostname = ?`
       )
       .bind(Date.now(), site.id, hostname)
