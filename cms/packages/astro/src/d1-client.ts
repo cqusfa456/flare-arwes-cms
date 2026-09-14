@@ -279,9 +279,10 @@ export class SciFiD1Client {
       cf_project_name: string | null
       content_routes: string | null
       content_mode: string | null
+      publishes_app: number | null
       parent_site_id: string | null
     }>(
-      `SELECT id, slug, name, provider, cf_project_name, content_routes, content_mode, parent_site_id
+      `SELECT id, slug, name, provider, cf_project_name, content_routes, content_mode, publishes_app, parent_site_id
        FROM sites
        WHERE is_active = 1 AND (slug = ? OR id = ?)
        LIMIT 1`,

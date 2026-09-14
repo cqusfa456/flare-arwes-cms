@@ -146,6 +146,12 @@ export class SciFiClient {
         parentSiteId: (data.parentSiteId ?? null) as string | null,
         parentSlug: (data.parentSlug ?? null) as string | null,
         contentRoutes,
+        // An older CMS does not report the flag: the site then publishes the app's
+        // routes only when it declares none, which is the rule that predates it.
+        publishesApp:
+          data.publishesApp === undefined
+            ? reportedMode !== 'paths' && contentRoutes === null
+            : data.publishesApp === true,
         mounts: (data.mounts ?? {}) as Record<string, string>,
         external: (data.external ?? {}) as Record<string, string>,
         appBaseUrl: (data.appBaseUrl ?? null) as string | null
