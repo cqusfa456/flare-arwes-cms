@@ -9,8 +9,9 @@ interface QqIconProps {
 /**
  * The QQ mark.
  *
- * Drawn from the vendor's own path (viewBox 1024), so it matches its siblings from
- * iconoir: `1.5em` square and `currentColor`, which is what a menu item colours.
+ * Drawn from the vendor's own path (viewBox 1024), sized like its siblings: the menu
+ * item sets the icon font size, and `1em` square with `currentColor` is what the
+ * other icons in the bar use.
  */
 const QqIcon = memo((props: QqIconProps): JSX.Element => {
   const { className } = props
@@ -18,8 +19,8 @@ const QqIcon = memo((props: QqIconProps): JSX.Element => {
   return (
     <svg
       className={cx(className)}
-      width="1.5em"
-      height="1.5em"
+      width="1em"
+      height="1em"
       viewBox="0 0 1024 1024"
       fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
