@@ -138,9 +138,10 @@ ${collectionLines.join('\n') || '- （还没有集合）'}
 | 健康检查 | \`GET ${input.baseUrl}/api/system/health\` | 数据库、缓存、存储的可用性。 |
 | 站点与其发布方式 | \`GET ${input.baseUrl}/api/site\`（带 \`X-Site\`）· \`GET ${input.baseUrl}/admin/sites/api/sites\` | 站点模式、主站、内容路由。 |
 | 站点管理（增删改） | \`POST ${input.baseUrl}/admin/sites/api/sites\`、\`PATCH\` / \`DELETE ${input.baseUrl}/admin/sites/api/sites/:id\` | 注册站点、改名称/模式/主站/内容路由、注销站点。后台路由：用 \`X-API-Key\` 调用。 |
-| 站点构建 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/build\` | 触发该站点构建；路径模式的站点会被拒绝（要构建它的主站）。 |
-| 构建配置 / 环境变量 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/sync-build-config\`、\`GET\` / \`POST .../build-env\` | 把构建配置与变量推送到 Cloudflare。 |
+| 站点构建 / 部署记录 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/build\`、\`GET .../deployments\` | 触发构建（路径模式站点会被拒绝，要构建它的主站）并查看最近的部署。 |
+| 构建配置 / 环境变量 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/sync-build-config\`、\`POST .../build-env\` | 把构建配置与构建环境推送到 Cloudflare。 |
 | 站点域名 | \`POST ${input.baseUrl}/admin/sites/api/sites/:id/domains\`、\`DELETE .../domains/:hostname\`、\`POST .../domains/refresh\`、\`POST .../domains/primary\` | 绑定、解绑、刷新自定义域名。 |
+| 站点预设 | \`GET ${input.baseUrl}/admin/sites/api/presets\`、\`POST .../presets/import\` | Arwes 预设与一键导入。 |
 | 待发布队列 | \`GET ${input.baseUrl}/admin/sync/api/pending\` | 后台编辑产生的待发布修订（含 diff）。 |
 
 调用这些地址时同样带上令牌：\`/api/*\` 用 \`Authorization: Bearer ${input.token}\`；\`/admin/*\` 用 \`X-API-Key: ${input.token}\`（后台页面走 Cookie 会话，脚本请用 API Key）。

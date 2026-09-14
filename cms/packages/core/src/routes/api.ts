@@ -63,7 +63,7 @@ apiRoutes.use('*', cors({
 
 // API Key authentication middleware for public API routes
 // Validates X-API-Key header on all requests and enforces:
-// - Read-only restriction: API tokens cannot use write methods (POST/PUT/DELETE)
+// - Read-only restriction: a read-only token cannot use write methods (POST/PUT/DELETE)
 // - Collection scoping: API tokens only access their allowed_collections
 apiRoutes.use('*', async (c, next) => {
   const apiKey = c.req.header('X-API-Key')
@@ -80,18 +80,34 @@ apiRoutes.use('*', async (c, next) => {
 
   const tokenRecord = result.tokenRecord
 
-  // Enforce read-only restriction — API tokens cannot write
+  // Enforce read-only restriction — the token's own flag decides, so a read-write
+  // token can write here exactly as it can through the admin routes.
   const method = c.req.method.toUpperCase()
-  if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
-    return c.json({ error: 'API tokens are read-only. Use user credentials for write operations.' }, 403)
+  if (
+    tokenRecord.is_read_only &&
+    (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH')
+  ) {
+    return c.json(
+      {
+        error:
+          'This API token is read-only. Mint a read-write token in Admin → API Tokens (or use the agent link) for write operations.'
+      },
+      403
+    )
   }
 
   // Store token on context for downstream collection-scope checks
   c.set('apiToken', tokenRecord)
+  // The token acts as the user who minted it, so an administrator's token reaches what
+  // an administrator reaches (see `requireAuth` in middleware/auth.ts for the same rule).
+  const owner = await db
+    .prepare('SELECT role, email FROM users WHERE id = ? LIMIT 1')
+    .bind(tokenRecord.user_id)
+    .first<{ role: string | null; email: string | null }>()
   c.set('user', {
     userId: tokenRecord.user_id,
-    email: 'api-token@system',
-    role: 'viewer',
+    email: owner?.email ?? 'api-token@system',
+    role: owner?.role || 'viewer',
     exp: tokenRecord.expires_at
       ? Math.floor(tokenRecord.expires_at / 1000)
       : Math.floor(Date.now() / 1000) + 86400,
