@@ -8,7 +8,6 @@
  * different from the header, and either can be edited without touching a layout.
  */
 import CmsNav from '@/components/CmsNav.astro'
-import { settings } from '@/config/settings'
 
 const year = new Date().getFullYear()
 ---
@@ -20,7 +19,7 @@ const year = new Date().getFullYear()
     <CmsNav navKey="footer" class="justify-center md:justify-start" />
 
     <p class="m-0 font-cta text-size-10 uppercase text-primary-low-4">
-      &copy; {year} {settings.title} &middot; v{settings.version}
+      &copy; {year} CQU&middot;SFA&middot;
     </p>
   </div>
 </footer>

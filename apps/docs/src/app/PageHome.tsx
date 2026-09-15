@@ -38,7 +38,7 @@ const PageHome = (): JSX.Element => {
             )}
             animated={['flicker']}
           >
-            Futuristic Sci-Fi UI Web Framework
+            欢迎来到重庆大学多时空科幻协会
           </Animated>
         </Animator>
 
